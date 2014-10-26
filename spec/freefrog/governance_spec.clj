@@ -21,7 +21,11 @@
   (it "can create an anchor circle without a lead link"
     (should= {:name "Courage Labs"} (g/anchor-circle "Courage Labs")))
 
-  (it "throws errors when things aren't filled in correctly"
+  (it "doesn't let you leave any parameters empty"
+    (should-throw IllegalArgumentException "Name may not be empty"
+                  (g/anchor-circle nil))
+    (should-throw IllegalArgumentException "Name may not be empty"
+                  (g/anchor-circle ""))
     (should-throw IllegalArgumentException "No parameters may be empty"
                   (g/anchor-circle nil nil nil))
     (should-throw IllegalArgumentException "No parameters may be empty"
@@ -39,12 +43,7 @@
     (should-throw IllegalArgumentException "No parameters may be empty"
                   (g/anchor-circle "Not Enough Information" "Joe Schmoe" nil))
     (should-throw IllegalArgumentException "No parameters may be empty"
-                  (g/anchor-circle "Not Enough Information" "Joe Schmoe" ""))
-
-    (should-throw IllegalArgumentException "Name may not be empty"
-                  (g/anchor-circle nil))
-    (should-throw IllegalArgumentException "Name may not be empty"
-                  (g/anchor-circle ""))))
+                  (g/anchor-circle "Not Enough Information" "Joe Schmoe" ""))))
 
 (let [purpose "Building awesome software"
       sample-anchor-with-role (g/add-role sample-anchor role-name purpose)
@@ -85,13 +84,14 @@
                (g/add-role sample-anchor role-name purpose domains
                            accountabilities)))
 
-    (it "throws errors when doing bad things"
+    (it "doesn't let you use empty names"
       (should-throw IllegalArgumentException "Name may not be empty"
                     (g/add-role sample-anchor nil nil nil nil))
       (should-throw IllegalArgumentException "Name may not be empty"
-                    (g/add-role sample-anchor "" nil nil nil))
+                    (g/add-role sample-anchor "" nil nil nil)))
+    (it "doesn't let you overwrite an existing role"
       (should-throw IllegalArgumentException (str "Role already exists: "
-                                               role-name)
+                                                  role-name)
                     (g/add-role sample-anchor-with-role role-name nil nil
                                 nil)))))
 

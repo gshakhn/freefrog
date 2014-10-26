@@ -1,5 +1,5 @@
 language: clojure
-script: lein spec && lein marg
+script: lein spec && lein marg src spec
 addons:
   artifacts:
     key:

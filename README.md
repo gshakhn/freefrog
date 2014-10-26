@@ -18,7 +18,7 @@ In Terminal:
 
     lein repl :headless
     
-Open a remote REPL:
+Open a remote REPL, then:
 
     (run)
     (browser-repl)
@@ -34,6 +34,10 @@ Running the specs once (SLOW):
 Or autotest (SLOW to start, then FAST to develop):
     
     lein autotest
+    
+To see what the documentation looks like:
+    
+    lein marg
 
 ## License
 
