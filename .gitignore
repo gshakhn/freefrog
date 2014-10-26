@@ -8,3 +8,6 @@ pom.xml
 .lein-repl-history
 .lein-plugins/
 /dev-resources/public/js/*
+.idea
+.repl
+freefrog.iml
