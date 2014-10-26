@@ -12,7 +12,8 @@
         :source-paths ["dev-resources/tools/http" "dev-resources/tools/repl"]
         :dependencies [[ring "1.2.1"]
                        [compojure "1.1.6"]
-                       [hickory "0.5.3"]]
+                       [hickory "0.5.3"]
+                       [com.velisco/tagged "0.3.4"]]
         :plugins [[com.cemerick/austin "0.1.4"]]
         :cljsbuild
         {:builds {:freefrog
