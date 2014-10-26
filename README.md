@@ -23,7 +23,17 @@ Open a remote REPL:
     (run)
     (browser-repl)
     
-Open a browser pointing to [http://localhost:3000](http://localhost:3000)    
+Open a browser pointing to [http://localhost:3000](http://localhost:3000)
+    
+## Development
+    
+Running the specs once (SLOW):
+
+    lein spec
+    
+Or autotest (SLOW to start, then FAST to develop):
+    
+    lein autotest
 
 ## License
 
