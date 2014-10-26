@@ -8,3 +8,4 @@ deploy:
       secure: ecXz5JWKXhHA6nIUunUWhnaBCB1vYhU5sse34/DN+JW/QjTr+IK8/Y6OCPMZ49kZw0r555zatuYMUErBZzHSdmAnT8/Gi5LCvRgd1BMnVmhe6H0bpKVlk7zGhnc3PsrqecvBkt7QV0DWSrXsuW2x3YvmLso07qVH35oQAaJpluA=
     bucket: freefrog
     local-dir: docs
+    skip_cleanup: true
