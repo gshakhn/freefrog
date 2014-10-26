@@ -41,3 +41,11 @@
                   (assoc circle :roles {}))]
      (update-in circle [:roles] assoc role-name
                 (make-role purpose domains accountabilities)))))
+
+(defn remove-role
+  "Remove a role from a circle."
+  [circle role-name]
+  (let [result (update-in circle [:roles] dissoc role-name)]
+    (if (empty? (:roles result))
+      (dissoc result :roles)
+      result)))
