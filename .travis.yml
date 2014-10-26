@@ -1,5 +1,9 @@
 language: clojure
-script: lein spec && lein marg src spec
+script: >
+  lein spec &&
+  lein marg src spec &&
+  lein ancient > docs/ancient.txt &&
+  lein kibit > docs/kibit.txt
 deploy:
   - provider: s3
     access_key_id:
