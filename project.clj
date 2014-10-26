@@ -18,7 +18,8 @@
                  [speclj "3.1.0"]]
   
   :plugins [[lein-cljsbuild "1.0.3"]
-            [speclj "3.1.0"]]
+            [speclj "3.1.0"]
+            [lein-marginalia "0.8.0"]]
 
   :test-paths ["spec"]
 

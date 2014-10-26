@@ -11,3 +11,5 @@ pom.xml
 .idea
 .repl
 freefrog.iml
+.DS_Store
+/docs/

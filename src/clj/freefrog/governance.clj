@@ -1,6 +1,8 @@
 (ns freefrog.governance)
 
 (defn anchor-circle
+  "Create a new anchor circle.  If given lead-link-* parameters, will
+   assign a lead link."
   ([name]
    (if (empty? name)
      (throw (IllegalArgumentException. "Name may not be empty")))
@@ -25,6 +27,8 @@
       (add-if :accountabilities accountabilities)))
 
 (defn add-role
+  "Adds a role to a circle.  The role may not conflict with an existing role.
+   role-name may not be empty."
   ([circle role-name purpose]
    (add-role circle role-name purpose nil nil))
   ([circle role-name purpose domains accountabilities]
