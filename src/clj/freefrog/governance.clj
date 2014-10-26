@@ -32,9 +32,9 @@
   ([circle role-name purpose]
    (add-role circle role-name purpose nil nil))
   ([circle role-name purpose domains accountabilities]
-   (if (empty? role-name)
+   (when (empty? role-name)
      (throw (IllegalArgumentException. "Name may not be empty")))
-   (if (get-in circle [:roles role-name])
+   (when (get-in circle [:roles role-name])
      (throw (IllegalArgumentException. (str "Role already exists: " role-name))))
    (let [circle (if (contains? circle :roles)
                   circle
@@ -45,6 +45,10 @@
 (defn remove-role
   "Remove a role from a circle."
   [circle role-name]
+  (when (empty? role-name)
+    (throw (IllegalArgumentException. "No role specified to delete")))
+  (when (empty? (get-in circle [:roles role-name]))
+    (throw (IllegalArgumentException. (str "Role not found: " role-name))))
   (let [result (update-in circle [:roles] dissoc role-name)]
     (if (empty? (:roles result))
       (dissoc result :roles)

@@ -104,6 +104,17 @@
 
       (it "removes the roles array if deleting a role causes it to be empty"
         (should= sample-anchor (g/remove-role sample-anchor-with-role
-                                              role-name))))))
+                                              role-name)))
+
+      (it "doesn't let you delete a role that doesn't exist"
+        (should-throw IllegalArgumentException (str "Role not found: "
+                                                    role-name)
+                      (g/remove-role sample-anchor role-name)))
+
+      (it "doesn't let you delete an empty role"
+        (should-throw IllegalArgumentException "No role specified to delete"
+                      (g/remove-role sample-anchor-with-role nil))
+        (should-throw IllegalArgumentException "No role specified to delete"
+                      (g/remove-role sample-anchor-with-role ""))))))
 
 (run-specs)
