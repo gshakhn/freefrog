@@ -49,7 +49,7 @@
       sample-anchor-with-role (g/add-role sample-anchor role-name purpose)
       domains ["Code" "Tests"]
       accountabilities ["Writing Code" "Testing their own stuff"]]
-  (describe "Roles"
+  (describe "Role Manipulation"
     (describe "adding"
       (it "can add a role to a circle with name and purpose"
         (should= (assoc sample-anchor :roles {role-name {:purpose purpose}})

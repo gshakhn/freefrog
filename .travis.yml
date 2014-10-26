@@ -1,11 +1,10 @@
 language: clojure
 script: lein spec && lein marg src spec
-addons:
-  artifacts:
-    key:
-      secure: NIprN9gpDLIQ5dgrpD6pPThwAgnyEzOGBLoigh5Zyw/UWbHeo/bYtzVwt9lZU6F8HfjG/PjtF2+t2lwx/D3Su2WjNErDbrhfBVvCm8UXwt0hVBewGfobJIyyycOlQqUonwVqhKWb7SVrjrKKSIZ8aGqt/Q2fahAJfEXCeeZxRus=
-    secret:
-      secure: XyTN08YO6KzYT6c8VNoQ4PUMZq82sQ8AjnJX33ggSHSW2FKJNUbzIeF4/KuciCal7vOjkIEjs/XkGvG1xAz01x0sCLfCELM6cwW14E7t7mmL3Mq305Hgw3z/TS66wTrsutCD/WRpKrud8G5skt1dT/u5B49WASyFaRIk7weVees=
+deploy:
+  - provider: s3
+    access_key_id:
+      secure: RTICbxTzrUHakFEZ5xrl09/Pf3GcnFIfzEhJJz+TbFFdSQXubSgmVs6fkopqfjxvHIxDWBel7dpdjxIQCsAOOr4vaTs3sH7ZCJ933o0dlJcUGj41QUNzgeG2wNxmCeFYg49rD2rAaX/ZDhjsjyIbz5piAV7zk4Szg3hDg0qETnk=
+    secret_access_key:
+      secure: ecXz5JWKXhHA6nIUunUWhnaBCB1vYhU5sse34/DN+JW/QjTr+IK8/Y6OCPMZ49kZw0r555zatuYMUErBZzHSdmAnT8/Gi5LCvRgd1BMnVmhe6H0bpKVlk7zGhnc3PsrqecvBkt7QV0DWSrXsuW2x3YvmLso07qVH35oQAaJpluA=
     bucket: freefrog
-    paths:
-    - docs/uberdoc.html
+    local-dir: docs
