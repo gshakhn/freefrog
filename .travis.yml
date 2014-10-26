@@ -9,3 +9,4 @@ deploy:
     bucket: freefrog
     local-dir: docs
     skip_cleanup: true
+    upload-dir: docs
