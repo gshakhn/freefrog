@@ -1,3 +1,6 @@
+;;; # Anchor Circle Manipulation Spec #
+;;; Defines how the Anchor Circle can be updated, and helps us differentiate
+;;; this special circle from what a "regular circle" can do.
 (ns freefrog.governance-anchor-circle-spec
   (:require [freefrog.governance :as g]
             [speclj.core :refer :all]))
