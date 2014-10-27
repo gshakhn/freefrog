@@ -28,7 +28,7 @@
                       {role-name {:accountabilities sample-accountabilities}})
         (g/add-role sample-anchor role-name
                     nil nil sample-accountabilities)))
-Ex
+
     (it "can add a role to a circle with name, purpose, and domains"
       (should= (assoc sample-anchor :roles {role-name {:domains sample-domains}})
         (g/add-role sample-anchor role-name
