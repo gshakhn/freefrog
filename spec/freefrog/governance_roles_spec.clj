@@ -55,9 +55,6 @@
         (g/add-role sample-anchor role-name sample-purpose sample-domains
                     sample-accountabilities)))
 
-    ;; Section 2.5
-    (it "doesn't let you create any of the constitutionally defined roles")
-
     (it "doesn't let you use empty names"
       (should-throw IllegalArgumentException "Name may not be empty"
         (g/add-role sample-anchor nil nil nil nil))
@@ -86,9 +83,7 @@
       (should-throw IllegalArgumentException "No role specified to remove"
         (g/remove-role sample-anchor-with-role nil))
       (should-throw IllegalArgumentException "No role specified to remove"
-        (g/remove-role sample-anchor-with-role "")))
-
-    (it "doesn't let you remove any of the special roles"))
+        (g/remove-role sample-anchor-with-role ""))))
 
   (describe "updating"
     (describe "name"
@@ -97,7 +92,7 @@
           (should= (update-in sample-anchor-with-role [:roles] s/rename-keys
                               {role-name new-name})
             (g/rename-role sample-anchor-with-role role-name new-name)))
-        (it "should refuse to rename a role that doesn't exist"
+        (it "refuses to rename a role that doesn't exist"
           (should-throw IllegalArgumentException (str "Role not found: "
                                                       role-name)
             (g/rename-role sample-anchor role-name new-name)))
@@ -106,10 +101,7 @@
           (should-throw IllegalArgumentException "No role specified to update"
             (g/rename-role sample-anchor-with-role nil new-name))
           (should-throw IllegalArgumentException "No role specified to update"
-            (g/rename-role sample-anchor-with-role "" new-name)))
-
-        ;; Section 2.2.3 and 2.5.3 (not specified!)
-        (it "doesn't let you rename any of the special roles")))
+            (g/rename-role sample-anchor-with-role "" new-name)))))
 
     ;; Section 1.1.a
     (describe "purpose"
@@ -128,7 +120,7 @@
                             :purpose)
           (g/update-role-purpose sample-anchor-with-role role-name "")))
 
-      (it "should refuse to change the purpose of a role that doesn't exist"
+      (it "refuses to change the purpose of a role that doesn't exist"
         (should-throw IllegalArgumentException (str "Role not found: "
                                                     role-name)
           (g/update-role-purpose sample-anchor role-name "Stuff")))
@@ -137,50 +129,48 @@
         (should-throw IllegalArgumentException "No role specified to update"
           (g/update-role-purpose sample-anchor-with-role nil "Stuff"))
         (should-throw IllegalArgumentException "No role specified to update"
-          (g/update-role-purpose sample-anchor-with-role "" "Stuff")))
-
-      ;; Section 2.5.3
-      (it "doesn't let you change the purpose of the special roles"))
+          (g/update-role-purpose sample-anchor-with-role "" "Stuff"))))
 
     ;; Section 1.1.b
-    (describe "domains"
-
-      ;; Section 2.2.3
-      (it "doesn't let you add domains to the Lead Link")
-
-      ;; Section 2.5.3
-      (it "allows you to add/remove domains to/from any of the elected roles")
-      (it "doesn't let you update/remove any of the constitutional domains of
-        the elected roles"))
+    (describe "domains")
 
     ;; Section 1.1.c
-    (describe "accountabilities"
-      ;; Section 2.2.3
-      (it "doesn't let you add accountabilities to the Lead Link")
+    (describe "accountabilities")))
 
-      ;; Section 2.5.3
-      (it "allows you to add/remove accountabilities to/from any of the
-        elected roles")
-      (it "doesn't let you update/remove any of the constitutional
-        accountabilities of the elected roles"))))
+;; Section 2.2
+(describe "Lead Link Role"
+  (it "doesn't let you create the Lead Link role")
+  (it "doesn't let you add domains to the Lead Link")
+  (it "doesn't let you add accountabilities to the Lead Link"))
 
 ;; Section 2.4
 (describe "Role Assignment"
   ;; Appendix A/Lead Link
   (it "can assign someone to a role")
 
-  ;; Section 2.4.3, Appendix A/Lead Link
-  (it "can remove someone from a role")
-
   ;; Section 2.4.2
   (it "can assign multiple people to a role")
   (it "can assign multiple people to a role with focuses")
 
+  ;; Section 2.4.3, Appendix A/Lead Link
+  (it "can remove someone from a role"))
+
+;; Section 2.5
+(describe "Elected Roles"
+  (it "doesn't let you create any of the elected roles")
+
   ;; Section 2.5.1
   (it "won't assign the person in the Lead Link role to the Facilitator
-    or Rep Link role"))
+    or Rep Link role")
 
-;; Section 3.1.c
-(describe "Elected Roles")
+  ;; Section 2.5.3
+  (it "doesn't let you change the purpose of the special roles")
+  (it "allows you to add/remove domains to/from any of the elected roles")
+  (it "doesn't let you update/remove any of the constitutional domains of
+        the elected roles")
+  (it "allows you to add/remove accountabilities to/from any of the
+        elected roles")
+  (it "doesn't let you update/remove any of the constitutional
+        accountabilities of the elected roles"))
 
 (run-specs)
