@@ -83,3 +83,12 @@
                dissoc :purpose)
     (update-in circle [:roles role-name]
                assoc :purpose new-purpose)))
+
+(defn add-domain
+  "Add a domain to a role in the given circle."
+  [circle role-name domain]
+  (validate-updates circle role-name)
+  (let [circle (if (get-in circle [:roles role-name :domains])
+                 circle
+                 (update-in circle [:roles role-name] assoc :domains []))]
+    (update-in circle [:roles role-name :domains] conj domain)))
