@@ -3,6 +3,7 @@
             [speclj.core :refer :all]))
 
 (describe "Anchor Circle"
+  ;; Section 5.2.2.a
   (it "can create an anchor circle with a lead link"
     (should= {:name      "Courage Labs"
               :lead-link {:name  "Stephen Starkey"
@@ -15,8 +16,8 @@
       (g/anchor-circle "Fear Labs" "Bill O'Reilly"
                        "billoreilly@foxnews.com")))
 
-  (it "can create an anchor circle without a lead link"
-    (should= {:name "Courage Labs"} (g/anchor-circle "Courage Labs")))
+  ;; Section 5.2.2.b
+  (it "can create an anchor circle without a lead link")
 
   (it "doesn't let you leave any parameters empty"
     (should-throw IllegalArgumentException "Name may not be empty"

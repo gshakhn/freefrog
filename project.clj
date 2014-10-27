@@ -20,4 +20,5 @@
 
   :test-paths ["spec"]
 
-  :aliases {"autotest" ["spec" "-a"]})
+  :aliases {"autotest" ["spec" "-a"]
+            "docs" ["marg" "src" "spec"]})

@@ -1,7 +1,7 @@
 language: clojure
 script: >
   lein spec &&
-  lein marg src spec &&
+  lein docs &&
   lein ancient > docs/ancient.txt &&
   lein kibit > docs/kibit.txt
 deploy:
