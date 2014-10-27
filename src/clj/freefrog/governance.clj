@@ -84,11 +84,23 @@
     (update-in circle [:roles role-name]
                assoc :purpose new-purpose)))
 
+(defn- get-domains [circle role-name]
+  (get-in circle [:roles role-name :domains]))
+
+(defn- validate-domain-not-present [circle role-name domain]
+  (if (contains? (get-domains circle role-name) domain)
+    (throw (IllegalArgumentException.
+             (format "Domain %s already exists on role %s" domain
+                     role-name)))))
+
 (defn add-domain
   "Add a domain to a role in the given circle."
   [circle role-name domain]
   (validate-updates circle role-name)
-  (let [circle (if (get-in circle [:roles role-name :domains])
+  (validate-domain-not-present circle role-name domain)
+
+  (let [domains (get-domains circle role-name)
+        circle (if domains
                  circle
-                 (update-in circle [:roles role-name] assoc :domains []))]
+                 (update-in circle [:roles role-name] assoc :domains #{}))]
     (update-in circle [:roles role-name :domains] conj domain)))

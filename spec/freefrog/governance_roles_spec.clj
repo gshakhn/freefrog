@@ -15,9 +15,12 @@
 
 (def sample-purpose "Building awesome software")
 (def sample-anchor-with-role (g/add-role sample-anchor role-name sample-purpose))
+
 (def sample-domain-1 "Code")
 (def sample-domain-2 "Tests")
 (def sample-domains [sample-domain-1 sample-domain-2])
+(def sample-anchor-with-domain
+  (g/add-domain sample-anchor-with-role role-name sample-domain-1))
 (def sample-accountabilities ["Writing Code" "Testing their own stuff"])
 
 ;; Section 3.1.a
@@ -137,18 +140,15 @@
     (describe "domains"
       (it "can add a domain to a role with no domains"
         (should= (update-in sample-anchor-with-role [:roles role-name]
-                            assoc :domains [sample-domain-1])
+                            assoc :domains #{sample-domain-1})
           (g/add-domain sample-anchor-with-role role-name sample-domain-1)))
 
       (it "can add a domain to a role with existing domains"
-        (let [anchor-with-one-role
-              (g/add-domain sample-anchor-with-role role-name sample-domain-1)
-
-              expected
-              (update-in anchor-with-one-role [:roles role-name :domains]
+        (let [expected
+              (update-in sample-anchor-with-domain [:roles role-name :domains]
                          conj sample-domain-2)]
           (should= expected
-            (g/add-domain anchor-with-one-role role-name sample-domain-2))))
+            (g/add-domain sample-anchor-with-domain role-name sample-domain-2))))
 
       (it "refuses to add a domain to a role that doesn't exist"
         (should-throw IllegalArgumentException (str "Role not found: "
@@ -161,7 +161,12 @@
         (should-throw IllegalArgumentException "No role specified to update"
           (g/add-domain sample-anchor-with-role "" "Stuff")))
 
-      (it "refuses to add the same domain twice")
+      (it "refuses to add the same domain twice"
+        (should-throw IllegalArgumentException
+          (format "Domain %s already exists on role %s" sample-domain-1
+                  role-name)
+          (g/add-domain sample-anchor-with-domain role-name sample-domain-1)))
+
       (it "can remove a domain from a role")
       (it "removes the domains array when there are no domains")
       (it "refuses to remove a domain from a role that doesn't exist")
