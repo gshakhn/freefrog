@@ -1,3 +1,6 @@
+;;; This namespace defines how governance can be manipulated, and is intended
+;;; to comply to the
+;;; [Holacracy Constitution v4.0](http://holacracy.org/sites/default/files/resources/holacracy_constitution_v4.0.pdf)
 (ns freefrog.governance
   (:require [clojure.set :as s]))
 
