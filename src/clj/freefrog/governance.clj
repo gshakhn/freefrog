@@ -90,7 +90,7 @@
 (defn- validate-domain-not-present [circle role-name domain]
   (if (contains? (get-domains circle role-name) domain)
     (throw (IllegalArgumentException.
-             (format "Domain %s already exists on role %s" domain
+             (format "Domain '%s' already exists on role '%s'" domain
                      role-name)))))
 
 (defn add-domain
@@ -104,3 +104,19 @@
                  circle
                  (update-in circle [:roles role-name] assoc :domains #{}))]
     (update-in circle [:roles role-name :domains] conj domain)))
+
+(defn- validate-domain-present [circle role-name domain]
+  (if-not (contains? (get-domains circle role-name) domain)
+    (throw (IllegalArgumentException.
+             (format "Domain '%s' doesn't exist on role '%s'" domain
+                     role-name)))))
+
+(defn remove-domain
+  "Remove a domain from a role in the given circle."
+  [circle role-name domain]
+  (validate-updates circle role-name)
+  (validate-domain-present circle role-name domain)
+  (let [result (update-in circle [:roles role-name :domains] disj domain)]
+    (if (empty? (get-domains result role-name))
+      (update-in result [:roles role-name] dissoc :domains)
+      result)))

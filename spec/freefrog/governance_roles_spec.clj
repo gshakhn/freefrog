@@ -21,6 +21,8 @@
 (def sample-domains [sample-domain-1 sample-domain-2])
 (def sample-anchor-with-domain
   (g/add-domain sample-anchor-with-role role-name sample-domain-1))
+(def sample-anchor-with-domains
+  (g/add-domain sample-anchor-with-domain role-name sample-domain-2))
 (def sample-accountabilities ["Writing Code" "Testing their own stuff"])
 
 ;; Section 3.1.a
@@ -163,14 +165,37 @@
 
       (it "refuses to add the same domain twice"
         (should-throw IllegalArgumentException
-          (format "Domain %s already exists on role %s" sample-domain-1
+          (format "Domain '%s' already exists on role '%s'" sample-domain-1
                   role-name)
           (g/add-domain sample-anchor-with-domain role-name sample-domain-1)))
 
-      (it "can remove a domain from a role")
-      (it "removes the domains array when there are no domains")
-      (it "refuses to remove a domain from a role that doesn't exist")
-      (it "refuses to remove a domain that doesn't exist"))
+      (it "can remove a domain from a role"
+        (should= sample-anchor-with-domain
+          (g/remove-domain sample-anchor-with-domains role-name
+                           sample-domain-2)))
+
+      (it "removes the domains array when there are no domains"
+        (should= sample-anchor-with-role
+          (g/remove-domain sample-anchor-with-domain role-name
+                           sample-domain-1)))
+
+      (it "refuses to remove a domain that doesn't exist"
+        (should-throw IllegalArgumentException
+          (format "Domain '%s' doesn't exist on role '%s'" sample-domain-2
+                  role-name)
+          (g/remove-domain sample-anchor-with-domain role-name
+                           sample-domain-2)))
+
+      (it "refuses to remove a domain from a role that doesn't exist"
+        (should-throw IllegalArgumentException (str "Role not found: "
+                                                    role-name)
+          (g/remove-domain sample-anchor role-name sample-domain-1)))
+
+      (it "refuses to remove a domain from an empty role"
+        (should-throw IllegalArgumentException "No role specified to update"
+          (g/remove-domain sample-anchor-with-role nil "Stuff"))
+        (should-throw IllegalArgumentException "No role specified to update"
+          (g/remove-domain sample-anchor-with-role "" "Stuff"))))
 
     ;; Section 1.1.c
     (describe "accountabilities")))
