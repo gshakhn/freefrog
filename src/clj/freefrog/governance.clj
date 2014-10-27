@@ -51,7 +51,7 @@
   "Remove a role from a circle."
   [circle role-name]
   (when (empty? role-name)
-    (throw (IllegalArgumentException. "No role specified to delete")))
+    (throw (IllegalArgumentException. "No role specified to remove")))
   (validate-role-exists circle role-name)
   (let [result (update-in circle [:roles] dissoc role-name)]
     (if (empty? (:roles result))
