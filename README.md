@@ -38,6 +38,11 @@ Or autotest (SLOW to start, then FAST to develop):
 To see what the documentation looks like:
     
     lein marg
+    
+## Documentation
+    
+You can find the project's latest documentation in 
+[Our S3 Artifact Bucket](http://s3.amazonaws.com/freefrog/docs/uberdoc.html).   
 
 ## License
 
