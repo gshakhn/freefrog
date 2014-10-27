@@ -41,3 +41,5 @@
       (g/anchor-circle "Not Enough Information" "Joe Schmoe" nil))
     (should-throw IllegalArgumentException "No parameters may be empty"
       (g/anchor-circle "Not Enough Information" "Joe Schmoe" ""))))
+
+(run-specs)
