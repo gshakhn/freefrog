@@ -155,24 +155,25 @@
       (it "allows you to add/remove accountabilities to/from any of the
         elected roles")
       (it "doesn't let you update/remove any of the constitutional
-        accountabilities of the elected roles")))
+        accountabilities of the elected roles"))))
 
-  (describe "assigning"
-    ;; Section 2.4
-    (it "can assign someone to a role")
+;; Section 2.4
+(describe "Role Assignment"
+  ;; Appendix A/Lead Link
+  (it "can assign someone to a role")
 
-    ;; Section 2.4.3
-    (it "can remove someone from a role")
+  ;; Section 2.4.3, Appendix A/Lead Link
+  (it "can remove someone from a role")
 
-    ;; Section 2.4.2
-    (it "can assign multiple people to a role")
-    (it "can assign multiple people to a role with focuses")
+  ;; Section 2.4.2
+  (it "can assign multiple people to a role")
+  (it "can assign multiple people to a role with focuses")
 
-    ;; Section 2.5.1
-    (it "won't assign the person in the Lead Link role to the Facilitator
-    or Rep Link role")
+  ;; Section 2.5.1
+  (it "won't assign the person in the Lead Link role to the Facilitator
+    or Rep Link role"))
 
-    ;; Section 2.5.2
-    (it "can assign one person each to an elected role, with a term")))
+;; Section 3.1.c
+(describe "Elected Roles")
 
 (run-specs)
