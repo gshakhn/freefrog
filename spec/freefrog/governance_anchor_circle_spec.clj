@@ -2,6 +2,7 @@
   (:require [freefrog.governance :as g]
             [speclj.core :refer :all]))
 
+;; Section 5.2
 (describe "Anchor Circle"
   ;; Section 5.2.2.a
   (it "can create an anchor circle with a lead link"
