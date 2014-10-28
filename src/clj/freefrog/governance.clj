@@ -96,7 +96,7 @@
   "Validate everything about domain manipulation.  Checks that the role name
    is valid and exists.  Also calls the custom validation function.
 
-  If the validation-fn returns true, throw an error with the given err-msg-fmt.
+  If the validation-fn returns true, throws an error with the given err-msg-fmt.
   err-msg-fmt be in the form of ^.*?%s.*?%s.*$ where the first %s is to be
   replaced with the domain and the second with the role-name."
   (validate-role-updates circle role-name)
