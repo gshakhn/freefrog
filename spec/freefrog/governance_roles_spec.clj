@@ -1,7 +1,7 @@
 ;;; # Role Manipulation Spec #
 ;;; Defines how all roles can be manipulated, both through governance
 ;;; (maintenance and elections) and through the normal business of
-;;; appointment/removal.Removed
+;;; appointment/removal.
 (ns freefrog.governance-roles-spec
   (:require [clojure.set :as s]
             [freefrog.governance :as g]
