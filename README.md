@@ -2,29 +2,6 @@
 
 Exquisite Organization -- For Free
 
-## Usage
-
-Terminal 1:
-
-    lein repl
-    (run)
-    (browser-repl)
-    
-Open a browser pointing to [http://localhost:3000](http://localhost:3000)    
-
-### In IntelliJ
-    
-In Terminal:    
-
-    lein repl :headless
-    
-Open a remote REPL, then:
-
-    (run)
-    (browser-repl)
-    
-Open a browser pointing to [http://localhost:3000](http://localhost:3000)
-    
 ## Development
     
 Running the specs once (SLOW):
