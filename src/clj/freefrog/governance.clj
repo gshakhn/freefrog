@@ -67,20 +67,17 @@
     (throw (IllegalArgumentException. "No role specified to update")))
   (validate-role-exists circle role-name))
 
-(defmacro updatefn [name docstring args & body]
-  `(defn ~name ~docstring ~args
-     (validate-updates ~(first args) ~(second args))
-     ~@body))
-
-(updatefn rename-role
+(defn rename-role
   "Rename a role in the given circle."
   [circle role-name new-name]
+  (validate-updates circle role-name)
   (update-in circle [:roles]
              s/rename-keys {role-name new-name}))
 
-(updatefn update-role-purpose
+(defn update-role-purpose
   "Update the purpose of a role in the given circle."
   [circle role-name new-purpose]
+  (validate-updates circle role-name)
   (if (empty? new-purpose)
     (update-in circle [:roles role-name]
                dissoc :purpose)
@@ -94,9 +91,10 @@
   (if (presence-fn (get-domains circle role-name) domain)
     (throw (IllegalArgumentException. (format err-msg domain role-name)))))
 
-(updatefn add-domain
+(defn add-domain
   "Add a domain to a role in the given circle."
   [circle role-name domain]
+  (validate-updates circle role-name)
   (validate-domain contains? "Domain '%s' already exists on role '%s'"
                    circle role-name domain)
 
@@ -106,9 +104,10 @@
                  (update-in circle [:roles role-name] assoc :domains #{}))]
     (update-in circle [:roles role-name :domains] conj domain)))
 
-(updatefn remove-domain
+(defn remove-domain
   "Remove a domain from a role in the given circle."
   [circle role-name domain]
+  (validate-updates circle role-name)
   (validate-domain (comp not contains?)
                    "Domain '%s' doesn't exist on role '%s'"
                    circle role-name domain)
