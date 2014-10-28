@@ -84,9 +84,9 @@
         (g/remove-role sample-anchor role-name)))
 
     (it "doesn't let you remove using an empty role name"
-      (should-throw IllegalArgumentException "No role specified to remove"
+      (should-throw IllegalArgumentException "Name may not be empty"
         (g/remove-role sample-anchor-with-role nil))
-      (should-throw IllegalArgumentException "No role specified to remove"
+      (should-throw IllegalArgumentException "Name may not be empty"
         (g/remove-role sample-anchor-with-role ""))))
 
   (describe "updating"
@@ -102,9 +102,9 @@
             (g/rename-role sample-anchor role-name new-name)))
 
         (it "doesn't rename using an empty role name"
-          (should-throw IllegalArgumentException "No role specified to update"
+          (should-throw IllegalArgumentException "Name may not be empty"
             (g/rename-role sample-anchor-with-role nil new-name))
-          (should-throw IllegalArgumentException "No role specified to update"
+          (should-throw IllegalArgumentException "Name may not be empty"
             (g/rename-role sample-anchor-with-role "" new-name)))))
 
     ;; Section 1.1.a
@@ -130,9 +130,9 @@
           (g/update-role-purpose sample-anchor role-name "Stuff")))
 
       (it "doesn't change purpose using an empty role name"
-        (should-throw IllegalArgumentException "No role specified to update"
+        (should-throw IllegalArgumentException "Name may not be empty"
           (g/update-role-purpose sample-anchor-with-role nil "Stuff"))
-        (should-throw IllegalArgumentException "No role specified to update"
+        (should-throw IllegalArgumentException "Name may not be empty"
           (g/update-role-purpose sample-anchor-with-role "" "Stuff"))))
 
     ;; Section 1.1.b
@@ -155,9 +155,9 @@
           (g/add-domain sample-anchor role-name sample-domain-1)))
 
       (it "refuses to add a domain to an empty role name"
-        (should-throw IllegalArgumentException "No role specified to update"
+        (should-throw IllegalArgumentException "Name may not be empty"
           (g/add-domain sample-anchor-with-role nil "Stuff"))
-        (should-throw IllegalArgumentException "No role specified to update"
+        (should-throw IllegalArgumentException "Name may not be empty"
           (g/add-domain sample-anchor-with-role "" "Stuff")))
 
       (it "refuses to add the same domain twice"
@@ -189,9 +189,9 @@
           (g/remove-domain sample-anchor role-name sample-domain-1)))
 
       (it "refuses to remove a domain from an empty role"
-        (should-throw IllegalArgumentException "No role specified to update"
+        (should-throw IllegalArgumentException "Name may not be empty"
           (g/remove-domain sample-anchor-with-role nil "Stuff"))
-        (should-throw IllegalArgumentException "No role specified to update"
+        (should-throw IllegalArgumentException "Name may not be empty"
           (g/remove-domain sample-anchor-with-role "" "Stuff"))))
 
     ;; Section 1.1.c
