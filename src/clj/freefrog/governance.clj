@@ -5,20 +5,20 @@
 (ns freefrog.governance
   (:require [clojure.set :as s]))
 
-(defn- validate
-  "Convenience function for throwing validation exceptions."
-  [is-invalid? err-msg]
-  (when is-invalid? (throw (IllegalArgumentException. err-msg))))
+(defn- validate-not
+  "Throws exception with given err-msg if invalid? is true."
+  [invalid? err-msg]
+  (when invalid? (throw (IllegalArgumentException. err-msg))))
 
 (defn anchor-circle
   "Create a new anchor circle.  If given lead-link-* parameters, will
    assign a lead link."
   ([name]
-   (validate (empty? name) "Name may not be empty")
+   (validate-not (empty? name) "Name may not be empty")
    {:name name})
 
   ([name lead-link-name lead-link-email]
-   (validate (or (empty? name) (empty? lead-link-name)
+   (validate-not (or (empty? name) (empty? lead-link-name)
                       (empty? lead-link-email)) "No parameters may be empty")
    (let [anchor-circle (anchor-circle name)]
      (assoc anchor-circle :lead-link
@@ -26,9 +26,7 @@
 
 (defn- assoc-if [map key value]
   "Associate a value with a key only if the value is non-nil."
-  (if value
-    (assoc map key value)
-    map))
+  (if value (assoc map key value) map))
 
 (defn- make-role [purpose domains accountabilities]
   (-> {}
@@ -37,7 +35,7 @@
       (assoc-if :accountabilities accountabilities)))
 
 (defn- validate-role-name [role-name]
-  (validate (empty? role-name) "Name may not be empty"))
+  (validate-not (empty? role-name) "Name may not be empty"))
 
 (defn add-role
   "Adds a role to a circle.  The role may not conflict with an existing role.
@@ -46,7 +44,7 @@
    (add-role circle role-name purpose nil nil))
   ([circle role-name purpose domains accountabilities]
    (validate-role-name role-name)
-   (validate (get-in circle [:roles role-name])
+   (validate-not (get-in circle [:roles role-name])
                   (str "Role already exists: " role-name))
    (let [circle (if (contains? circle :roles)
                   circle
@@ -55,7 +53,7 @@
                 (make-role purpose domains accountabilities)))))
 
 (defn- validate-role-exists [circle role-name]
-  (validate (empty? (get-in circle [:roles role-name]))
+  (validate-not (empty? (get-in circle [:roles role-name]))
                  (str "Role not found: " role-name)))
 
 (defn- validate-role-updates [circle role-name]
@@ -92,15 +90,16 @@
 (defn- get-domains [circle role-name]
   (get-in circle [:roles role-name :domains]))
 
-(defn- validate-domain [circle role-name domain validation-fn err-msg-fmt]
-  "Validate everything about domain manipulation.  Checks that the role name
-   is valid and exists.  Also calls the custom validation function.
+(defn- validate-domain [circle role-name domain check-fn err-msg-fmt]
+  "Validate everything about domain manipulation. Checks that the role name
+   is non-empty and present. Also calls the custom validation function.
 
-  If the validation-fn returns true, throws an error with the given err-msg-fmt.
-  err-msg-fmt be in the form of ^.*?%s.*?%s.*$ where the first %s is to be
-  replaced with the domain and the second with the role-name."
+   If the check-fn returns true, throws an error with the given
+   err-msg-fmt. err-msg-fmt be in the form of ^.*?%s.*?%s.*$ where the
+   first %s is to be replaced with the domain and the second with the
+   role-name."
   (validate-role-updates circle role-name)
-  (validate (validation-fn (get-domains circle role-name) domain)
+  (validate-not (check-fn (get-domains circle role-name) domain)
                  (format err-msg-fmt domain role-name)))
 
 (defn add-domain
@@ -121,5 +120,4 @@
                    "Domain '%s' doesn't exist on role '%s'")
   (let [result (update-in circle [:roles role-name :domains] disj domain)]
     (if (empty? (get-domains result role-name))
-      (update-in result [:roles role-name] dissoc :domains)
-      result)))
+      (update-in result [:roles role-name] dissoc :domains) result)))
