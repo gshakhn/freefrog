@@ -6,5 +6,12 @@
 (describe "governance rest api"
   (before-all (r/start-test-server))
   (after-all (r/stop-test-server))
-  (it "should return status code 200 at the root"
-    (should= 200 (:status (http-client/get "http://localhost:3000")))))
+
+  (it "should return status code 404 at the root"
+    (should= 404 (:status (http-client/get "http://localhost:3000" {:throw-exceptions false}))))
+
+  (context "when no circles have been created"
+    (with response (http-client/get "http://localhost:3000/circle" {:throw-exceptions false}))
+    (it "should return an empty array"
+        (should= 200 (:status @response))
+        (should= "[]" (:body @response)))))
