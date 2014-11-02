@@ -4,6 +4,10 @@ Exquisite Organization -- For Free
 
 ## Development
     
+Fire up a server to test against:
+    
+    lein ring server 3000
+
 Running the specs once (SLOW):
 
     lein spec
