@@ -15,6 +15,7 @@
                  [org.clojure/core.typed "0.2.72"]
                  [com.velisco/tagged "0.3.4"]
                  [clj-jgit "0.8.0"]
+                 [ring-server "0.3.1"]
                  [speclj "3.1.0"]]
 
   :profiles {:dev {:dependencies [[clj-http "1.0.1"]] }}
