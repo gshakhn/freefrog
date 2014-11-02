@@ -20,7 +20,24 @@
   (g/add-domain sample-anchor-with-role role-name sample-domain-1))
 (def sample-anchor-with-domains
   (g/add-domain sample-anchor-with-domain role-name sample-domain-2))
-(def sample-accountabilities ["Writing Code" "Testing their own stuff"])
+(def sample-acc-1 "Writing Code")
+(def sample-acc-2 "Testing their own stuff")
+(def sample-accountabilities [sample-acc-1 sample-acc-2])
+(def sample-anchor-with-acc
+  (g/add-accountability sample-anchor-with-role role-name sample-acc-1))
+
+(defn should-not-update-missing-or-empty-roles [fn type-str val]
+  (describe (format "%s problems" type-str)
+    (it "doesn't work with a role that doesn't exist"
+      (should-throw IllegalArgumentException (str "Role not found: "
+                                                  role-name)
+        (fn sample-anchor role-name val)))
+
+    (it "doesn't work with an empty role name"
+      (should-throw IllegalArgumentException "Name may not be empty"
+        (fn sample-anchor-with-role nil val))
+      (should-throw IllegalArgumentException "Name may not be empty"
+        (fn sample-anchor-with-role "" val)))))
 
 ;; Section 3.1.a
 (describe "Role Manipulation"
@@ -96,16 +113,8 @@
           (should= (update-in sample-anchor-with-role [:roles] s/rename-keys
                               {role-name new-name})
             (g/rename-role sample-anchor-with-role role-name new-name)))
-        (it "refuses to rename a role that doesn't exist"
-          (should-throw IllegalArgumentException (str "Role not found: "
-                                                      role-name)
-            (g/rename-role sample-anchor role-name new-name)))
-
-        (it "doesn't rename using an empty role name"
-          (should-throw IllegalArgumentException "Name may not be empty"
-            (g/rename-role sample-anchor-with-role nil new-name))
-          (should-throw IllegalArgumentException "Name may not be empty"
-            (g/rename-role sample-anchor-with-role "" new-name)))))
+        (should-not-update-missing-or-empty-roles g/rename-role "renaming role"
+          new-name)))
 
     ;; Section 1.1.a
     (describe "purpose"
@@ -124,16 +133,9 @@
                             :purpose)
           (g/update-role-purpose sample-anchor-with-role role-name "")))
 
-      (it "refuses to change the purpose of a role that doesn't exist"
-        (should-throw IllegalArgumentException (str "Role not found: "
-                                                    role-name)
-          (g/update-role-purpose sample-anchor role-name "Stuff")))
-
-      (it "doesn't change purpose using an empty role name"
-        (should-throw IllegalArgumentException "Name may not be empty"
-          (g/update-role-purpose sample-anchor-with-role nil "Stuff"))
-        (should-throw IllegalArgumentException "Name may not be empty"
-          (g/update-role-purpose sample-anchor-with-role "" "Stuff"))))
+      (should-not-update-missing-or-empty-roles g/update-role-purpose
+        "updating purpose"
+        "Stuff"))
 
     ;; Section 1.1.b
     (describe "domains"
@@ -149,16 +151,8 @@
           (should= expected
             (g/add-domain sample-anchor-with-domain role-name sample-domain-2))))
 
-      (it "refuses to add a domain to a role that doesn't exist"
-        (should-throw IllegalArgumentException (str "Role not found: "
-                                                    role-name)
-          (g/add-domain sample-anchor role-name sample-domain-1)))
-
-      (it "refuses to add a domain to an empty role name"
-        (should-throw IllegalArgumentException "Name may not be empty"
-          (g/add-domain sample-anchor-with-role nil "Stuff"))
-        (should-throw IllegalArgumentException "Name may not be empty"
-          (g/add-domain sample-anchor-with-role "" "Stuff")))
+      (should-not-update-missing-or-empty-roles g/add-domain "adding a domain"
+        sample-domain-1)
 
       (it "refuses to add the same domain twice"
         (should-throw IllegalArgumentException
@@ -183,19 +177,32 @@
           (g/remove-domain sample-anchor-with-domain role-name
                            sample-domain-2)))
 
-      (it "refuses to remove a domain from a role that doesn't exist"
-        (should-throw IllegalArgumentException (str "Role not found: "
-                                                    role-name)
-          (g/remove-domain sample-anchor role-name sample-domain-1)))
-
-      (it "refuses to remove a domain from an empty role"
-        (should-throw IllegalArgumentException "Name may not be empty"
-          (g/remove-domain sample-anchor-with-role nil "Stuff"))
-        (should-throw IllegalArgumentException "Name may not be empty"
-          (g/remove-domain sample-anchor-with-role "" "Stuff"))))
+      (should-not-update-missing-or-empty-roles g/remove-domain
+        "removing domain" sample-domain-1))
 
     ;; Section 1.1.c
-    (describe "accountabilities")))
+    (describe "accountabilities"
+      (it "adds an accountability to a role that has no accountabilities"
+        (should= (update-in sample-anchor-with-role [:roles role-name]
+                            assoc :accountabilities [sample-acc-1])
+          (g/add-accountability sample-anchor-with-role role-name
+                                sample-acc-1)))
+
+      (it "adds an accountability to a role that already has one"
+        (should= (update-in sample-anchor-with-acc [:roles role-name
+                                                    :accountabilities]
+                            conj sample-acc-2)
+          (g/add-accountability sample-anchor-with-acc role-name
+                                sample-acc-2)))
+
+      (it "refuses to add the same accountability twice")
+
+      (should-not-update-missing-or-empty-roles g/add-accountability
+        "adding accountability" sample-acc-1)
+
+      (it "can remove an accountability")
+      (it "refuses to remove an accountability that doesn't exist")
+      (it "should not remove an accountability from a missing or empty role"))))
 
 ;; Section 2.2
 (describe "Lead Link Role"

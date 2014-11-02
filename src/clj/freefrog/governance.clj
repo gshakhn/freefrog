@@ -121,3 +121,15 @@
   (let [result (update-in circle [:roles role-name :domains] disj domain)]
     (if (empty? (get-domains result role-name))
       (update-in result [:roles role-name] dissoc :domains) result)))
+
+(defn add-accountability
+  "Add an accountability to a role in the given circle."
+  [circle role-name accountability]
+  (validate-role-updates circle role-name)
+  (let [accountabilities (get-in circle [:roles role-name :accountabilities])
+        circle (if accountabilities
+                 circle
+                 (update-in circle [:roles role-name] assoc
+                            :accountabilities []))]
+    (update-in circle [:roles role-name :accountabilities]
+               conj accountability)))
