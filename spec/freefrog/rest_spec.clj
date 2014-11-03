@@ -57,4 +57,14 @@
                                      :body (json/generate-string 
                                              {:name "Test Circle!"})}))
     (it "should return a bad request"
-      (should= 400 (:status @response)))))
+      (should= 400 (:status @response))
+      (should-contain "IllegalArgumentException" (:body @response))))
+
+  (context "upon creating a circle with malformed json"
+    (with response (http-client/post "http://localhost:3000/circles" 
+                                    {:throw-exceptions false
+                                     :content-type :json
+                                     :body "{\"name\" :: \"Bill\"}"}))
+    (it "should return a bad request"
+      (should= 400 (:status @response))
+      (should-contain "IOException" (:body @response)))))
