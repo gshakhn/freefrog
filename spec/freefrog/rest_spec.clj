@@ -23,7 +23,9 @@
                                     {:throw-exceptions false
                                      :content-type :json
                                      :body (json/generate-string 
-                                             {:name "Test Circle!"})}))
+                                             {:name "Test Circle!"
+                                              :lead-link-name "Bill"
+                                              :lead-link-email "bfinn@example.com"})}))
     (it "should redirect"
       (should= 303 (:status @response))
       (should-contain "application/json" (get-in @response [:headers "Content-Type"]))
@@ -35,11 +37,24 @@
                                      "http://localhost:3000/circles" 
                                      {:throw-exceptions false
                                       :content-type :json
-                                      :form-params {:name "Test Circle!"}})))
+                                      :form-params {:name "Test Circle!"
+                                                    :lead-link-name "Bill"
+                                                    :lead-link-email "bfinn@example.com"}})))
                             "location"))
       (with get-response (http-client/get (str "http://localhost:3000" 
                                                @location)
                                       {:throw-exceptions false}))
       (it "should return the content that was created" 
           (should= 200 (:status @get-response))
-          (should= {"name" "Test Circle!"} (json/parse-string (:body @get-response)))))))
+          (should= {"lead-link" {"email" "bfinn@example.com"
+                                 "name" "Bill" } "name" "Test Circle!"} 
+                   (json/parse-string (:body @get-response))))))
+
+  (context "upon creating a circle with missing parameters"
+    (with response (http-client/post "http://localhost:3000/circles" 
+                                    {:throw-exceptions false
+                                     :content-type :json
+                                     :body (json/generate-string 
+                                             {:name "Test Circle!"})}))
+    (it "should return a bad request"
+      (should= 400 (:status @response)))))

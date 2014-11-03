@@ -1,6 +1,7 @@
 (ns freefrog.rest
   (:require [liberator.core :refer [resource defresource]]
             [ring.middleware.params :refer [wrap-params]]
+            [freefrog.governance :as g]
             [clj-json.core :as json]
             [clojure.java.io :as io]
             [compojure.core :refer [defroutes ANY]])
@@ -19,17 +20,32 @@
       (slurp (io/reader body)))))
 
 ;; For PUT and POST parse the body as json and store in the context
-;; ;; under the given key.
-(defn parse-json [context key]
+;; under the given key.
+(defn malformed-json? [context]
   (when (#{:put :post} (get-in context [:request :request-method]))
     (try
       (if-let [body (body-as-string context)]
         (let [data (json/parse-string body)]
-          [false {key data}])
-        {:message "No body"})
+          [false data])
+        [true {:message "No body"}])
       (catch Exception e
         (.printStackTrace e)
-        {:message (format "IOException: %s" (.getMessage e))}))))
+        [true {:message (format "IOException: %s" (.getMessage e))}]))))
+
+(defn create-circle [context key]
+  (when (#{:post} (get-in context [:request :request-method]))
+    (let [[malformed? ret-data] (malformed-json? context)]
+      (if malformed?
+        ret-data
+        (let [{circle-name "name", lead-link-name "lead-link-name"
+               lead-link-email "lead-link-email"} ret-data]
+          (try
+            [false {key 
+                    (g/anchor-circle circle-name lead-link-name lead-link-email)}]
+            (catch IllegalArgumentException e
+              (.printStackTrace e)
+              [true {:message 
+                     (format "IllegalArgumentException: %s" (.getMessage e))}])))))))
 
 ;; For PUT and POST check if the content type is json.
 (defn check-content-type [ctx content-types]
@@ -59,7 +75,7 @@
   :available-media-types ["application/json"]
   :handle-ok ::circle
   :delete! (fn [_] (dosync (alter circles assoc id nil)))
-  :malformed? #(parse-json % ::data)
+  :malformed? #(malformed-json? %)
   :can-put-to-missing? false
   :put! #(dosync (alter circles assoc id (::data %)))
   :new? (fn [_] (nil? (get @circles id ::sentinel))))
@@ -67,7 +83,7 @@
 (defresource circles-resource
   :available-media-types ["application/json"]
   :allowed-methods [:get :post]
-  :malformed? #(parse-json % ::data)
+  :malformed? #(create-circle % ::data)
   :post! #(let [id (str (inc (rand-int 100000)))]
             (dosync (alter circles assoc id (::data %)))
                  {::id id})
