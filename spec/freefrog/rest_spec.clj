@@ -58,9 +58,10 @@
                                      "http://localhost:3000/circles" 
                                      {:throw-exceptions false
                                       :content-type :json
-                                      :form-params {:name "Test Circle!"
-                                                    :lead-link-name "Bill"
-                                                    :lead-link-email "bfinn@example.com"}})))
+                                      :body (json/generate-string 
+                                              {:name "Test Circle!"
+                                               :lead-link-name "Bill"
+                                               :lead-link-email "bfinn@example.com"})})))
                             "location"))
       (with get-response (http-client/get (str "http://localhost:3000" 
                                                @location)
@@ -95,13 +96,26 @@
         (should= 2 (count (json/parse-string (:body @get-response)))))))
 
   (context "roles"
+    (context "when requesting the list of roles for a non-existent circle"
+      (with roles-response (http-client/get (str "http://localhost:3000/circles/1234/roles")
+                                            {:throw-exceptions false}))
+        (it "should 404"
+          (should= 404 (:status @roles-response))))
     (context "with a new circle"
-      (before (http-client/post "http://localhost:3000/circles" 
-                                {:content-type :json
-                                 :body (json/generate-string 
-                                         {:name "Test Circle 2"
-                                          :lead-link-name "Bill"
-                                          :lead-link-email "bfinn@example.com"})}))
+      (with circle-location (get (json/parse-string 
+                            (:body (http-client/post 
+                                     "http://localhost:3000/circles" 
+                                     {:throw-exceptions false
+                                      :content-type :json
+                                      :body (json/generate-string 
+                                              {:name "Test Circle!"
+                                               :lead-link-name "Bill"
+                                               :lead-link-email "bfinn@example.com"})})))
+                            "location"))
 
         (context "when requesting the list of roles"
-           (it "should return an empty array")))))
+          (with roles-response (http-client/get (str "http://localhost:3000" @circle-location "/roles")
+                                                {:throw-exceptions false}))
+          (it "should return an empty array"
+              (should= 200 (:status @roles-response))
+              (should= "[]" (:body @roles-response)))))))

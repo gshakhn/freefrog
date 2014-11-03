@@ -92,9 +92,26 @@
                    (keys @circles))
   :location (fn [ctx] {:location (format "/circles/%s" (::id ctx))}))
 
+(defresource collective-roles-resource [circle-id]
+  :exists? (fn [_]
+             (let [e (get @circles circle-id)]
+                    (if-not (nil? e)
+                      {::circle e})))
+  :available-media-types ["application/json"]
+  :allowed-methods [:get :post]
+  :malformed? #(create-circle % ::data)
+  :post! #(let [id (str (inc (rand-int 100000)))]
+            (dosync (alter circles assoc id (::data %)))
+                 {::id id})
+  :post-redirect? true
+  :handle-ok #(map (fn [id] (str (build-entry-url (get % :request) id)))
+                   (keys (get-in % [::circle :roles])))
+  :location (fn [ctx] {:location (format "/circles/%s" (::id ctx))}))
+
 (defroutes app
+  (ANY "/circles" [] collective-circles-resource)
   (ANY "/circles/:id" [id] (circle-resource id))
-  (ANY "/circles" [] collective-circles-resource))
+  (ANY "/circles/:circle-id/roles" [circle-id] (collective-roles-resource circle-id)))
 
 (def handler 
   (-> app 
