@@ -4,6 +4,17 @@
             [clj-http.client :as http-client]
             [freefrog.rest :as r]))
 
+(defn should-return-400 [spec-context circle-content response-content]
+  (context spec-context
+    (with response (http-client/post "http://localhost:3000/circles" 
+                                    {:throw-exceptions false
+                                     :content-type :json
+                                     :body circle-content}))
+    (it "should return a bad request"
+      (should= 400 (:status @response))
+      (should-contain response-content(:body @response)))))
+
+
 (describe "governance rest api"
   (before-all (r/start-test-server))
   (after-all (r/stop-test-server))
@@ -50,21 +61,13 @@
                                  "name" "Bill" } "name" "Test Circle!"} 
                    (json/parse-string (:body @get-response))))))
 
-  (context "upon creating a circle with missing parameters"
-    (with response (http-client/post "http://localhost:3000/circles" 
-                                    {:throw-exceptions false
-                                     :content-type :json
-                                     :body (json/generate-string 
-                                             {:name "Test Circle!"})}))
-    (it "should return a bad request"
-      (should= 400 (:status @response))
-      (should-contain "IllegalArgumentException" (:body @response))))
-
-  (context "upon creating a circle with malformed json"
-    (with response (http-client/post "http://localhost:3000/circles" 
-                                    {:throw-exceptions false
-                                     :content-type :json
-                                     :body "{\"name\" :: \"Bill\"}"}))
-    (it "should return a bad request"
-      (should= 400 (:status @response))
-      (should-contain "IOException" (:body @response)))))
+  (context "upon creating a circle"
+    (should-return-400 "with invalid paramaters" 
+                       (json/generate-string {:foo "Test Circle!"})
+                       "IllegalArgumentException")
+    (should-return-400 "with missing paramaters" 
+                       (json/generate-string {:name "Test Circle!"})
+                       "IllegalArgumentException")
+    (should-return-400 "with malformed JSON" 
+                       "{\"name\" :: \"Bill\""
+                       "IOException")))
