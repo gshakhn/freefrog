@@ -33,6 +33,11 @@
         (.printStackTrace e)
         [true {:message (format "IOException: %s" (.getMessage e))}]))))
 
+(defn get-circle [circle-id]
+  (let [c (get @circles circle-id)]
+    (if-not (nil? c)
+      {::circle c})))
+
 (defn create-circle [context key]
   (when (#{:post} (get-in context [:request :request-method]))
     (let [[malformed? ret-data] (malformed-json? context)]
@@ -40,12 +45,29 @@
         ret-data
         (let [{:keys [name lead-link-name lead-link-email]} ret-data]
           (try
-            [false {key 
-                    (g/anchor-circle name lead-link-name lead-link-email)}]
+            [false {key (g/anchor-circle name lead-link-name lead-link-email)}]
             (catch IllegalArgumentException e
               (.printStackTrace e)
               [true {:message 
                      (format "IllegalArgumentException: %s" (.getMessage e))}])))))))
+
+(defn create-role [circle-id context key]
+  (when (#{:post} (get-in context [:request :request-method]))
+    (let [[malformed? ret-data] (malformed-json? context)]
+      (if malformed?
+        ret-data
+        (if-let [circle (::circle (get-circle circle-id))]
+          (let [{:keys [name purpose domains accountabilities]} ret-data]
+            (try
+              [false {key (g/add-role (get-circle circle-id) name purpose domains accountabilities)}]
+              (catch IllegalArgumentException e
+                (.printStackTrace e)
+                [true {:message 
+                       (format "IllegalArgumentException: %s" (.getMessage e))}])))
+          [true {:message (format "IllegalArgumentException: Circle %s does not exist."
+                                  circle-id)}])))))
+
+
 
 ;; For PUT and POST check if the content type is json.
 (defn check-content-type [ctx content-types]
@@ -93,20 +115,17 @@
   :location (fn [ctx] {:location (format "/circles/%s" (::id ctx))}))
 
 (defresource collective-roles-resource [circle-id]
-  :exists? (fn [_]
-             (let [e (get @circles circle-id)]
-                    (if-not (nil? e)
-                      {::circle e})))
+  :exists? (fn [_] (get-circle circle-id))
   :available-media-types ["application/json"]
   :allowed-methods [:get :post]
-  :malformed? #(create-circle % ::data)
+  :malformed? #(create-role circle-id % ::data)
   :post! #(let [id (str (inc (rand-int 100000)))]
             (dosync (alter circles assoc id (::data %)))
                  {::id id})
   :post-redirect? true
   :handle-ok #(map (fn [id] (str (build-entry-url (get % :request) id)))
                    (keys (get-in % [::circle :roles])))
-  :location (fn [ctx] {:location (format "/circles/%s" (::id ctx))}))
+  :location (fn [ctx] {:location (format "/circles/%s/roles/%s" circle-id (::id ctx))}))
 
 (defroutes app
   (ANY "/circles" [] collective-circles-resource)

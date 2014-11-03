@@ -37,7 +37,7 @@
                                                {:name "Test Circle!"
                                                 :lead-link-name "Bill"
                                                 :lead-link-email "bfinn@example.com"})}))
-      (it "should redirect"
+      (it "should redirect to the location of the newly created resource"
         (should= 303 (:status @response))
         (should-contain "application/json" (get-in @response [:headers "Content-Type"]))
         (should-contain #"^\/circles\/\d+" (get (json/parse-string (:body @response)) "location")))
@@ -101,6 +101,18 @@
                                             {:throw-exceptions false}))
         (it "should 404"
           (should= 404 (:status @roles-response))))
+
+    (context "when posting a new role to a non-existent circle"
+      (with roles-response (http-client/post 
+                             (str "http://localhost:3000/circles/1234/roles")
+                             {:throw-exceptions false
+                              :content-type :json
+                              :body (json/generate-string 
+                                      {:name "My Role!"})}))
+        (it "should 400 with a helpful error message"
+            (should= 400 (:status @roles-response))
+            (should-contain "Circle 1234 does not exist." (:body @roles-response))))
+
     (context "with a new circle"
       (with circle-location (get (json/parse-string 
                             (:body (http-client/post 
@@ -118,4 +130,19 @@
                                                 {:throw-exceptions false}))
           (it "should return an empty array"
               (should= 200 (:status @roles-response))
-              (should= "[]" (:body @roles-response)))))))
+              (should= "[]" (:body @roles-response))))
+
+        (context "creating a role"
+          (with roles-response (http-client/post 
+                                 (str "http://localhost:3000" @circle-location "/roles")
+                                 {:throw-exceptions false
+                                  :content-type :json
+                                  :body (json/generate-string 
+                                          {:name "My Role!"})}))
+          (it "should redirect to the location of the newly created resource"
+              (should= 303 (:status @roles-response))
+              (should-contain "application/json" 
+                              (get-in @roles-response [:headers "Content-Type"]))
+              (should-contain #"^\/circles\/\d+\/roles\/\d+" (get 
+                                                   (json/parse-string 
+                                                     (:body @roles-response)) "location")))))))
