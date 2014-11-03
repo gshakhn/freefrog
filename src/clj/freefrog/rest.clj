@@ -2,6 +2,7 @@
   (:require [liberator.core :refer [resource defresource]]
             [ring.middleware.params :refer [wrap-params]]
             [freefrog.governance :as g]
+            [clojure.walk :refer [keywordize-keys]]
             [clj-json.core :as json]
             [clojure.java.io :as io]
             [compojure.core :refer [defroutes ANY]])
@@ -25,7 +26,7 @@
   (when (#{:put :post} (get-in context [:request :request-method]))
     (try
       (if-let [body (body-as-string context)]
-        (let [data (json/parse-string body)]
+        (let [data (keywordize-keys (json/parse-string body))]
           [false data])
         [true {:message "No body"}])
       (catch Exception e
@@ -37,11 +38,10 @@
     (let [[malformed? ret-data] (malformed-json? context)]
       (if malformed?
         ret-data
-        (let [{circle-name "name", lead-link-name "lead-link-name"
-               lead-link-email "lead-link-email"} ret-data]
+        (let [{:keys [name lead-link-name lead-link-email]} ret-data]
           (try
             [false {key 
-                    (g/anchor-circle circle-name lead-link-name lead-link-email)}]
+                    (g/anchor-circle name lead-link-name lead-link-email)}]
             (catch IllegalArgumentException e
               (.printStackTrace e)
               [true {:message 
@@ -80,7 +80,7 @@
   :put! #(dosync (alter circles assoc id (::data %)))
   :new? (fn [_] (nil? (get @circles id ::sentinel))))
 
-(defresource circles-resource
+(defresource collective-circles-resource
   :available-media-types ["application/json"]
   :allowed-methods [:get :post]
   :malformed? #(create-circle % ::data)
@@ -94,7 +94,7 @@
 
 (defroutes app
   (ANY "/circles/:id" [id] (circle-resource id))
-  (ANY "/circles" [] circles-resource))
+  (ANY "/circles" [] collective-circles-resource))
 
 (def handler 
   (-> app 
