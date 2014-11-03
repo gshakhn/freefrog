@@ -69,12 +69,7 @@
   :allowed-methods [:get :post]
   :malformed? #(parse-json % ::data)
   :post! #(let [id (str (inc (rand-int 100000)))]
-            (println @circles)
-            (println %)
-            (println (:body (:request %)))
-            (println (::data %))
             (dosync (alter circles assoc id (::data %)))
-            (println @circles)
                  {::id id})
   :post-redirect? true
   :handle-ok #(map (fn [id] (str (build-entry-url (get % :request) id)))
