@@ -1,5 +1,6 @@
 (ns freefrog.rest-spec
   (:require [speclj.core :refer :all]
+            [clj-json.core :as json]
             [clj-http.client :as http-client]
             [freefrog.rest :as r]))
 
@@ -21,10 +22,24 @@
     (with response (http-client/post "http://localhost:3000/circles" 
                                     {:throw-exceptions false
                                      :content-type :json
-                                     :form-params {:name "Test Circle!"}}))
+                                     :body (json/generate-string 
+                                             {:name "Test Circle!"})}))
     (it "should redirect"
       (should= 303 (:status @response))
       (should-contain "application/json" (get-in @response [:headers "Content-Type"]))
-      (should-contain "location" (:body @response)))
+      (should-contain #"^\/circles\/\d+" (get (json/parse-string (:body @response)) "location")))
+
     (context "and getting the created circle"
-      (it "should return the content that was created" ))))
+      (with location (get (json/parse-string 
+                            (:body (http-client/post 
+                                     "http://localhost:3000/circles" 
+                                     {:throw-exceptions false
+                                      :content-type :json
+                                      :form-params {:name "Test Circle!"}})))
+                            "location"))
+      (with get-response (http-client/get (str "http://localhost:3000" 
+                                               @location)
+                                      {:throw-exceptions false}))
+      (it "should return the content that was created" 
+          (should= 200 (:status @get-response))
+          (should= {"name" "Test Circle!"} (json/parse-string (:body @get-response)))))))

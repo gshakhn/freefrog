@@ -15,6 +15,7 @@
                  [org.clojure/core.typed "0.2.72"]
                  [com.velisco/tagged "0.3.4"]
                  [clj-jgit "0.8.0"]
+                 [clj-json "0.5.3"]
                  [ring-server "0.3.1"]
                  [speclj "3.1.0"]]
 
