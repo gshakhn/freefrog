@@ -21,9 +21,9 @@
   ([uri options]
    (http-client/get (str "http://localhost:3000/" uri) (merge {:throw-exceptions false} options))))
 
-(defn should-return-400 [spec-context circle-content response-content]
+(defn should-return-400 [spec-context uri-fn request-content response-content]
   (context spec-context
-    (with response (http-post-request "circles" circle-content))
+    (with response (http-post-request (uri-fn) request-content))
     (it "should return a bad request"
       (should= 400 (:status @response))
       (should-contain response-content (:body @response)))))
@@ -44,23 +44,27 @@
           (should= "[]" (:body @response))))
   
     (context "when creating a circle"
-      (with response (http-post-request "circles" 
-                                        (json/generate-string 
-                                          {:name "Test Circle!"
-                                           :lead-link-name "Bill"
-                                           :lead-link-email "bfinn@example.com"})))
-      (it "should redirect to the location of the newly created resource"
-        (should= 303 (:status @response))
-        (should-contain "application/json" (get-in @response [:headers "Content-Type"]))
-        (should-contain #"^\/circles\/\d+" (get (json/parse-string (:body @response)) "location")))
+      (context "with valid parameters"
+        (with response (http-post-request "circles" 
+                                          (json/generate-string 
+                                            {:name "Test Circle!"
+                                             :lead-link-name "Bill"
+                                             :lead-link-email "bfinn@example.com"})))
+        (it "should redirect to the location of the newly created resource"
+          (should= 303 (:status @response))
+          (should-contain "application/json" (get-in @response [:headers "Content-Type"]))
+          (should-contain #"^\/circles\/\d+" (get (json/parse-string (:body @response)) "location"))))
   
       (should-return-400 "with invalid paramaters" 
+                         (fn [] "circles")
                          (json/generate-string {:foo "Test Circle!"})
                          "IllegalArgumentException")
       (should-return-400 "with missing paramaters" 
+                         (fn [] "circles")
                          (json/generate-string {:name "Test Circle!"})
                          "IllegalArgumentException")
       (should-return-400 "with malformed JSON" 
+                         (fn [] "circles")
                          "{\"name\" :: \"Bill\""
                          "IOException"))
   
@@ -129,19 +133,34 @@
 
         (context "when requesting the list of roles"
           (with roles-response (http-get-request (str @circle-location "/roles")))
+
           (it "should return an empty array"
               (should= 200 (:status @roles-response))
               (should= "[]" (:body @roles-response))))
 
-        (context "creating a role"
-          (with roles-response (http-post-request
-                                 (str @circle-location "/roles")
-                                 (json/generate-string 
-                                          {:name "My Role!"})))
-          (it "should redirect to the location of the newly created resource"
-              (should= 303 (:status @roles-response))
-              (should-contain "application/json" 
-                              (get-in @roles-response [:headers "Content-Type"]))
-              (should-contain #"^\/circles\/\d+\/roles\/\d+" (get 
-                                                   (json/parse-string 
-                                                     (:body @roles-response)) "location")))))))
+        (context "when creating a role"
+          (context "with valid parameters"
+            (with roles-response (http-post-request
+                                   (str @circle-location "/roles")
+                                   (json/generate-string 
+                                            {:name "My Role!"})))
+
+            (it "should redirect to the location of the newly created resource"
+                (should= 303 (:status @roles-response))
+                (should-contain "application/json" 
+                                (get-in @roles-response [:headers "Content-Type"]))
+                (should-contain #"^\/circles\/\d+\/roles\/\d+" (get 
+                                                     (json/parse-string 
+                                                       (:body @roles-response)) "location"))))
+          (should-return-400 "with invalid paramaters" 
+                             #(str @circle-location "/roles")
+                             (json/generate-string {:foo "Test Role"})
+                             "IllegalArgumentException")
+          (should-return-400 "with missing paramaters" 
+                             #(str @circle-location "/roles")
+                             (json/generate-string {})
+                             "IllegalArgumentException")
+          (should-return-400 "with malformed JSON" 
+                             #(str @circle-location "/roles")
+                             "{\"name\" :: \"Bill\""
+                             "IOException")))))
