@@ -42,6 +42,42 @@
       (should-throw IllegalArgumentException "Name may not be empty"
         (fn sample-anchor-with-role "" val)))))
 
+(defn should-handle-collection-properly [add-fn remove-fn type type-str coll1
+                                         coll2 val1 val2]
+  (describe type-str
+    (it (str "can add a " type-str " to a role with no " type-str "s")
+      (should= (update-in sample-anchor-with-role [:roles role-name]
+                          assoc type #{val1})
+        (add-fn sample-anchor-with-role role-name val1)))
+
+    (it (str "can add a " type-str " to a role with existing " type-str "s")
+      (let [expected
+            (update-in coll1 [:roles role-name type] conj val2)]
+        (should= expected
+          (add-fn coll1 role-name val2))))
+
+    (should-not-update-missing-or-empty-roles add-fn
+      (str "adding a " type-str) val1)
+
+    (it (str "refuses to add the same " type-str " twice")
+      (should-throw IllegalArgumentException
+        (format "%s '%s' already exists on role '%s'" type-str val1 role-name)
+        (add-fn coll1 role-name val1)))
+
+    (it (str "can remove a " type-str " from a role")
+      (should= coll1 (remove-fn coll2 role-name val2)))
+
+    (it (str "removes the " type-str "s array when there are none left")
+      (should= sample-anchor-with-role (remove-fn coll1 role-name val1)))
+
+    (it (str "refuses to remove a " type-str " that doesn't exist")
+      (should-throw IllegalArgumentException
+        (format "%s '%s' doesn't exist on role '%s'" type-str val2 role-name)
+        (remove-fn coll1 role-name val2)))
+
+    (should-not-update-missing-or-empty-roles remove-fn
+      (str "removing a " type-str) val1)))
+
 ;; Section 3.1.a
 (describe "Role Manipulation"
   (describe "adding"
@@ -141,88 +177,20 @@
         "Stuff"))
 
     ;; Section 1.1.b
-    (describe "domains"
-      (it "can add a domain to a role with no domains"
-        (should= (update-in sample-anchor-with-role [:roles role-name]
-                            assoc :domains #{sample-domain-1})
-          (g/add-domain sample-anchor-with-role role-name sample-domain-1)))
-
-      (it "can add a domain to a role with existing domains"
-        (let [expected
-              (update-in sample-anchor-with-domain [:roles role-name :domains]
-                         conj sample-domain-2)]
-          (should= expected
-            (g/add-domain sample-anchor-with-domain role-name sample-domain-2))))
-
-      (should-not-update-missing-or-empty-roles g/add-domain "adding a domain"
-        sample-domain-1)
-
-      (it "refuses to add the same domain twice"
-        (should-throw IllegalArgumentException
-          (format "Domain '%s' already exists on role '%s'" sample-domain-1
-                  role-name)
-          (g/add-domain sample-anchor-with-domain role-name sample-domain-1)))
-
-      (it "can remove a domain from a role"
-        (should= sample-anchor-with-domain
-          (g/remove-domain sample-anchor-with-domains role-name
-                           sample-domain-2)))
-
-      (it "removes the domains array when there are no domains"
-        (should= sample-anchor-with-role
-          (g/remove-domain sample-anchor-with-domain role-name
-                           sample-domain-1)))
-
-      (it "refuses to remove a domain that doesn't exist"
-        (should-throw IllegalArgumentException
-          (format "Domain '%s' doesn't exist on role '%s'" sample-domain-2
-                  role-name)
-          (g/remove-domain sample-anchor-with-domain role-name
-                           sample-domain-2)))
-
-      (should-not-update-missing-or-empty-roles g/remove-domain
-        "removing domain" sample-domain-1))
+    (should-handle-collection-properly g/add-domain g/remove-domain
+                                       :domains "Domain"
+                                       sample-anchor-with-domain
+                                       sample-anchor-with-domains
+                                       sample-domain-1
+                                       sample-domain-2)
 
     ;; Section 1.1.c
-    (describe "accountabilities"
-      (it "adds an accountability to a role that has no accountabilities"
-        (should= (update-in sample-anchor-with-role [:roles role-name]
-                            assoc :accountabilities #{sample-acc-1})
-          (g/add-accountability sample-anchor-with-role role-name
-                                sample-acc-1)))
-
-      (it "adds an accountability to a role that already has one"
-        (should= (update-in sample-anchor-with-acc [:roles role-name
-                                                    :accountabilities]
-                            conj sample-acc-2)
-          (g/add-accountability sample-anchor-with-acc role-name
-                                sample-acc-2)))
-
-      (it "refuses to add the same accountability twice"
-        (should-throw IllegalArgumentException
-          (format "Accountability '%s' already exists on role '%s'" sample-acc-1
-                  role-name)
-          (g/add-accountability sample-anchor-with-acc role-name sample-acc-1)))
-
-      (should-not-update-missing-or-empty-roles g/add-accountability
-        "adding accountability" sample-acc-1)
-
-      (it "can remove an accountability"
-        (should= sample-anchor-with-acc
-          (g/remove-accountability sample-anchor-with-accs role-name sample-acc-2))
-        (should= sample-anchor-with-role
-          (g/remove-accountability sample-anchor-with-acc role-name sample-acc-1)))
-
-      (it "refuses to remove an accountability that doesn't exist"
-        (should-throw IllegalArgumentException
-          (format "Accountability '%s' doesn't exist on role '%s'"
-                  sample-acc-2 role-name)
-          (g/remove-accountability sample-anchor-with-acc role-name
-                                   sample-acc-2)))
-
-      (it "should not remove an accountability from a missing or empty role"
-        (should-not-update-missing-or-empty-roles g/remove-accountability
-          "removing accountability" sample-acc-1)))))
+    (should-handle-collection-properly g/add-accountability g/remove-accountability
+                                       :accountabilities "Accountability"
+                                       sample-anchor-with-acc
+                                       sample-anchor-with-accs
+                                       sample-acc-1
+                                       sample-acc-2)))
 
 ;; Section 2.2
 (describe "Lead Link Role"
