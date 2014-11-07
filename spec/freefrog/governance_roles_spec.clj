@@ -25,6 +25,9 @@
 (def sample-accountabilities [sample-acc-1 sample-acc-2])
 (def sample-anchor-with-acc
   (g/add-accountability sample-anchor-with-role role-name sample-acc-1))
+(def sample-anchor-with-accs
+  (-> sample-anchor-with-role (g/add-accountability role-name sample-acc-1)
+      (g/add-accountability role-name sample-acc-2)))
 
 (defn should-not-update-missing-or-empty-roles [fn type-str val]
   (describe (format "%s problems" type-str)
@@ -184,7 +187,7 @@
     (describe "accountabilities"
       (it "adds an accountability to a role that has no accountabilities"
         (should= (update-in sample-anchor-with-role [:roles role-name]
-                            assoc :accountabilities [sample-acc-1])
+                            assoc :accountabilities #{sample-acc-1})
           (g/add-accountability sample-anchor-with-role role-name
                                 sample-acc-1)))
 
@@ -195,14 +198,31 @@
           (g/add-accountability sample-anchor-with-acc role-name
                                 sample-acc-2)))
 
-      (it "refuses to add the same accountability twice")
+      (it "refuses to add the same accountability twice"
+        (should-throw IllegalArgumentException
+          (format "Accountability '%s' already exists on role '%s'" sample-acc-1
+                  role-name)
+          (g/add-accountability sample-anchor-with-acc role-name sample-acc-1)))
 
       (should-not-update-missing-or-empty-roles g/add-accountability
         "adding accountability" sample-acc-1)
 
-      (it "can remove an accountability")
-      (it "refuses to remove an accountability that doesn't exist")
-      (it "should not remove an accountability from a missing or empty role"))))
+      (it "can remove an accountability"
+        (should= sample-anchor-with-acc
+          (g/remove-accountability sample-anchor-with-accs role-name sample-acc-2))
+        (should= sample-anchor-with-role
+          (g/remove-accountability sample-anchor-with-acc role-name sample-acc-1)))
+
+      (it "refuses to remove an accountability that doesn't exist"
+        (should-throw IllegalArgumentException
+          (format "Accountability '%s' doesn't exist on role '%s'"
+                  sample-acc-2 role-name)
+          (g/remove-accountability sample-anchor-with-acc role-name
+                                   sample-acc-2)))
+
+      (it "should not remove an accountability from a missing or empty role"
+        (should-not-update-missing-or-empty-roles g/remove-accountability
+          "removing accountability" sample-acc-1)))))
 
 ;; Section 2.2
 (describe "Lead Link Role"

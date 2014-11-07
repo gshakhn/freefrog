@@ -122,14 +122,34 @@
     (if (empty? (get-domains result role-name))
       (update-in result [:roles role-name] dissoc :domains) result)))
 
+(defn- get-accountabilities [circle role-name]
+  (get-in circle [:roles role-name :accountabilities]))
+
 (defn add-accountability
   "Add an accountability to a role in the given circle."
   [circle role-name accountability]
   (validate-role-updates circle role-name)
-  (let [accountabilities (get-in circle [:roles role-name :accountabilities])
+  (validate-not (contains? (get-accountabilities circle role-name)
+                           accountability)
+                (format "Accountability '%s' already exists on role '%s'"
+                        accountability role-name))
+  (let [accountabilities (get-accountabilities circle role-name)
         circle (if accountabilities
                  circle
                  (update-in circle [:roles role-name] assoc
-                            :accountabilities []))]
+                            :accountabilities #{}))]
     (update-in circle [:roles role-name :accountabilities]
                conj accountability)))
+
+(defn remove-accountability
+  "Remove an accountability from a role in the given circle."
+  [circle role-name accountability]
+  (validate-role-updates circle role-name)
+  (validate-not ((comp not contains?) (get-accountabilities circle role-name)
+                           accountability)
+                (format "Accountability '%s' doesn't exist on role '%s'"
+                        accountability role-name))
+  (let [result (update-in circle [:roles role-name :accountabilities]
+                          disj accountability)]
+    (if (empty? (get-accountabilities result role-name))
+      (update-in result [:roles role-name] dissoc :accountabilities) result)))
