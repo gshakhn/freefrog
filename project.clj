@@ -9,7 +9,6 @@
   :source-paths ["src/clj"]
 
   :dependencies [[org.clojure/clojure "1.6.0"]
-                 [org.clojure/core.typed "0.2.72"]
                  [com.velisco/tagged "0.3.4"]
                  [clj-jgit "0.8.0"]
                  [speclj "3.1.0"]]
