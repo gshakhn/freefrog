@@ -1,7 +1,17 @@
 ;;; # Governance Encoding #
-;;; This namespace defines how governance can be manipulated, and is intended
+;;; Defines how governance can be manipulated, and is intended
 ;;; to comply to the
 ;;; [Holacracy Constitution v4.0](http://holacracy.org/sites/default/files/resources/holacracy_constitution_v4.0.pdf)
+;;;
+;;; Designed to provide all manipulation functions for Holacracy governance
+;;; structures. It is not recommended that the structures
+;;; generated/manipulated by this namespace be manually edited outside of
+;;; this namespace for any purpose.
+;;;
+;;; This would cause difficulties tracking down the source of a structure
+;;; should one need to do so. It also adds the benefit of having all logic in
+;;; one place so one can more easily reason about it.
+
 (ns freefrog.governance
   (:require [clojure.set :as s]))
 
@@ -130,6 +140,12 @@
     (if (empty? (get-things result role-name type))
       (update-in result [:roles role-name] dissoc type) result)))
 
+;; These functions are critical to maintaining namespace encapsulation. Simply
+;; allowing an external actor to call directly into the "add-to" and
+;; "remove-from" functions artificially constrains this namespace from
+;; easily being able to cause these functions to differentiate themselves from
+;; one another should they need to, adding a heavier burden on future
+;; maintainers.
 (defn add-domain
   "Add a domain to a role in the given circle."
   [circle role-name domain]
