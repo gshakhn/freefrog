@@ -99,13 +99,11 @@
 
     (it "can add a role to a circle with name, purpose, and domains"
       (should= (assoc sample-anchor :roles {role-name {:domains sample-domains}})
-        (g/add-role sample-anchor role-name
-                    nil sample-domains nil)))
+        (g/add-role sample-anchor role-name nil sample-domains nil)))
 
     (it "can add a role to a circle with name, purpose, and accountabilities"
       (should= (assoc sample-anchor :roles {role-name {:domains sample-domains}})
-        (g/add-role sample-anchor role-name
-                    nil sample-domains nil)))
+        (g/add-role sample-anchor role-name nil sample-domains nil)))
 
     (it "can add a role to a circle with everything"
       (should= (assoc sample-anchor :roles
@@ -173,11 +171,11 @@
           (g/update-role-purpose sample-anchor-with-role role-name "")))
 
       (should-not-update-missing-or-empty-roles g/update-role-purpose
-        "updating purpose"
-        "Stuff"))
+        "updating purpose" "Stuff"))
 
     ;; Section 1.1.b
-    (should-handle-collection-properly g/add-domain g/remove-domain
+    (should-handle-collection-properly g/add-domain
+                                       g/remove-domain
                                        :domains "Domain"
                                        sample-anchor-with-domain
                                        sample-anchor-with-domains
@@ -185,7 +183,8 @@
                                        sample-domain-2)
 
     ;; Section 1.1.c
-    (should-handle-collection-properly g/add-accountability g/remove-accountability
+    (should-handle-collection-properly g/add-accountability
+                                       g/remove-accountability
                                        :accountabilities "Accountability"
                                        sample-anchor-with-acc
                                        sample-anchor-with-accs
