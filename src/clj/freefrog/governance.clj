@@ -173,8 +173,9 @@
   (validate-things circle role-name type thing contains?
                    "%s '%s' already exists on role '%s'")
   (let [things (get-things circle role-name type)
-        circle (if things circle
-                          (update-in circle [:roles role-name] assoc type #{}))]
+        circle (if things
+                 circle
+                 (update-in circle [:roles role-name] assoc type #{}))]
     (update-in circle [:roles role-name type] conj thing)))
 
 (defn- remove-from
