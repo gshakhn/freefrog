@@ -1,7 +1,36 @@
+;
+; Copyright © 2014 Courage Labs
+;
+; This file is part of Freefrog.
+;
+; Freefrog is free software: you can redistribute it and/or modify
+; it under the terms of the GNU Affero General Public License as published by
+; the Free Software Foundation, either version 3 of the License, or
+; (at your option) any later version.
+;
+; Freefrog is distributed in the hope that it will be useful,
+; but WITHOUT ANY WARRANTY; without even the implied warranty of
+; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+; GNU Affero General Public License for more details.
+;
+; You should have received a copy of the GNU Affero General Public License
+; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+;
+
 ;;; # Governance Encoding #
-;;; This namespace defines how governance can be manipulated, and is intended
+;;; Defines how governance can be manipulated, and is intended
 ;;; to comply to the
 ;;; [Holacracy Constitution v4.0](http://holacracy.org/sites/default/files/resources/holacracy_constitution_v4.0.pdf)
+;;;
+;;; Designed to provide all manipulation functions for Holacracy governance
+;;; structures. It is not recommended that the structures
+;;; generated/manipulated by this namespace be manually edited outside of
+;;; this namespace for any purpose.
+;;;
+;;; This would cause difficulties tracking down the source of a structure
+;;; should one need to do so. It also adds the benefit of having all logic in
+;;; one place so one can more easily reason about it.
+
 (ns freefrog.governance
   (:require [clojure.set :as s]))
 
@@ -82,54 +111,76 @@
   [circle role-name new-purpose]
   (validate-role-updates circle role-name)
   (if (empty? new-purpose)
-    (update-in circle [:roles role-name]
-               dissoc :purpose)
-    (update-in circle [:roles role-name]
-               assoc :purpose new-purpose)))
+    (update-in circle [:roles role-name] dissoc :purpose)
+    (update-in circle [:roles role-name] assoc :purpose new-purpose)))
 
-(defn- get-domains [circle role-name]
-  (get-in circle [:roles role-name :domains]))
+(defn- get-things [circle role-name type]
+  (get-in circle [:roles role-name type]))
 
-(defn- validate-domain [circle role-name domain check-fn err-msg-fmt]
-  "Validate everything about domain manipulation. Checks that the role name
-   is non-empty and present. Also calls the custom validation function.
+(def ^:private err-types {:domains "Domain"
+                          :accountabilities "Accountability"})
+
+(defn- validate-things
+  "Abstract function to validate collections of things in a circle. Checks that
+   the role name is non-empty and present. Also calls the custom validation
+   function.
 
    If the check-fn returns true, throws an error with the given
-   err-msg-fmt. err-msg-fmt be in the form of ^.*?%s.*?%s.*$ where the
-   first %s is to be replaced with the domain and the second with the
-   role-name."
-  (validate-role-updates circle role-name)
-  (validate-not (check-fn (get-domains circle role-name) domain)
-                 (format err-msg-fmt domain role-name)))
+   err-msg-fmt. err-msg-fmt be in the form of ^.*%s.*%s.*%s.*$ where the
+   first %s is to be replaced with a singular English representation of
+   the given type (see err-types), the second %s is to be replaced with the
+   thing itself and the third with the role-name.
 
+   For example: %s '%s' already exists on role '%s'"
+  [circle role-name type thing check-fn err-msg-fmt]
+  (validate-role-updates circle role-name)
+  (validate-not (check-fn (get-things circle role-name type) thing)
+                (format err-msg-fmt (err-types type) thing role-name)))
+
+(defn- add-to
+  "Abstract function that adds anything to a set of things in a role in a
+   circle. Performs all validation and so forth. Creates the set if it doesn't
+   exist."
+  [circle role-name type thing]
+  (validate-things circle role-name type thing contains?
+                   "%s '%s' already exists on role '%s'")
+  (let [things (get-things circle role-name type)
+        circle (if things circle
+                 (update-in circle [:roles role-name] assoc type #{}))]
+    (update-in circle [:roles role-name type] conj thing)))
+
+(defn- remove-from
+  "Abstract function that removes a thing from a set of things in a role in a
+   circle. Performs all validation and so forth. Removes the set if it's empty."
+  [circle role-name type thing]
+  (validate-things circle role-name type thing (comp not contains?)
+                   "%s '%s' doesn't exist on role '%s'")
+  (let [result (update-in circle [:roles role-name type] disj thing)]
+    (if (empty? (get-things result role-name type))
+      (update-in result [:roles role-name] dissoc type) result)))
+
+;; These functions are critical to maintaining namespace encapsulation. Simply
+;; allowing an external actor to call directly into the "add-to" and
+;; "remove-from" functions artificially constrains this namespace from
+;; easily being able to cause these functions to differentiate themselves from
+;; one another should they need to, adding a heavier burden on future
+;; maintainers.
 (defn add-domain
   "Add a domain to a role in the given circle."
   [circle role-name domain]
-  (validate-domain circle role-name domain contains?
-                   "Domain '%s' already exists on role '%s'")
-  (let [domains (get-domains circle role-name)
-        circle (if domains
-                 circle
-                 (update-in circle [:roles role-name] assoc :domains #{}))]
-    (update-in circle [:roles role-name :domains] conj domain)))
+  (add-to circle role-name :domains domain))
 
 (defn remove-domain
   "Remove a domain from a role in the given circle."
   [circle role-name domain]
-  (validate-domain circle role-name domain (comp not contains?)
-                   "Domain '%s' doesn't exist on role '%s'")
-  (let [result (update-in circle [:roles role-name :domains] disj domain)]
-    (if (empty? (get-domains result role-name))
-      (update-in result [:roles role-name] dissoc :domains) result)))
+  (remove-from circle role-name :domains domain))
 
 (defn add-accountability
   "Add an accountability to a role in the given circle."
   [circle role-name accountability]
-  (validate-role-updates circle role-name)
-  (let [accountabilities (get-in circle [:roles role-name :accountabilities])
-        circle (if accountabilities
-                 circle
-                 (update-in circle [:roles role-name] assoc
-                            :accountabilities []))]
-    (update-in circle [:roles role-name :accountabilities]
-               conj accountability)))
+  (add-to circle role-name :accountabilities accountability))
+
+(defn remove-accountability
+  "Remove an accountability from a role in the given circle."
+  [circle role-name accountability]
+  (remove-from circle role-name :accountabilities accountability))

@@ -1,3 +1,22 @@
+;
+; Copyright © 2014 Courage Labs
+;
+; This file is part of Freefrog.
+;
+; Freefrog is free software: you can redistribute it and/or modify
+; it under the terms of the GNU Affero General Public License as published by
+; the Free Software Foundation, either version 3 of the License, or
+; (at your option) any later version.
+;
+; Freefrog is distributed in the hope that it will be useful,
+; but WITHOUT ANY WARRANTY; without even the implied warranty of
+; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+; GNU Affero General Public License for more details.
+;
+; You should have received a copy of the GNU Affero General Public License
+; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+;
+
 ;;; # Role Manipulation Spec #
 ;;; Defines how all roles can be manipulated, both through governance
 ;;; (maintenance and elections) and through the normal business of
@@ -25,6 +44,9 @@
 (def sample-accountabilities [sample-acc-1 sample-acc-2])
 (def sample-anchor-with-acc
   (g/add-accountability sample-anchor-with-role role-name sample-acc-1))
+(def sample-anchor-with-accs
+  (-> sample-anchor-with-role (g/add-accountability role-name sample-acc-1)
+      (g/add-accountability role-name sample-acc-2)))
 
 (defn should-not-update-missing-or-empty-roles [fn type-str val]
   (describe (format "%s problems" type-str)
@@ -38,6 +60,42 @@
         (fn sample-anchor-with-role nil val))
       (should-throw IllegalArgumentException "Name may not be empty"
         (fn sample-anchor-with-role "" val)))))
+
+(defn should-handle-collection-properly [add-fn remove-fn type type-str coll1
+                                         coll2 val1 val2]
+  (describe type-str
+    (it (str "can add a " type-str " to a role with no " type-str "s")
+      (should= (update-in sample-anchor-with-role [:roles role-name]
+                          assoc type #{val1})
+        (add-fn sample-anchor-with-role role-name val1)))
+
+    (it (str "can add a " type-str " to a role with existing " type-str "s")
+      (let [expected
+            (update-in coll1 [:roles role-name type] conj val2)]
+        (should= expected
+          (add-fn coll1 role-name val2))))
+
+    (should-not-update-missing-or-empty-roles add-fn
+      (str "adding a " type-str) val1)
+
+    (it (str "refuses to add the same " type-str " twice")
+      (should-throw IllegalArgumentException
+        (format "%s '%s' already exists on role '%s'" type-str val1 role-name)
+        (add-fn coll1 role-name val1)))
+
+    (it (str "can remove a " type-str " from a role")
+      (should= coll1 (remove-fn coll2 role-name val2)))
+
+    (it (str "removes the " type-str "s array when there are none left")
+      (should= sample-anchor-with-role (remove-fn coll1 role-name val1)))
+
+    (it (str "refuses to remove a " type-str " that doesn't exist")
+      (should-throw IllegalArgumentException
+        (format "%s '%s' doesn't exist on role '%s'" type-str val2 role-name)
+        (remove-fn coll1 role-name val2)))
+
+    (should-not-update-missing-or-empty-roles remove-fn
+      (str "removing a " type-str) val1)))
 
 ;; Section 3.1.a
 (describe "Role Manipulation"
@@ -60,13 +118,11 @@
 
     (it "can add a role to a circle with name, purpose, and domains"
       (should= (assoc sample-anchor :roles {role-name {:domains sample-domains}})
-        (g/add-role sample-anchor role-name
-                    nil sample-domains nil)))
+        (g/add-role sample-anchor role-name nil sample-domains nil)))
 
     (it "can add a role to a circle with name, purpose, and accountabilities"
       (should= (assoc sample-anchor :roles {role-name {:domains sample-domains}})
-        (g/add-role sample-anchor role-name
-                    nil sample-domains nil)))
+        (g/add-role sample-anchor role-name nil sample-domains nil)))
 
     (it "can add a role to a circle with everything"
       (should= (assoc sample-anchor :roles
@@ -134,75 +190,25 @@
           (g/update-role-purpose sample-anchor-with-role role-name "")))
 
       (should-not-update-missing-or-empty-roles g/update-role-purpose
-        "updating purpose"
-        "Stuff"))
+        "updating purpose" "Stuff"))
 
     ;; Section 1.1.b
-    (describe "domains"
-      (it "can add a domain to a role with no domains"
-        (should= (update-in sample-anchor-with-role [:roles role-name]
-                            assoc :domains #{sample-domain-1})
-          (g/add-domain sample-anchor-with-role role-name sample-domain-1)))
-
-      (it "can add a domain to a role with existing domains"
-        (let [expected
-              (update-in sample-anchor-with-domain [:roles role-name :domains]
-                         conj sample-domain-2)]
-          (should= expected
-            (g/add-domain sample-anchor-with-domain role-name sample-domain-2))))
-
-      (should-not-update-missing-or-empty-roles g/add-domain "adding a domain"
-        sample-domain-1)
-
-      (it "refuses to add the same domain twice"
-        (should-throw IllegalArgumentException
-          (format "Domain '%s' already exists on role '%s'" sample-domain-1
-                  role-name)
-          (g/add-domain sample-anchor-with-domain role-name sample-domain-1)))
-
-      (it "can remove a domain from a role"
-        (should= sample-anchor-with-domain
-          (g/remove-domain sample-anchor-with-domains role-name
-                           sample-domain-2)))
-
-      (it "removes the domains array when there are no domains"
-        (should= sample-anchor-with-role
-          (g/remove-domain sample-anchor-with-domain role-name
-                           sample-domain-1)))
-
-      (it "refuses to remove a domain that doesn't exist"
-        (should-throw IllegalArgumentException
-          (format "Domain '%s' doesn't exist on role '%s'" sample-domain-2
-                  role-name)
-          (g/remove-domain sample-anchor-with-domain role-name
-                           sample-domain-2)))
-
-      (should-not-update-missing-or-empty-roles g/remove-domain
-        "removing domain" sample-domain-1))
+    (should-handle-collection-properly g/add-domain
+                                       g/remove-domain
+                                       :domains "Domain"
+                                       sample-anchor-with-domain
+                                       sample-anchor-with-domains
+                                       sample-domain-1
+                                       sample-domain-2)
 
     ;; Section 1.1.c
-    (describe "accountabilities"
-      (it "adds an accountability to a role that has no accountabilities"
-        (should= (update-in sample-anchor-with-role [:roles role-name]
-                            assoc :accountabilities [sample-acc-1])
-          (g/add-accountability sample-anchor-with-role role-name
-                                sample-acc-1)))
-
-      (it "adds an accountability to a role that already has one"
-        (should= (update-in sample-anchor-with-acc [:roles role-name
-                                                    :accountabilities]
-                            conj sample-acc-2)
-          (g/add-accountability sample-anchor-with-acc role-name
-                                sample-acc-2)))
-
-      (it "refuses to add the same accountability twice")
-
-      (should-not-update-missing-or-empty-roles g/add-accountability
-        "adding accountability" sample-acc-1)
-
-      (it "can remove an accountability")
-      (it "refuses to remove an accountability that doesn't exist")
-      (it "should not remove an accountability from a missing or empty role"))))
+    (should-handle-collection-properly g/add-accountability
+                                       g/remove-accountability
+                                       :accountabilities "Accountability"
+                                       sample-anchor-with-acc
+                                       sample-anchor-with-accs
+                                       sample-acc-1
+                                       sample-acc-2)))
 
 ;; Section 2.2
 (describe "Lead Link Role"
