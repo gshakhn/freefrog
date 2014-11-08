@@ -67,13 +67,13 @@
                                             "convert to role"))
 
 ;; Section 2.2
-#_(describe "Lead Link Role"
+(describe "Lead Link Role"
   (it "doesn't let you create the Lead Link role")
   (it "doesn't let you add domains to the Lead Link")
   (it "doesn't let you add accountabilities to the Lead Link"))
 
 ;; Section 2.4
-#_(describe "Role Assignment"
+(describe "Role Assignment"
   ;; Appendix A/Lead Link
   (it "can assign someone to a role")
 
@@ -85,7 +85,7 @@
   (it "can remove someone from a role"))
 
 ;; Section 2.5
-#_(describe "Elected Roles"
+(describe "Elected Roles"
   (it "doesn't let you create any of the elected roles")
 
   ;; Section 2.5.1
@@ -109,6 +109,10 @@
   (-> sample-anchor
       (g/add-role subcircle-name "Great software")
       (g/convert-to-circle subcircle-name)))
+(def circle-with-subrole
+  (g/update-subcircle circle-with-subcircle [subcircle-name]
+                      g/add-role role-name
+                      subcircle-role-purpose))
 
 (describe "Subcircle manipulation"
   (it "can add a role to a subcircle"
@@ -121,17 +125,29 @@
       (should= expected actual)))
 
   (it "can remove a role from a subcircle"
-    (let [circle-with-subrole
-          (g/update-subcircle circle-with-subcircle [subcircle-name]
-                              g/add-role role-name
-                              subcircle-role-purpose)]
-      (should= circle-with-subcircle (g/update-subcircle
-                                       circle-with-subrole
-                                       [subcircle-name] g/remove-role
-                                       subcircle-role-name))))
+    (should= circle-with-subcircle (g/update-subcircle
+                                     circle-with-subrole
+                                     [subcircle-name] g/remove-role
+                                     subcircle-role-name)))
 
-  (it "can manipulate a deeply-nested structure")
+  (it "can manipulate a deeply-nested structure"
+    (let [expected
+          (update-in circle-with-subrole [:roles subcircle-name :roles
+                                          subcircle-role-name]
+                     g/convert-to-circle)
 
-  (it "refuses to add a role to a role that isn't a circle"))
+          actual
+          (g/update-subcircle circle-with-subrole [subcircle-name
+                                                   subcircle-role-name]
+                              g/convert-to-circle)]
+      (should= expected actual)))
+
+  (it "refuses to add a role to a role that isn't a circle"
+    (should-throw IllegalArgumentException
+      (format "Role '%s' is not a circle." subcircle-role-name)
+      (pp/pprint (g/update-subcircle circle-with-subrole [subcircle-name
+                                                          subcircle-role-name]
+                                     g/add-role "Secretary"
+                                     "Whatever I want")))))
 
 (run-specs)

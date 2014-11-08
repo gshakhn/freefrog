@@ -95,7 +95,7 @@
 
   ([name lead-link-name lead-link-email]
    (validate-not (or (empty? name) (empty? lead-link-name)
-                      (empty? lead-link-email)) "No parameters may be empty")
+                     (empty? lead-link-email)) "No parameters may be empty")
    (let [anchor-circle (anchor-circle name)]
      (assoc anchor-circle :lead-link
             {:name lead-link-name :email lead-link-email}))))
@@ -108,8 +108,10 @@
 
   ([circle new-role-name purpose domains accountabilities]
    (validate-role-name new-role-name)
+   (validate (is-circle? circle)
+             (format "Role '%s' is not a circle." (:name circle)))
    (validate-not (get-in circle [:roles new-role-name])
-                  (str "Role already exists: " new-role-name))
+                 (str "Role already exists: " new-role-name))
    (let [circle (if (contains? circle :roles)
                   circle
                   (assoc circle :roles {}))]
@@ -143,7 +145,7 @@
 (defn- get-things [circle role-name type]
   (get-in circle [:roles role-name type]))
 
-(def ^:private err-types {:domains "Domain"
+(def ^:private err-types {:domains          "Domain"
                           :accountabilities "Accountability"})
 
 (defn- validate-things
@@ -172,7 +174,7 @@
                    "%s '%s' already exists on role '%s'")
   (let [things (get-things circle role-name type)
         circle (if things circle
-                 (update-in circle [:roles role-name] assoc type #{}))]
+                          (update-in circle [:roles role-name] assoc type #{}))]
     (update-in circle [:roles role-name type] conj thing)))
 
 (defn- remove-from
@@ -212,10 +214,11 @@
   (remove-from circle role-name :accountabilities accountability))
 
 (defn update-subcircle
-  "Generalizes any circle manipulation to subcircles. The path given is a
-   series of role names starting from (but not including) the anchor circle.
-   The function is what gets applied to the final subcircle, and the params
-   are the arguments passed to that function."
+  "Generalizes any circle manipulation to unlimited subcircles. The path given
+   is a series of role names starting from (but not including) the anchor
+   circle. The function is what gets applied to the final subcircle, and the
+   params are the arguments passed to that function."
   [circle path fn & params]
-  (let [update-args (concat [circle [:roles (first path)] fn] params)]
+  (let [update-args
+        (concat [circle (interleave (repeat :roles) path) fn] params)]
     (apply update-in update-args)))
