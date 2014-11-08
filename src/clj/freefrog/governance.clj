@@ -34,14 +34,10 @@
 (ns freefrog.governance
   (:require [clojure.set :as s]))
 
-(defn- validate
-  "Throws exception with given err-msg if valid? is not true."
-  [valid? err-msg]
+(defn- validate [valid? err-msg]
   (when-not valid? (throw (IllegalArgumentException. err-msg))))
 
-(defn- validate-not
-  "Throws exception with given err-msg if invalid? is true."
-  [invalid? err-msg]
+(defn- validate-not [invalid? err-msg]
   (validate (not invalid?) err-msg))
 
 (defn- validate-role-exists [circle role-name]
@@ -57,19 +53,26 @@
   (validate-role-exists circle role-name))
 
 (defn is-circle?
+  "Returns true if the given circle really is a circle. If you give it a
+  role, it will tell you if the given role inside the given circle is a circle."
   ([circle] (:is-circle? circle))
   ([circle role-name] (is-circle? (get-in circle [:roles role-name]))))
 
 (defn convert-to-circle
-  ([circle]
-   (validate-not (is-circle? circle)
-                 (format "Role %s is already a circle!" (:name circle)))
-   (assoc circle :is-circle? true))
+  "Convert the given role into a circle. Also supports converting a role
+   inside of a circle into a circle. If the role is already a circle, expect
+   an exception."
+  ([role]
+   (validate-not (is-circle? role)
+                 (format "Role %s is already a circle!" (:name role)))
+   (assoc role :is-circle? true))
   ([circle role-name]
    (validate-role-updates circle role-name)
    (update-in circle [:roles role-name] convert-to-circle)))
 
 (defn convert-to-role
+  "Convert the given circle into a role. If it's already not a circle, expect
+   an exception."
   [circle role-name]
   (validate-role-updates circle role-name)
   (validate (is-circle? circle role-name)
@@ -80,18 +83,25 @@
   "Associate a value with a key only if the value is non-nil."
   (if value (assoc map key value) map))
 
-(defn- make-role [role-name purpose domains accountabilities]
-  (-> {:name role-name}
-      (assoc-if :purpose purpose)
-      (assoc-if :domains domains)
-      (assoc-if :accountabilities accountabilities)))
+(defn- make-role
+  "Make a role with the given name, purpose, domains and accountabilities.
+   Any of these items can be nil or empty, and they won't be added to the role.
+   This particular function doesn't validate anything, so be careful to
+   validate before using it!"
+  ([role-name]
+   {:name role-name})
+  ([role-name purpose domains accountabilities]
+   (-> (make-role role-name)
+       (assoc-if :purpose purpose)
+       (assoc-if :domains domains)
+       (assoc-if :accountabilities accountabilities))))
 
 (defn anchor-circle
   "Create a new anchor circle.  If given lead-link-* parameters, will
    assign a lead link."
   ([name]
    (validate-not (empty? name) "Name may not be empty")
-   (convert-to-circle {:name name}))
+   (convert-to-circle (make-role name)))
 
   ([name lead-link-name lead-link-email]
    (validate-not (or (empty? name) (empty? lead-link-name)
@@ -188,12 +198,14 @@
     (if (empty? (get-things result role-name type))
       (update-in result [:roles role-name] dissoc type) result)))
 
+;; ## Role Collection Manipulation Functions ##
 ;; These functions are critical to maintaining namespace encapsulation. Simply
 ;; allowing an external actor to call directly into the "add-to" and
 ;; "remove-from" functions artificially constrains this namespace from
 ;; easily being able to cause these functions to differentiate themselves from
 ;; one another should they need to, adding a heavier burden on future
 ;; maintainers.
+
 (defn add-domain
   "Add a domain to a role in the given circle."
   [circle role-name domain]

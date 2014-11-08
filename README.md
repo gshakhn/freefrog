@@ -14,7 +14,7 @@ Or autotest (SLOW to start, then FAST to develop):
     
 To see what the documentation looks like:
     
-    lein marg
+    lein marg && open docs/uberdoc.html
     
 ## Information
     
