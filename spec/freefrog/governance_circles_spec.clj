@@ -20,7 +20,8 @@
 ;;; # Circle Manipulation Spec #
 ;;; Defines how circles may be updated.
 (ns freefrog.governance-circles-spec
-  (:require [freefrog.governance :as g]
+  (:require [clojure.pprint :as pp]
+            [freefrog.governance :as g]
             [freefrog.governance-spec-helpers :refer :all]
             [speclj.core :refer :all]))
 
@@ -66,13 +67,13 @@
                                             "convert to role"))
 
 ;; Section 2.2
-(describe "Lead Link Role"
+#_(describe "Lead Link Role"
   (it "doesn't let you create the Lead Link role")
   (it "doesn't let you add domains to the Lead Link")
   (it "doesn't let you add accountabilities to the Lead Link"))
 
 ;; Section 2.4
-(describe "Role Assignment"
+#_(describe "Role Assignment"
   ;; Appendix A/Lead Link
   (it "can assign someone to a role")
 
@@ -84,7 +85,7 @@
   (it "can remove someone from a role"))
 
 ;; Section 2.5
-(describe "Elected Roles"
+#_(describe "Elected Roles"
   (it "doesn't let you create any of the elected roles")
 
   ;; Section 2.5.1
@@ -100,5 +101,37 @@
         elected roles")
   (it "doesn't let you update/remove any of the constitutional
         accountabilities of the elected roles"))
+
+(def subcircle-name "Development")
+(def subcircle-role-name "Programmer")
+(def subcircle-role-purpose "Coding")
+(def circle-with-subcircle
+  (-> sample-anchor
+      (g/add-role subcircle-name "Great software")
+      (g/convert-to-circle subcircle-name)))
+
+(describe "Subcircle manipulation"
+  (it "can add a role to a subcircle"
+    (let [expected (update-in circle-with-subcircle [:roles subcircle-name]
+                              g/add-role subcircle-role-name
+                              subcircle-role-purpose)
+          actual (g/update-subcircle circle-with-subcircle [subcircle-name]
+                                     g/add-role subcircle-role-name
+                                     subcircle-role-purpose)]
+      (should= expected actual)))
+
+  (it "can remove a role from a subcircle"
+    (let [circle-with-subrole
+          (g/update-subcircle circle-with-subcircle [subcircle-name]
+                              g/add-role role-name
+                              subcircle-role-purpose)]
+      (should= circle-with-subcircle (g/update-subcircle
+                                       circle-with-subrole
+                                       [subcircle-name] g/remove-role
+                                       subcircle-role-name))))
+
+  (it "can manipulate a deeply-nested structure")
+
+  (it "refuses to add a role to a role"))
 
 (run-specs)

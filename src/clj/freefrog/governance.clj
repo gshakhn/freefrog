@@ -103,18 +103,18 @@
 (defn add-role
   "Adds a role to a circle.  The role may not conflict with an existing role.
    role-name may not be empty."
-  ([circle role-name purpose]
-   (add-role circle role-name purpose nil nil))
+  ([circle new-role-name purpose]
+   (add-role circle new-role-name purpose nil nil))
 
-  ([circle role-name purpose domains accountabilities]
-   (validate-role-name role-name)
-   (validate-not (get-in circle [:roles role-name])
-                  (str "Role already exists: " role-name))
+  ([circle new-role-name purpose domains accountabilities]
+   (validate-role-name new-role-name)
+   (validate-not (get-in circle [:roles new-role-name])
+                  (str "Role already exists: " new-role-name))
    (let [circle (if (contains? circle :roles)
                   circle
                   (assoc circle :roles {}))]
-     (update-in circle [:roles] assoc role-name
-                (make-role role-name purpose domains accountabilities)))))
+     (update-in circle [:roles] assoc new-role-name
+                (make-role new-role-name purpose domains accountabilities)))))
 
 (defn remove-role
   "Remove a role from a circle."
@@ -210,3 +210,12 @@
   "Remove an accountability from a role in the given circle."
   [circle role-name accountability]
   (remove-from circle role-name :accountabilities accountability))
+
+(defn update-subcircle
+  "Generalizes any circle manipulation to subcircles. The path given is a
+   series of role names starting from (but not including) the anchor circle.
+   The function is what gets applied to the final subcircle, and the params
+   are the arguments passed to that function."
+  [circle path fn & params]
+  (let [update-args (concat [circle [:roles (first path)] fn] params)]
+    (apply update-in update-args)))
