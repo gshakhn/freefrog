@@ -53,6 +53,8 @@
                                (g/convert-to-circle sample-role-name)
                                (g/convert-to-role sample-role-name))))
 
+  (it "refuses to convert a non-empty circle into a role")
+
   (it "refuses to convert a role that isn't a circle into a role"
     (should-throw IllegalArgumentException
       (format "Role %s is not a circle!" sample-role-name)
