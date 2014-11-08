@@ -34,17 +34,64 @@
 (ns freefrog.governance
   (:require [clojure.set :as s]))
 
+(defn- validate
+  "Throws exception with given err-msg if valid? is not true."
+  [valid? err-msg]
+  (when-not valid? (throw (IllegalArgumentException. err-msg))))
+
 (defn- validate-not
   "Throws exception with given err-msg if invalid? is true."
   [invalid? err-msg]
-  (when invalid? (throw (IllegalArgumentException. err-msg))))
+  (validate (not invalid?) err-msg))
+
+(defn- validate-role-exists [circle role-name]
+  (validate-not (empty? (get-in circle [:roles role-name]))
+                (str "Role not found: " role-name)))
+
+(defn- validate-role-name [role-name]
+  (validate-not (empty? role-name) "Name may not be empty"))
+
+(defn- validate-role-updates [circle role-name]
+  "Checks that the role name is not empty and that it exists in the circle."
+  (validate-role-name role-name)
+  (validate-role-exists circle role-name))
+
+(defn is-circle?
+  ([circle] (:is-circle? circle))
+  ([circle role-name] (is-circle? (get-in circle [:roles role-name]))))
+
+(defn convert-to-circle
+  ([circle]
+   (validate-not (is-circle? circle)
+                 (format "Role %s is already a circle!" (:name circle)))
+   (assoc circle :is-circle? true))
+  ([circle role-name]
+   (validate-role-updates circle role-name)
+   (update-in circle [:roles role-name] convert-to-circle)))
+
+(defn convert-to-role
+  [circle role-name]
+  (validate-role-updates circle role-name)
+  (validate (is-circle? circle role-name)
+            (format "Role %s is not a circle!" role-name))
+  (update-in circle [:roles role-name] dissoc :is-circle?))
+
+(defn- assoc-if [map key value]
+  "Associate a value with a key only if the value is non-nil."
+  (if value (assoc map key value) map))
+
+(defn- make-role [role-name purpose domains accountabilities]
+  (-> {:name role-name}
+      (assoc-if :purpose purpose)
+      (assoc-if :domains domains)
+      (assoc-if :accountabilities accountabilities)))
 
 (defn anchor-circle
   "Create a new anchor circle.  If given lead-link-* parameters, will
    assign a lead link."
   ([name]
    (validate-not (empty? name) "Name may not be empty")
-   {:name name})
+   (convert-to-circle {:name name}))
 
   ([name lead-link-name lead-link-email]
    (validate-not (or (empty? name) (empty? lead-link-name)
@@ -53,24 +100,12 @@
      (assoc anchor-circle :lead-link
             {:name lead-link-name :email lead-link-email}))))
 
-(defn- assoc-if [map key value]
-  "Associate a value with a key only if the value is non-nil."
-  (if value (assoc map key value) map))
-
-(defn- make-role [purpose domains accountabilities]
-  (-> {}
-      (assoc-if :purpose purpose)
-      (assoc-if :domains domains)
-      (assoc-if :accountabilities accountabilities)))
-
-(defn- validate-role-name [role-name]
-  (validate-not (empty? role-name) "Name may not be empty"))
-
 (defn add-role
   "Adds a role to a circle.  The role may not conflict with an existing role.
    role-name may not be empty."
   ([circle role-name purpose]
    (add-role circle role-name purpose nil nil))
+
   ([circle role-name purpose domains accountabilities]
    (validate-role-name role-name)
    (validate-not (get-in circle [:roles role-name])
@@ -79,16 +114,7 @@
                   circle
                   (assoc circle :roles {}))]
      (update-in circle [:roles] assoc role-name
-                (make-role purpose domains accountabilities)))))
-
-(defn- validate-role-exists [circle role-name]
-  (validate-not (empty? (get-in circle [:roles role-name]))
-                 (str "Role not found: " role-name)))
-
-(defn- validate-role-updates [circle role-name]
-  "Checks that the role name is not empty and that it exists in the circle."
-  (validate-role-name role-name)
-  (validate-role-exists circle role-name))
+                (make-role role-name purpose domains accountabilities)))))
 
 (defn remove-role
   "Remove a role from a circle."

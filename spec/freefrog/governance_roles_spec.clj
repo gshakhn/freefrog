@@ -24,13 +24,8 @@
 (ns freefrog.governance-roles-spec
   (:require [clojure.set :as s]
             [freefrog.governance :as g]
+            [freefrog.governance-spec-helpers :refer :all]
             [speclj.core :refer :all]))
-
-(def sample-anchor (g/anchor-circle "Sample"))
-(def role-name "Programmer")
-
-(def sample-purpose "Building awesome software")
-(def sample-anchor-with-role (g/add-role sample-anchor role-name sample-purpose))
 
 (def sample-domain-1 "Code")
 (def sample-domain-2 "Tests")
@@ -48,20 +43,7 @@
   (-> sample-anchor-with-role (g/add-accountability role-name sample-acc-1)
       (g/add-accountability role-name sample-acc-2)))
 
-(defn should-not-update-missing-or-empty-roles [fn type-str val]
-  (describe (format "%s problems" type-str)
-    (it "doesn't work with a role that doesn't exist"
-      (should-throw IllegalArgumentException (str "Role not found: "
-                                                  role-name)
-        (fn sample-anchor role-name val)))
-
-    (it "doesn't work with an empty role name"
-      (should-throw IllegalArgumentException "Name may not be empty"
-        (fn sample-anchor-with-role nil val))
-      (should-throw IllegalArgumentException "Name may not be empty"
-        (fn sample-anchor-with-role "" val)))))
-
-(defn should-handle-collection-properly [add-fn remove-fn type type-str coll1
+(defn- should-handle-collection-properly [add-fn remove-fn type type-str coll1
                                          coll2 val1 val2]
   (describe type-str
     (it (str "can add a " type-str " to a role with no " type-str "s")
@@ -101,32 +83,42 @@
 (describe "Role Manipulation"
   (describe "adding"
     (it "can add a role to a circle with name and purpose"
-      (should= (assoc sample-anchor :roles {role-name {:purpose sample-purpose}})
+      (should= (assoc sample-anchor :roles {role-name
+                                            {:name    role-name
+                                             :purpose sample-purpose}})
         sample-anchor-with-role))
 
     (it "can add a role to a circle that already has roles"
-      (should= (update-in sample-anchor-with-role [:roles] assoc "Tester"
-                          {:purpose "Making sure Programmers don't screw up"})
-        (g/add-role sample-anchor-with-role "Tester"
-                    "Making sure Programmers don't screw up")))
+      (let [second-role-name "Tester"
+            second-role-purpose "Making sure Programmers don't screw up"]
+        (should= (update-in sample-anchor-with-role [:roles] assoc
+                            second-role-name
+                            {:name    second-role-name
+                             :purpose second-role-purpose})
+          (g/add-role sample-anchor-with-role second-role-name
+                      second-role-purpose))))
 
     (it "can add a role to a circle with name and accountabilities"
       (should= (assoc sample-anchor :roles
-                      {role-name {:accountabilities sample-accountabilities}})
+                      {role-name {:name             role-name
+                                  :accountabilities sample-accountabilities}})
         (g/add-role sample-anchor role-name
                     nil nil sample-accountabilities)))
 
     (it "can add a role to a circle with name, purpose, and domains"
-      (should= (assoc sample-anchor :roles {role-name {:domains sample-domains}})
+      (should= (assoc sample-anchor :roles {role-name {:name    role-name
+                                                       :domains sample-domains}})
         (g/add-role sample-anchor role-name nil sample-domains nil)))
 
     (it "can add a role to a circle with name, purpose, and accountabilities"
-      (should= (assoc sample-anchor :roles {role-name {:domains sample-domains}})
+      (should= (assoc sample-anchor :roles {role-name {:name    role-name
+                                                       :domains sample-domains}})
         (g/add-role sample-anchor role-name nil sample-domains nil)))
 
     (it "can add a role to a circle with everything"
       (should= (assoc sample-anchor :roles
-                      {role-name {:purpose          sample-purpose
+                      {role-name {:name             role-name
+                                  :purpose          sample-purpose
                                   :domains          sample-domains
                                   :accountabilities sample-accountabilities}})
         (g/add-role sample-anchor role-name sample-purpose sample-domains
@@ -152,15 +144,7 @@
     (it "removes the roles array if deleting a role causes it to be empty"
       (should= sample-anchor (g/remove-role sample-anchor-with-role role-name)))
 
-    (it "doesn't let you remove a role that doesn't exist"
-      (should-throw IllegalArgumentException (str "Role not found: " role-name)
-        (g/remove-role sample-anchor role-name)))
-
-    (it "doesn't let you remove using an empty role name"
-      (should-throw IllegalArgumentException "Name may not be empty"
-        (g/remove-role sample-anchor-with-role nil))
-      (should-throw IllegalArgumentException "Name may not be empty"
-        (g/remove-role sample-anchor-with-role ""))))
+    (should-not-update-missing-or-empty-roles g/remove-role "role itself"))
 
   (describe "updating"
     (describe "name"
@@ -209,41 +193,4 @@
                                        sample-anchor-with-accs
                                        sample-acc-1
                                        sample-acc-2)))
-
-;; Section 2.2
-(describe "Lead Link Role"
-  (it "doesn't let you create the Lead Link role")
-  (it "doesn't let you add domains to the Lead Link")
-  (it "doesn't let you add accountabilities to the Lead Link"))
-
-;; Section 2.4
-(describe "Role Assignment"
-  ;; Appendix A/Lead Link
-  (it "can assign someone to a role")
-
-  ;; Section 2.4.2
-  (it "can assign multiple people to a role")
-  (it "can assign multiple people to a role with focuses")
-
-  ;; Section 2.4.3, Appendix A/Lead Link
-  (it "can remove someone from a role"))
-
-;; Section 2.5
-(describe "Elected Roles"
-  (it "doesn't let you create any of the elected roles")
-
-  ;; Section 2.5.1
-  (it "won't assign the person in the Lead Link role to the Facilitator
-    or Rep Link role")
-
-  ;; Section 2.5.3
-  (it "doesn't let you change the purpose of the special roles")
-  (it "allows you to add/remove domains to/from any of the elected roles")
-  (it "doesn't let you update/remove any of the constitutional domains of
-        the elected roles")
-  (it "allows you to add/remove accountabilities to/from any of the
-        elected roles")
-  (it "doesn't let you update/remove any of the constitutional
-        accountabilities of the elected roles"))
-
 (run-specs)
