@@ -21,7 +21,7 @@
   (:require [freefrog.governance :as g]
             [speclj.core :refer :all]))
 
-(def sample-anchor (g/anchor-circle "Sample"))
+(def sample-anchor (g/anchor-circle "Amazing Corp"))
 (def role-name "Programmer")
 
 (def sample-purpose "Building awesome software")
@@ -33,7 +33,6 @@
     fixed-params))
 
 (defn should-not-update-missing-or-empty-roles [fn type-str & params]
-  (println type-str params)
   (describe (format "%s problems" type-str)
     (it "doesn't work with a role that doesn't exist"
       (should-throw IllegalArgumentException (str "Role not found: "

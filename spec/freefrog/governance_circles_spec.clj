@@ -132,6 +132,6 @@
 
   (it "can manipulate a deeply-nested structure")
 
-  (it "refuses to add a role to a role"))
+  (it "refuses to add a role to a role that isn't a circle"))
 
 (run-specs)
