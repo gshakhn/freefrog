@@ -1,12 +1,16 @@
 (ns freefrog.rest
   (:require [liberator.core :refer [resource defresource]]
+            [liberator.dev]
             [ring.middleware.params :refer [wrap-params]]
             [freefrog.governance :as g]
             [clojure.walk :refer [keywordize-keys]]
+            [clojure.string :refer [split]]
             [clj-json.core :as json]
             [clojure.java.io :as io]
+            [compojure.route :as route]
             [compojure.core :refer [defroutes ANY]])
-  (:use ring.adapter.jetty)
+  (:use [ring.adapter.jetty]
+        [ring.util.codec :only [url-encode url-decode]])
   (:import java.net.URL))
 
 (defonce circles (ref {}))
@@ -27,45 +31,53 @@
     (try
       (if-let [body (body-as-string context)]
         (let [data (keywordize-keys (json/parse-string body))]
-          [false data])
+          [false {::json-data data}])
         [true {:message "No body"}])
       (catch Exception e
         (.printStackTrace e)
         [true {:message (format "IOException: %s" (.getMessage e))}]))))
 
-(defn get-circle [circle-id]
-  (let [c (get @circles circle-id)]
-    (if-not (nil? c)
-      {::circle c})))
+(defn circle-processable? [context]
+  (if (#{:post} (get-in context [:request :request-method]))
+    (let [{:keys [name lead-link-name lead-link-email]} (::json-data context)]
+      (try
+        [true {::circle-data (g/anchor-circle name lead-link-name lead-link-email)}]
+        (catch IllegalArgumentException e
+          (.printStackTrace e)
+          [false {:message 
+                 (format "IllegalArgumentException: %s" (.getMessage e))}])))
+    [true]))
 
-(defn create-circle [context key]
-  (when (#{:post} (get-in context [:request :request-method]))
-    (let [[malformed? ret-data] (malformed-json? context)]
-      (if malformed?
-        ret-data
-        (let [{:keys [name lead-link-name lead-link-email]} ret-data]
-          (try
-            [false {key (g/anchor-circle name lead-link-name lead-link-email)}]
-            (catch IllegalArgumentException e
-              (.printStackTrace e)
-              [true {:message 
-                     (format "IllegalArgumentException: %s" (.getMessage e))}])))))))
+(defn get-circle-name-from-uri [uri index]
+  (url-decode (first (take-last index (split uri #"/")))))
 
-(defn create-role [circle-id context key]
-  (when (#{:post} (get-in context [:request :request-method]))
-    (let [[malformed? ret-data] (malformed-json? context)]
-      (if malformed?
-        ret-data
-        (if-let [circle (::circle (get-circle circle-id))]
-          (let [{:keys [name purpose domains accountabilities]} ret-data]
+(defn role-processable? [context]
+  (if (#{:post :get} (get-in context [:request :request-method]))
+    (let [circle-name (get-circle-name-from-uri 
+                        (get-in context [:request :uri]) 2)]
+      (if-let [curr-circle (get @circles circle-name)]
+        (if (#{:post} (get-in context [:request :request-method]))
+          (let [{:keys [name purpose domains accountabilities]} (get context ::json-data)]
             (try
-              [false {key (g/add-role circle name purpose domains accountabilities)}]
-              (catch IllegalArgumentException e
-                (.printStackTrace e)
-                [true {:message 
-                       (format "IllegalArgumentException: %s" (.getMessage e))}])))
-          [true {:message (format "IllegalArgumentException: Circle %s does not exist."
-                                  circle-id)}])))))
+              [true {::circle-data (g/add-role curr-circle name purpose domains accountabilities)
+                     ::roles (:roles curr-circle) 
+                     ::role-id (url-encode name) 
+                     ::circle circle-name}]
+               (catch IllegalArgumentException e
+                 (.printStackTrace e)
+                 [false {:message 
+                         (format "IllegalArgumentException: %s" (.getMessage e))}])))
+          {::roles (:roles curr-circle) ::circle circle-name})
+        [false {:message (format "Circle '%s' does not exist." circle-name)}]))
+    [true]))
+
+(defn role-exists? [context role-id]
+  (let [circle-name (get-circle-name-from-uri 
+                      (get-in context [:request :uri]) 3)]
+    (if-let [curr-role 
+             (get-in @circles 
+                     [circle-name :roles (url-decode role-id)])]
+      [true {::role curr-role}])))
 
 ;; For PUT and POST check if the content type is json.
 (defn check-content-type [ctx content-types]
@@ -85,75 +97,62 @@
                 (str id))))
 
 (defresource circle-resource [id]
-  :allowed-methods [:get :put :delete]
+  :allowed-methods [:get]
   :known-content-type? #(check-content-type % ["application/json"])
   :exists? (fn [_]
-             (let [e (get @circles id)]
+             (let [e (get @circles (url-decode id))]
                (if-not (nil? e)
                  {::circle e})))
-  :existed? (fn [_] (nil? (get @circles id ::sentinel)))
   :available-media-types ["application/json"]
   :handle-ok ::circle
-  ;:delete! (fn [_] (dosync (alter circles assoc id nil)))
-  :malformed? #(malformed-json? %)
-  :can-put-to-missing? false
-  :put! #(dosync (alter circles assoc id (::data %)))
-  :new? (fn [_] (nil? (get @circles id ::sentinel))))
+  :malformed? (fn [ctx] (malformed-json? ctx))
+  :can-put-to-missing? false)
 
 (defresource collective-circles-resource
   :available-media-types ["application/json"]
   :allowed-methods [:get :post]
-  :malformed? #(create-circle % ::data)
-  :post! #(let [id (str (inc (rand-int 100000)))]
-            (dosync (alter circles assoc id (::data %)))
-            {::id id})
+  :malformed? #(malformed-json? %)
+  :processable? #(circle-processable? %)
+  :post! #(let [id (get-in % [::circle-data :name])
+                url-encoded-id (url-encode id)]
+            (dosync (alter circles assoc id (::circle-data %)))
+            {::url-encoded-id url-encoded-id})
   :post-redirect? true
   :handle-ok #(map (fn [id] (str (build-entry-url (get % :request) id)))
                    (keys @circles))
-  :location (fn [ctx] {:location (format "/circles/%s" (::id ctx))}))
+  :location (fn [ctx] {:location (str (:uri (:request ctx)) "/" (::url-encoded-id ctx))}))
 
-(defresource role-resource [circle-id role-id]
-  :allowed-methods [:get :put :delete]
+(defresource role-resource [role-id]
+  :allowed-methods [:get]
   :known-content-type? #(check-content-type % ["application/json"])
-  :exists? (fn [_]
-             (if-let [e (get-in @circles [circle-id role-id])]
-               {::circle e}))
-  :existed? (fn [_] (nil? (get @circles circle-id ::sentinel)))
+  :exists? #(role-exists? % role-id)
   :available-media-types ["application/json"]
-  :handle-ok ::circle
-  ;:delete! (fn [_] (dosync (alter circles assoc id nil)))
+  :handle-ok ::role
   :malformed? #(malformed-json? %)
-  :can-put-to-missing? false
-  ;:put! #(dosync (alter circles assoc id (::data %)))
-  :new? (fn [_] (nil? (get @circles circle-id ::sentinel))))
+  :can-put-to-missing? false)
 
-(defresource collective-roles-resource [circle-id]
-  :exists? (fn [_] (get-circle circle-id))
+(defresource collective-roles-resource
+  :exists? (fn [_] true)
   :available-media-types ["application/json"]
   :allowed-methods [:get :post]
-  :malformed? #(create-role circle-id % ::data)
-  :post! #(let [id (str (inc (rand-int 100000)))]
-            (println %)
-            (println @circles)
-            (dosync (alter circles assoc circle-id (::data %)))
-            (println @circles)
-            {::id id})
+  :malformed? (fn [ctx] (malformed-json? ctx))
+  :processable? (fn [ctx] (role-processable? ctx))
+  :post! #(dosync (alter circles assoc (::circle %) (::circle-data %)))
   :post-redirect? true
   :handle-ok #(map (fn [id] (str (build-entry-url (get % :request) id)))
                    (keys (get-in % [::circle :roles])))
-  :location (fn [ctx] {:location (format "/circles/%s/roles/%s" circle-id (::id ctx))}))
+  :location (fn [ctx] {:location (str (:uri (:request ctx)) "/" (::role-id ctx))}))
 
 (defroutes app
-  (ANY "/circles" [] collective-circles-resource)
-  (ANY "/circles/:id" [id] (circle-resource id))
-  (ANY "/circles/:circle-id/roles" [circle-id] 
-       (collective-roles-resource circle-id))
-  (ANY "/circles/:circle-id/roles/:role-id" [circle-id role-id] 
-       (role-resource circle-id role-id)))
+  (ANY "*/c" [] collective-circles-resource)
+  (ANY "*/c/:id" [id] (circle-resource id))
+  (ANY "*/r" [] collective-roles-resource)
+  (ANY "*/r/:id" [id] (role-resource id))
+  (route/not-found "<h1>:-(</hi>"))
 
 (def handler 
   (-> app 
-    wrap-params))
+    (liberator.dev/wrap-trace :header :ui)))
 
 (def test-server (ref nil))
 
