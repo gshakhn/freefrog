@@ -154,13 +154,13 @@
 
   (context "roles"
     (context "when requesting the list of roles for a non-existent circle"
-      (with roles-response (http-get-request "circles/New%20Circle/r"))
+      (with roles-response (http-get-request "circles/New%20Circle/roles"))
       (it "should 404"
         (should= 404 (:status @roles-response))))
 
     (context "when posting a new role to a non-existent circle"
       (with roles-response (http-post-request 
-                             "circles/New%20Circle/r"
+                             "circles/New%20Circle/roles"
                              (json/generate-string {:name "My Role!"})))
       (it "should 422 with a helpful error message"
         (should= 404 (:status @roles-response))
@@ -175,7 +175,7 @@
                                                :lead-link-email "bfinn@example.com"}))))
 
       (context "when requesting the list of roles"
-        (with roles-response (http-get-request (str @circle-location "/r")))
+        (with roles-response (http-get-request (str @circle-location "/roles")))
 
         (it "should return an empty array"
           (should= 200 (:status @roles-response))
@@ -184,34 +184,34 @@
       (context "when creating a role"
         (context "with valid parameters"
           (with roles-response (http-post-request
-                                 (str @circle-location "/r")
+                                 (str @circle-location "/roles")
                                  (json/generate-string {:name "My Role!"})))
 
           (it "should return the location of the newly created resource"
             (should= 201 (:status @roles-response))
-            (should= (str "/circles/" (url-encode "Test Circle!") "/r/" 
+            (should= (str "/circles/" (url-encode "Test Circle!") "/roles/" 
                           (url-encode "My Role!"))
                      (get-location @roles-response))))
 
         (should-return-4xx "with invalid paramaters" 
-                           #(str @circle-location "/r")
+                           #(str @circle-location "/roles")
                            (json/generate-string {:foo "Test Role"})
                            400
                            "IllegalArgumentException")
         (should-return-4xx "with missing paramaters" 
-                           #(str @circle-location "/r")
+                           #(str @circle-location "/roles")
                            (json/generate-string {})
                            400
                            "IllegalArgumentException")
         (should-return-4xx "with malformed JSON" 
-                           #(str @circle-location "/r")
+                           #(str @circle-location "/roles")
                            "{\"name\" :: \"Bill\""
                            400
                            "IOException"))
 
       (context "with a created role and its location"
         (with role-location (get-location (http-post-request
-                                            (str @circle-location "/r")
+                                            (str @circle-location "/roles")
                                             (json/generate-string 
                                               {:name "Test Role"})
                                             {:throw-exceptions true} )))
@@ -222,7 +222,7 @@
 
       (context "with a created role with accountabilities and its location"
         (with role-location (get-location (http-post-request
-                                            (str @circle-location "/r")
+                                            (str @circle-location "/roles")
                                             (json/generate-string 
                                               {:name "Test Role"
                                                :purpose "End world hunger"})

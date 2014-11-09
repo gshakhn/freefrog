@@ -189,8 +189,8 @@
 (defroutes app
   (ANY "*/circles" [] collective-circles-resource)
   (ANY "*/circles/:id" [id] (circle-resource id))
-  (ANY "*/r" [] collective-roles-resource)
-  (ANY "*/r/:id" [id] (role-resource id))
+  (ANY "*/roles" [] collective-roles-resource)
+  (ANY "*/roles/:id" [id] (role-resource id))
   (GET "*" [] collective-circles-resource)
   (route/not-found "<h1>:-(</hi>"))
 
