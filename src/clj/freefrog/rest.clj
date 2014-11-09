@@ -133,6 +133,20 @@
           [false ret-val]))
       ret-val)))
 
+(defresource anchor-circle-resource
+  :handle-ok (fn[_] (json/generate-string @circles))
+  :allowed-methods [:get])
+
+(defresource implicit-circle-resource
+  :processable? #(valid-uri? (get-in % [:request :uri]))
+  :allowed-methods [:get]
+  :known-content-type? #(check-content-type % ["application/json"])
+  :exists? #(circle-exists? % 1)
+  :available-media-types ["application/json"]
+  :handle-ok ::circle
+  :malformed? (fn [ctx] (malformed-json? ctx))
+  :can-put-to-missing? false)
+
 (defresource circle-resource [id]
   :processable? #(valid-uri? (get-in % [:request :uri]))
   :allowed-methods [:get]
@@ -186,12 +200,21 @@
                                      :body (::create-failed %)}))
   :location (fn [ctx] (str (:uri (:request ctx)) "/" (::url-encoded-role-id ctx))))
 
+(defresource accountabilities-resource [role-id]
+  :allowed-methods [:get])
+
+(defresource domains-resource [role-id]
+  :allowed-methods [:get])
+
 (defroutes app
+  (ANY "/" [] anchor-circle-resource)
   (ANY "*/circles" [] collective-circles-resource)
   (ANY "*/circles/:id" [id] (circle-resource id))
   (ANY "*/roles" [] collective-roles-resource)
   (ANY "*/roles/:id" [id] (role-resource id))
-  (GET "*" [] collective-circles-resource)
+  (ANY "*/roles/:id/accountabilities" [id] (accountabilities-resource id))
+  (ANY "*/roles/:id/domains" [id] (domains-resource id))
+  (ANY "*" [] implicit-circle-resource)
   (route/not-found "<h1>:-(</hi>"))
 
 (def handler 

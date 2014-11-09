@@ -57,9 +57,6 @@
   (after-all (r/stop-test-server))
   (after (r/reset-database))
 
-;  (it "should return status code 404 at the root"
-;    (should= 404 (:status (http-get-request))))
-
   (context "URIs"
     (it "should allow processing of the anchor circle"
       (should-not= 422 (:status (http-get-request "/"))))
@@ -83,10 +80,17 @@
 
   (context "circles"
     (context "when no circles have been created"
-      (with response (http-get-request "circles"))
-      (it "should return an empty array"
-        (should= 200 (:status @response))
-        (should= "[]" (:body @response))))
+      (context "requesting the root resource"
+        (with response (http-get-request "/"))
+        (it "should return an empty array"
+          (should= 200 (:status @response))
+          (should= "{}" (:body @response))))
+
+      (context "requesting the circles resource"
+        (with response (http-get-request "circles"))
+        (it "should return an empty array"
+          (should= 200 (:status @response))
+          (should= "[]" (:body @response)))))
 
     (context "when creating a circle"
       (context "with valid parameters"
@@ -115,19 +119,29 @@
                          400
                          "IOException"))
 
-    (context "with a created circle and its location"
+    (context "with a created circle"
       (with location (get-location (http-post-request
                                      "circles" 
                                      (json/generate-string 
                                        {:name "Test Circle!"
                                         :lead-link-name "Bill"
                                         :lead-link-email "bfinn@example.com"}))))
-      (with get-response (http-get-request @location))
-      (it "should return the content that was created" 
-        (should= 200 (:status @get-response))
-        (should= {"lead-link" {"email" "bfinn@example.com"
-                               "name" "Bill" } "name" "Test Circle!"} 
-                 (json/parse-string (:body @get-response)))))
+      (context "and its specified location"
+        (with get-response (http-get-request @location))
+        (it "should return the content that was created" 
+          (should= 200 (:status @get-response))
+          (should= {"lead-link" {"email" "bfinn@example.com"
+                                 "name" "Bill" } "name" "Test Circle!"} 
+                   (json/parse-string (:body @get-response)))))
+
+      (context "and its implicit location"
+        (with get-response (http-get-request (url-encode "Test Circle!")))
+        (it "should return the content that was created" 
+          (should-not= nil @location)
+          (should= 200 (:status @get-response))
+          (should= {"lead-link" {"email" "bfinn@example.com"
+                                 "name" "Bill" } "name" "Test Circle!"} 
+                   (json/parse-string (:body @get-response))))))
 
     (context "when creating multiple circles"
       (before (http-post-request "circles" 
