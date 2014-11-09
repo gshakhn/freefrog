@@ -22,7 +22,18 @@
             [clj-json.core :as json]
             [clj-http.client :as http-client]
             [freefrog.rest :as r])
-  (:use [ring.util.codec :only [url-encode]]))
+  (:use [ring.adapter.jetty] [ring.util.codec :only [url-encode]]))
+
+(def test-server (ref nil))
+
+(defn start-test-server []
+  (when-not @test-server
+    (dosync
+      (ref-set test-server (run-jetty #'r/handler {:port 3000 :join? false}))))
+  (.start @test-server))
+
+(defn stop-test-server []
+  (.stop @test-server))
 
 (defn http-post-request 
   ([uri body]
@@ -53,8 +64,8 @@
       (should-contain response-content (:body @response)))))
 
 (describe "governance rest api"
-  (before-all (r/start-test-server))
-  (after-all (r/stop-test-server))
+  (before-all (start-test-server))
+  (after-all (stop-test-server))
   (after (r/reset-database))
 
   (context "circles"

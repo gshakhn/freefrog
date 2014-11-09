@@ -29,7 +29,7 @@
             [clojure.java.io :as io]
             [compojure.route :as route]
             [compojure.core :refer [defroutes ANY GET]])
-  (:use [ring.adapter.jetty]
+  (:use 
         [ring.util.codec :only [url-encode url-decode]])
   (:import java.net.URL))
 
@@ -209,17 +209,6 @@
 (def handler 
   (-> app 
     (liberator.dev/wrap-trace :header :ui)))
-
-(def test-server (ref nil))
-
-(defn start-test-server []
-  (when-not @test-server
-    (dosync
-      (ref-set test-server (run-jetty #'handler {:port 3000 :join? false}))))
-  (.start @test-server))
-
-(defn stop-test-server []
-  (.stop @test-server))
 
 (defn reset-database []
   (dosync
