@@ -28,7 +28,7 @@
             [clj-json.core :as json]
             [clojure.java.io :as io]
             [compojure.route :as route]
-            [compojure.core :refer [defroutes ANY]])
+            [compojure.core :refer [defroutes ANY GET]])
   (:use [ring.adapter.jetty]
         [ring.util.codec :only [url-encode url-decode]])
   (:import java.net.URL))
@@ -105,6 +105,21 @@
                 (:uri request)
                 (str id))))
 
+(def valid-reserved-word-indices
+  {"roles" [-1, -2]})
+
+(defn valid-special-value? [pair]
+  (let [[index value] pair]
+    (some #{index} (get valid-reserved-word-indices value))))
+
+(defn valid-uri? [uri]
+  (prn uri)
+  (let [tree (split uri #"/")
+        special-values (keep-indexed #(when (get #{"roles"} %2)
+                                        [(- %1 (count tree)) %2]) tree)]
+    (every? valid-special-value? special-values)))
+
+
 (defn create-circle [context]
   (prn "Create circle!")
   (let [{:keys [name lead-link-name lead-link-email]} (::json-data context)]
@@ -132,6 +147,7 @@
 (defresource collective-circles-resource
   :available-media-types ["application/json"]
   :allowed-methods [:get :post]
+  :processable? #(valid-uri? (get-in % [:request :uri]))
   :malformed? #(malformed-json? %)
   :post! #(create-circle %)
   :new? true
@@ -168,6 +184,7 @@
   (ANY "*/c/:id" [id] (circle-resource id))
   (ANY "*/r" [] collective-roles-resource)
   (ANY "*/r/:id" [id] (role-resource id))
+  (GET "*" [] collective-circles-resource)
   (route/not-found "<h1>:-(</hi>"))
 
 (def handler 

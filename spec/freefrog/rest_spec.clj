@@ -57,8 +57,29 @@
   (after-all (r/stop-test-server))
   (after (r/reset-database))
 
-  (it "should return status code 404 at the root"
-    (should= 404 (:status (http-get-request))))
+;  (it "should return status code 404 at the root"
+;    (should= 404 (:status (http-get-request))))
+
+  (context "URIs"
+    (it "should allow processing of the anchor circle"
+      (should-not= 422 (:status (http-get-request "/"))))
+
+    (it "should allow processing of the anchor circle's roles"
+      (should-not= 422 (:status (http-get-request "/roles"))))
+
+    (it "should allow processing of nested circles"
+      (should-not= 422 (:status (http-get-request "/Circle1/SubCircle"))))
+
+    (it "should allow processing of a circle's roles"
+      (should-not= 422 (:status (http-get-request "/Circle1/roles"))))
+
+    (it "should allow processing of a circle's particular roles"
+      (should-not= 422 (:status (http-get-request "/Circle1/roles/MyRole"))))
+
+    (it "should not allow processing of a circle named 'roles'"
+      (should= 422 (:status (http-get-request "/Circle1/roles/SubCircle/MyRole"))))
+
+    (it "should not allow processing of the roles of a circle named 'roles' "))
 
   (context "circles"
     (context "when no circles have been created"
