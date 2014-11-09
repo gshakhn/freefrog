@@ -120,18 +120,18 @@
         (with get-response (http-get-request @location))
         (it "should return the content that was created" 
           (should= 200 (:status @get-response))
-          (should= {"lead-link" {"email" "bfinn@example.com"
-                                 "name" "Bill" } "name" "Test Circle!"} 
-                   (json/parse-string (:body @get-response)))))
+          (should-contain "Test Circle!" (:body @get-response))
+          (should-contain "Bill" (:body @get-response))
+          (should-contain "bfinn@example.com" (:body @get-response))))
 
       (context "and its implicit location"
         (with get-response (http-get-request (url-encode "Test Circle!")))
         (it "should return the content that was created" 
           (should-not= nil @location)
           (should= 200 (:status @get-response))
-          (should= {"lead-link" {"email" "bfinn@example.com"
-                                 "name" "Bill" } "name" "Test Circle!"} 
-                   (json/parse-string (:body @get-response))))))
+          (should-contain "Test Circle!" (:body @get-response))
+          (should-contain "Bill" (:body @get-response))
+          (should-contain "bfinn@example.com" (:body @get-response)))))
 
     (context "when creating multiple circles"
       (before (http-post-request "circles" 
@@ -222,7 +222,7 @@
         (with get-response (http-get-request @role-location))
         (it "should return the content that was created" 
           (should= 200 (:status @get-response))
-          (should= "{}" (:body @get-response))))
+          (should-contain "Test Role" (:body @get-response))))
 
       (context "with a created role with accountabilities and its location"
         (with role-location (get-location (http-post-request
@@ -234,5 +234,5 @@
         (with get-response (http-get-request @role-location))
         (it "should return the content that was created" 
           (should= 200 (:status @get-response))
-          (should= (json/generate-string {:purpose "End world hunger"})
-                   (:body @get-response)))))))
+          (should-contain "Test Role" (:body @get-response))
+          (should-contain "End world hunger" (:body @get-response)))))))
