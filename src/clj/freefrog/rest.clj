@@ -44,12 +44,15 @@
       java.lang.String body
       (slurp (io/reader body)))))
 
+(defn put-or-post? [ctx]
+  (#{:put :post} (get-in ctx [:request :request-method])))
+
 ;; For PUT and POST parse the body as json and store in the context
 ;; under the given key.
-(defn malformed-json? [context]
-  (when (#{:put :post} (get-in context [:request :request-method]))
+(defn malformed-json? [ctx]
+  (when (put-or-post? ctx)
     (try
-      (if-let [body (body-as-string context)]
+      (if-let [body (body-as-string ctx)]
         (let [data (keywordize-keys (json/parse-string body))]
           [false {::json-data data}])
         [true {:message "No body"}])
@@ -62,7 +65,7 @@
 
 ;; For PUT and POST check if the content type is json.
 (defn check-content-type [ctx content-types]
-  (if (#{:put :post} (get-in ctx [:request :request-method]))
+  (if (put-or-post? ctx)
     (or
       (some #{(get-in ctx [:request :headers "content-type"])}
             content-types)
@@ -84,8 +87,8 @@
   (let [[index value] pair]
     (some #{index} (get valid-reserved-word-indices value))))
 
-(defn circle-exists? [context index]
-  (let [uri (get-in context [:request :uri])
+(defn circle-exists? [ctx index]
+  (let [uri (get-in ctx [:request :uri])
         uri-list (split uri #"/")
         circle-name (url-decode (first (take-last index uri-list)))
         circle (get @anchor-circle circle-name)]
@@ -93,8 +96,8 @@
       [true {::circle-name circle-name ::circle circle}]
       [false {:message (format "Circle '%s' does not exist." circle-name)}])))
 
-(defn create-circle [context]
-  (let [{:keys [name lead-link-name lead-link-email]} (::json-data context)]
+(defn create-circle [ctx]
+  (let [{:keys [name lead-link-name lead-link-email]} (::json-data ctx)]
     (try
       (dosync
         (alter anchor-circle assoc name 
@@ -104,12 +107,12 @@
         ;(.printStackTrace e)
         {::create-failed (format "IllegalArgumentException: %s" (.getMessage e))}))))
 
-(defn create-role [context]
-  (let [{:keys [name purpose domains accountabilities]} (get context ::json-data)
-        circle-name (::circle-name context)]
+(defn create-role [ctx]
+  (let [{:keys [name purpose domains accountabilities]} (get ctx ::json-data)
+        circle-name (::circle-name ctx)]
     (try
       (dosync (alter anchor-circle assoc circle-name 
-                     (g/add-role (::circle context) 
+                     (g/add-role (::circle ctx) 
                                  name purpose domains accountabilities)))
       {::role-data (:roles (get @anchor-circle circle-name)) 
        ::url-encoded-role-id (url-encode name)}
@@ -117,8 +120,8 @@
         ;(.printStackTrace e)
         {::create-failed (format "IllegalArgumentException: %s" (.getMessage e))}))))
 
-(defn role-exists? [context role-id]
-  (let [[circle-exists? ret-val] (circle-exists? context 3)]
+(defn role-exists? [ctx role-id]
+  (let [[circle-exists? ret-val] (circle-exists? ctx 3)]
     (if circle-exists?
       (let [circle (::circle ret-val)
             curr-role (get-in circle [:roles (url-decode role-id)])]
@@ -127,9 +130,50 @@
           [false ret-val]))
       ret-val)))
 
+(defn handle-put [ctx]
+  true)
+
+(defn add-role [params]
+  true)
+
+(defn create-anchor-circle [params]
+  (let [{:keys [name lead-link-name lead-link-email]} params]
+    (try
+      (dosync
+        (ref-set anchor-circle 
+                 (g/anchor-circle name lead-link-name lead-link-email)))
+      {::circle-data (get @anchor-circle name) ::url-encoded-id (url-encode name)}
+      (catch IllegalArgumentException e
+        ;(.printStackTrace e)
+        {::create-failed (format "IllegalArgumentException: %s" (.getMessage e))}))))
+
+(def commands
+  {"anchorCircle" create-anchor-circle
+   "addRole" add-role})
+
+(defn handle-post [ctx]
+  ((get commands (::command ctx)) (::params ctx)))
+
+(defn json-processable? [ctx]
+  (if (put-or-post? ctx)
+    (if-let [command (get-in ctx [::json-data :command])]
+      (if (get commands command)
+        [true {::command command
+               ::params (get-in ctx [::json-data :params])}]
+        [false {:message (format "Invalid command '%s' received." command)}])
+      [false {:message "No command specified for request"}])
+    true))
+
 (defresource anchor-circle-resource
+  :malformed? #(malformed-json? %)
+  :processable? #(json-processable? %)
+  :post! #(handle-post %)
   :handle-ok (fn[_] (json/generate-string @anchor-circle))
-  :allowed-methods [:get])
+  :allowed-methods [:get :post]
+  :handle-created #(when (::create-failed %) 
+                     (ring-response {:status 400 
+                                     :body (::create-failed %)}))
+  :location (fn [ctx] (:uri (:request ctx))))
 
 (defresource implicit-circle-resource
   :allowed-methods [:get]

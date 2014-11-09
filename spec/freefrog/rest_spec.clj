@@ -35,6 +35,14 @@
 (defn stop-test-server []
   (.stop @test-server))
 
+(defn http-put-request 
+  ([uri body]
+   (http-put-request uri body nil))
+  ([uri body options]
+   (http-client/put (str "http://localhost:3000" uri) 
+                     (merge {:throw-exceptions false
+                             :content-type :json
+                             :body body} options))))
 (defn http-post-request 
   ([uri body]
    (http-post-request uri body nil))
@@ -68,30 +76,80 @@
   (after-all (stop-test-server))
   (after (r/reset-database))
 
-  (context "circles"
-    (context "when no circles have been created"
+  (context "anchor circle"
+    (should-return-4xx "with malformed JSON" 
+                       (fn [] "/")
+                       "{\"command\" :: \"addRole\""
+                       400
+                       "IOException")
+
+    (should-return-4xx "with no paramaters" 
+                       (fn [] "/")
+                       ""
+                       422
+                       "No command specified for request")
+
+    (should-return-4xx "with an invalid command" 
+                       (fn [] "/")
+                       (json/generate-string {:command "nonsense"})
+                       422
+                       "Invalid command 'nonsense' received.")
+
+    (context "with nothing having been created"
       (context "requesting the root resource"
         (with response (http-get-request "/"))
-        (it "should return an empty array"
+        (it "should return an empty object"
           (should= 200 (:status @response))
-          (should= "{}" (:body @response))))
+          (should= "{}" (:body @response)))))
 
-      (context "requesting the circles resource"
-        (with response (http-get-request "circles"))
-        (it "should return an empty array"
-          (should= 200 (:status @response))
-          (should= "[]" (:body @response)))))
+    (context "with creating the anchor circle"
+      (should-return-4xx "with no paramaters" 
+                         (fn [] "/")
+                         (json/generate-string
+                           {:command "anchorCircle"})
+                         400
+                         "IllegalArgumentException")
 
-    (context "when creating a circle"
+      (should-return-4xx "with missing paramaters" 
+                         (fn [] "/")
+                         (json/generate-string
+                           {:command "anchorCircle"
+                            :params {:name "Test Circle!"}})
+                         400
+                         "IllegalArgumentException")
+
       (context "with valid parameters"
-        (with response (http-post-request "circles" 
-                                          (json/generate-string 
-                                            {:name "Test Circle!"
-                                             :lead-link-name "Bill"
-                                             :lead-link-email "bfinn@example.com"})))
+        (with response (http-post-request 
+                         "/" 
+                         (json/generate-string
+                           {:command "anchorCircle",
+                            :params {:name "Test Circle!"
+                                     :lead-link-name "Bill"
+                                     :lead-link-email "bfinn@example.com"}})))
         (it "should return the location of the newly created resource"
           (should= 201 (:status @response))
-          (should= (str "/circles/" (url-encode "Test Circle!")) (get-location @response))))
+          (should= "/" (get-location @response)))
+
+        (context "with retrieving the circle"
+          (with get-response (http-get-request (get-location @response)))
+          (it "should return the content that was created" 
+            (should= 200 (:status @get-response))
+            (should-contain "Test Circle!" (:body @get-response))
+            (should-contain "Bill" (:body @get-response))
+            (should-contain "bfinn@example.com" (:body @get-response))))
+
+        (context "with creating a role"
+          (context "with valid parameters"
+            (with response (http-post-request 
+                             "/" 
+                             (json/generate-string
+                               {:command "addRole",
+                                :params {:name "Test Circle!"
+                                         :lead-link-name "Bill"
+                                         :lead-link-email "bfinn@example.com"}})))
+            (it "should return the location of the newly created resource"))))
+              ;(should= 201 (:status @response))
+              ;(should= (str "/circles/" (url-encode "Test Circle!")) (get-location @response))))))
 
       (should-return-4xx "with invalid paramaters" 
                          (fn [] "circles")
