@@ -20,6 +20,7 @@
 (ns freefrog.rest
   (:require [liberator.core :refer [resource defresource]]
             [liberator.dev]
+            [liberator.representation :refer [ring-response]]
             [ring.middleware.params :refer [wrap-params]]
             [freefrog.governance :as g]
             [clojure.walk :refer [keywordize-keys]]
@@ -53,19 +54,8 @@
           [false {::json-data data}])
         [true {:message "No body"}])
       (catch Exception e
-        (.printStackTrace e)
+        ;(.printStackTrace e)
         [true {:message (format "IOException: %s" (.getMessage e))}]))))
-
-(defn circle-processable? [context]
-  (if (#{:post} (get-in context [:request :request-method]))
-    (let [{:keys [name lead-link-name lead-link-email]} (::json-data context)]
-      (try
-        [true {::circle-data (g/anchor-circle name lead-link-name lead-link-email)}]
-        (catch IllegalArgumentException e
-          (.printStackTrace e)
-          [false {:message 
-                 (format "IllegalArgumentException: %s" (.getMessage e))}])))
-    [true]))
 
 (defn get-circle-name-from-uri [uri index]
   (url-decode (first (take-last index (split uri #"/")))))
@@ -83,7 +73,7 @@
                      ::role-id (url-encode name) 
                      ::circle circle-name}]
                (catch IllegalArgumentException e
-                 (.printStackTrace e)
+                 ;(.printStackTrace e)
                  [false {:message 
                          (format "IllegalArgumentException: %s" (.getMessage e))}])))
           {::roles (:roles curr-circle) ::circle circle-name})
@@ -115,6 +105,18 @@
                 (:uri request)
                 (str id))))
 
+(defn create-circle [context]
+  (prn "Create circle!")
+  (let [{:keys [name lead-link-name lead-link-email]} (::json-data context)]
+    (try
+      (dosync
+        (alter circles assoc name 
+               (g/anchor-circle name lead-link-name lead-link-email)))
+      {::circle-data (get @circles name) ::url-encoded-id (url-encode name)}
+      (catch IllegalArgumentException e
+        ;(.printStackTrace e)
+        {::create-failed (format "IllegalArgumentException: %s" (.getMessage e))}))))
+
 (defresource circle-resource [id]
   :allowed-methods [:get]
   :known-content-type? #(check-content-type % ["application/json"])
@@ -131,15 +133,14 @@
   :available-media-types ["application/json"]
   :allowed-methods [:get :post]
   :malformed? #(malformed-json? %)
-  :processable? #(circle-processable? %)
-  :post! #(let [id (get-in % [::circle-data :name])
-                url-encoded-id (url-encode id)]
-            (dosync (alter circles assoc id (::circle-data %)))
-            {::url-encoded-id url-encoded-id})
-  :post-redirect? true
+  :post! #(create-circle %)
+  :new? true
   :handle-ok #(map (fn [id] (str (build-entry-url (get % :request) id)))
                    (keys @circles))
-  :location (fn [ctx] {:location (str (:uri (:request ctx)) "/" (::url-encoded-id ctx))}))
+  :handle-created #(when (::create-failed %) 
+                     (ring-response {:status 400 
+                                     :body (::create-failed %)}))
+  :location (fn [ctx] (str (:uri (:request ctx)) "/" (::url-encoded-id ctx))))
 
 (defresource role-resource [role-id]
   :allowed-methods [:get]

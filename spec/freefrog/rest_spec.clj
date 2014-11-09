@@ -41,6 +41,9 @@
   ([uri options]
    (http-client/get (str "http://localhost:3000/" uri) (merge {:throw-exceptions false} options))))
 
+(defn get-location [response]
+  (get (:headers response) "Location"))
+
 (defn should-return-4xx [spec-context uri-fn request-content 
                          response-code response-content]
   (context spec-context
@@ -71,21 +74,20 @@
                                             {:name "Test Circle!"
                                              :lead-link-name "Bill"
                                              :lead-link-email "bfinn@example.com"})))
-        (it "should redirect to the location of the newly created resource"
-          (should= 303 (:status @response))
+        (it "should return the location of the newly created resource"
+          (should= 201 (:status @response))
           (should-contain "application/json" (get-in @response [:headers "Content-Type"]))
-          (should= (str "/c/" (url-encode "Test Circle!")) (get (json/parse-string (:body @response)) 
-                                                  "location"))))
+          (should= (str "/c/" (url-encode "Test Circle!")) (get-location @response))))
 
       (should-return-4xx "with invalid paramaters" 
                          (fn [] "c")
                          (json/generate-string {:foo "Test Circle!"})
-                         422
+                         400
                          "IllegalArgumentException")
       (should-return-4xx "with missing paramaters" 
                          (fn [] "c")
                          (json/generate-string {:name "Test Circle!"})
-                         422
+                         400
                          "IllegalArgumentException")
       (should-return-4xx "with malformed JSON" 
                          (fn [] "c")
@@ -94,14 +96,12 @@
                          "IOException"))
 
     (context "with a created circle and its location"
-      (with location (get (json/parse-string 
-                            (:body (http-post-request
+      (with location (get-location (http-post-request
                                      "c" 
                                      (json/generate-string 
                                        {:name "Test Circle!"
                                         :lead-link-name "Bill"
                                         :lead-link-email "bfinn@example.com"}))))
-                          "location"))
       (with get-response (http-get-request @location))
       (it "should return the content that was created" 
         (should= 200 (:status @get-response))
@@ -147,14 +147,12 @@
         (should-contain "Circle 'New Circle' does not exist." (:body @roles-response))))
 
     (context "with a circle"
-      (with circle-location (get (json/parse-string 
-                                   (:body (http-post-request
+      (with circle-location (get-location (http-post-request
                                             "c" 
                                             (json/generate-string 
                                               {:name "Test Circle!"
                                                :lead-link-name "Bill"
                                                :lead-link-email "bfinn@example.com"}))))
-                                 "location"))
 
       (context "when requesting the list of roles"
         (with roles-response (http-get-request (str @circle-location "/r")))
