@@ -97,7 +97,6 @@
                                              :lead-link-email "bfinn@example.com"})))
         (it "should return the location of the newly created resource"
           (should= 201 (:status @response))
-          (should-contain "application/json" (get-in @response [:headers "Content-Type"]))
           (should= (str "/c/" (url-encode "Test Circle!")) (get-location @response))))
 
       (should-return-4xx "with invalid paramaters" 
@@ -156,15 +155,15 @@
   (context "roles"
     (context "when requesting the list of roles for a non-existent circle"
       (with roles-response (http-get-request "c/New%20Circle/r"))
-      (it "should 422"
-        (should= 422 (:status @roles-response))))
+      (it "should 404"
+        (should= 404 (:status @roles-response))))
 
     (context "when posting a new role to a non-existent circle"
       (with roles-response (http-post-request 
                              "c/New%20Circle/r"
                              (json/generate-string {:name "My Role!"})))
       (it "should 422 with a helpful error message"
-        (should= 422 (:status @roles-response))
+        (should= 404 (:status @roles-response))
         (should-contain "Circle 'New Circle' does not exist." (:body @roles-response))))
 
     (context "with a circle"
@@ -188,23 +187,21 @@
                                  (str @circle-location "/r")
                                  (json/generate-string {:name "My Role!"})))
 
-          (it "should redirect to the location of the newly created resource"
-            (should= 303 (:status @roles-response))
-            (should-contain "application/json" 
-                            (get-in @roles-response [:headers "Content-Type"]))
+          (it "should return the location of the newly created resource"
+            (should= 201 (:status @roles-response))
             (should= (str "/c/" (url-encode "Test Circle!") "/r/" 
                           (url-encode "My Role!"))
-                     (get (json/parse-string (:body @roles-response)) "location"))))
+                     (get-location @roles-response))))
 
         (should-return-4xx "with invalid paramaters" 
                            #(str @circle-location "/r")
                            (json/generate-string {:foo "Test Role"})
-                           422
+                           400
                            "IllegalArgumentException")
         (should-return-4xx "with missing paramaters" 
                            #(str @circle-location "/r")
                            (json/generate-string {})
-                           422
+                           400
                            "IllegalArgumentException")
         (should-return-4xx "with malformed JSON" 
                            #(str @circle-location "/r")
@@ -213,27 +210,23 @@
                            "IOException"))
 
       (context "with a created role and its location"
-        (with role-location (get (json/parse-string 
-                              (:body (http-post-request
-                                       (str @circle-location "/r")
-                                       (json/generate-string 
-                                         {:name "Test Role"})
-                                       {:throw-exceptions true} )))
-                            "location"))
+        (with role-location (get-location (http-post-request
+                                            (str @circle-location "/r")
+                                            (json/generate-string 
+                                              {:name "Test Role"})
+                                            {:throw-exceptions true} )))
         (with get-response (http-get-request @role-location))
         (it "should return the content that was created" 
           (should= 200 (:status @get-response))
           (should= "{}" (:body @get-response))))
 
       (context "with a created role with accountabilities and its location"
-        (with role-location (get (json/parse-string 
-                              (:body (http-post-request
-                                       (str @circle-location "/r")
-                                       (json/generate-string 
-                                         {:name "Test Role"
-                                          :purpose "End world hunger"})
-                                       {:throw-exceptions true} )))
-                            "location"))
+        (with role-location (get-location (http-post-request
+                                            (str @circle-location "/r")
+                                            (json/generate-string 
+                                              {:name "Test Role"
+                                               :purpose "End world hunger"})
+                                            {:throw-exceptions true} )))
         (with get-response (http-get-request @role-location))
         (it "should return the content that was created" 
           (should= 200 (:status @get-response))

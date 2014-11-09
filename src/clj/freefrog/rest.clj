@@ -60,34 +60,6 @@
 (defn get-circle-name-from-uri [uri index]
   (url-decode (first (take-last index (split uri #"/")))))
 
-(defn role-processable? [context]
-  (if (#{:post :get} (get-in context [:request :request-method]))
-    (let [circle-name (get-circle-name-from-uri 
-                        (get-in context [:request :uri]) 2)]
-      (if-let [curr-circle (get @circles circle-name)]
-        (if (#{:post} (get-in context [:request :request-method]))
-          (let [{:keys [name purpose domains accountabilities]} (get context ::json-data)]
-            (try
-              [true {::circle-data (g/add-role curr-circle name purpose domains accountabilities)
-                     ::roles (:roles curr-circle) 
-                     ::role-id (url-encode name) 
-                     ::circle circle-name}]
-               (catch IllegalArgumentException e
-                 ;(.printStackTrace e)
-                 [false {:message 
-                         (format "IllegalArgumentException: %s" (.getMessage e))}])))
-          {::roles (:roles curr-circle) ::circle circle-name})
-        [false {:message (format "Circle '%s' does not exist." circle-name)}]))
-    [true]))
-
-(defn role-exists? [context role-id]
-  (let [circle-name (get-circle-name-from-uri 
-                      (get-in context [:request :uri]) 3)]
-    (if-let [curr-role 
-             (get-in @circles 
-                     [circle-name :roles (url-decode role-id)])]
-      [true {::role curr-role}])))
-
 ;; For PUT and POST check if the content type is json.
 (defn check-content-type [ctx content-types]
   (if (#{:put :post} (get-in ctx [:request :request-method]))
@@ -113,15 +85,21 @@
     (some #{index} (get valid-reserved-word-indices value))))
 
 (defn valid-uri? [uri]
-  (prn uri)
   (let [tree (split uri #"/")
         special-values (keep-indexed #(when (get #{"roles"} %2)
                                         [(- %1 (count tree)) %2]) tree)]
     (every? valid-special-value? special-values)))
 
+(defn circle-exists? [context index]
+  (let [uri (get-in context [:request :uri])
+        uri-list (split uri #"/")
+        circle-name (url-decode (first (take-last index uri-list)))
+        circle (get @circles circle-name)]
+    (if circle
+      [true {::circle-name circle-name ::circle circle}]
+      [false {:message (format "Circle '%s' does not exist." circle-name)}])))
 
 (defn create-circle [context]
-  (prn "Create circle!")
   (let [{:keys [name lead-link-name lead-link-email]} (::json-data context)]
     (try
       (dosync
@@ -132,7 +110,31 @@
         ;(.printStackTrace e)
         {::create-failed (format "IllegalArgumentException: %s" (.getMessage e))}))))
 
+(defn create-role [context]
+  (let [{:keys [name purpose domains accountabilities]} (get context ::json-data)
+        circle-name (::circle-name context)]
+    (try
+      (dosync (alter circles assoc circle-name 
+                     (g/add-role (::circle context) 
+                                 name purpose domains accountabilities)))
+      {::role-data (:roles (get @circles circle-name)) 
+       ::url-encoded-role-id (url-encode name)}
+      (catch IllegalArgumentException e
+        ;(.printStackTrace e)
+        {::create-failed (format "IllegalArgumentException: %s" (.getMessage e))}))))
+
+(defn role-exists? [context role-id]
+  (let [[circle-exists? ret-val] (circle-exists? context 3)]
+    (if circle-exists?
+      (let [circle (::circle ret-val)
+            curr-role (get-in circle [:roles (url-decode role-id)])]
+        (if curr-role
+          [true (merge ret-val {::role curr-role})]
+          [false ret-val]))
+      ret-val)))
+
 (defresource circle-resource [id]
+  :processable? #(valid-uri? (get-in % [:request :uri]))
   :allowed-methods [:get]
   :known-content-type? #(check-content-type % ["application/json"])
   :exists? (fn [_]
@@ -145,9 +147,9 @@
   :can-put-to-missing? false)
 
 (defresource collective-circles-resource
+  :processable? #(valid-uri? (get-in % [:request :uri]))
   :available-media-types ["application/json"]
   :allowed-methods [:get :post]
-  :processable? #(valid-uri? (get-in % [:request :uri]))
   :malformed? #(malformed-json? %)
   :post! #(create-circle %)
   :new? true
@@ -159,6 +161,7 @@
   :location (fn [ctx] (str (:uri (:request ctx)) "/" (::url-encoded-id ctx))))
 
 (defresource role-resource [role-id]
+  :processable? #(valid-uri? (get-in % [:request :uri]))
   :allowed-methods [:get]
   :known-content-type? #(check-content-type % ["application/json"])
   :exists? #(role-exists? % role-id)
@@ -168,16 +171,20 @@
   :can-put-to-missing? false)
 
 (defresource collective-roles-resource
-  :exists? (fn [_] true)
+  :processable? #(valid-uri? (get-in % [:request :uri]))
+  :exists? #(circle-exists? % 2)
   :available-media-types ["application/json"]
   :allowed-methods [:get :post]
   :malformed? (fn [ctx] (malformed-json? ctx))
-  :processable? (fn [ctx] (role-processable? ctx))
-  :post! #(dosync (alter circles assoc (::circle %) (::circle-data %)))
-  :post-redirect? true
+  :new? true
+  :post! #(create-role %)
+  :can-post-to-missing? false
   :handle-ok #(map (fn [id] (str (build-entry-url (get % :request) id)))
                    (keys (get-in % [::circle :roles])))
-  :location (fn [ctx] {:location (str (:uri (:request ctx)) "/" (::role-id ctx))}))
+  :handle-created #(when (::create-failed %) 
+                     (ring-response {:status 400 
+                                     :body (::create-failed %)}))
+  :location (fn [ctx] (str (:uri (:request ctx)) "/" (::url-encoded-role-id ctx))))
 
 (defroutes app
   (ANY "*/c" [] collective-circles-resource)
