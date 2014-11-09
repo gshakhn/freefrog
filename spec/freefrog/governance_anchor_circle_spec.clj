@@ -28,14 +28,17 @@
 (describe "Anchor Circle"
   ;; Section 5.2.2.a
   (it "can create an anchor circle with a lead link"
-    (should= {:name      "Courage Labs"
-              :lead-link {:name  "Stephen Starkey"
-                          :email "stephen@couragelabs.com"}}
+    (should= {:name       "Courage Labs"
+              :is-circle? true
+              :lead-link  {:name  "Stephen Starkey"
+                           :email "stephen@couragelabs.com"}}
       (g/anchor-circle "Courage Labs" "Stephen Starkey"
                        "stephen@couragelabs.com"))
 
-    (should= {:name "Fear Labs" :lead-link {:name  "Bill O'Reilly"
-                                            :email "billoreilly@foxnews.com"}}
+    (should= {:name       "Fear Labs"
+              :is-circle? true
+              :lead-link  {:name  "Bill O'Reilly"
+                           :email "billoreilly@foxnews.com"}}
       (g/anchor-circle "Fear Labs" "Bill O'Reilly"
                        "billoreilly@foxnews.com")))
 
