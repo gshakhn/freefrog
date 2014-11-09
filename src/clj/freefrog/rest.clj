@@ -33,7 +33,7 @@
         [ring.util.codec :only [url-encode url-decode]])
   (:import java.net.URL))
 
-(defonce circles (ref {}))
+(defonce anchor-circle (ref {}))
 
 ;;;; http://clojure-liberator.github.io/liberator/tutorial/all-together.html
 ;; convert the body to a reader. Useful for testing in the repl
@@ -88,7 +88,7 @@
   (let [uri (get-in context [:request :uri])
         uri-list (split uri #"/")
         circle-name (url-decode (first (take-last index uri-list)))
-        circle (get @circles circle-name)]
+        circle (get @anchor-circle circle-name)]
     (if circle
       [true {::circle-name circle-name ::circle circle}]
       [false {:message (format "Circle '%s' does not exist." circle-name)}])))
@@ -97,9 +97,9 @@
   (let [{:keys [name lead-link-name lead-link-email]} (::json-data context)]
     (try
       (dosync
-        (alter circles assoc name 
+        (alter anchor-circle assoc name 
                (g/anchor-circle name lead-link-name lead-link-email)))
-      {::circle-data (get @circles name) ::url-encoded-id (url-encode name)}
+      {::circle-data (get @anchor-circle name) ::url-encoded-id (url-encode name)}
       (catch IllegalArgumentException e
         ;(.printStackTrace e)
         {::create-failed (format "IllegalArgumentException: %s" (.getMessage e))}))))
@@ -108,10 +108,10 @@
   (let [{:keys [name purpose domains accountabilities]} (get context ::json-data)
         circle-name (::circle-name context)]
     (try
-      (dosync (alter circles assoc circle-name 
+      (dosync (alter anchor-circle assoc circle-name 
                      (g/add-role (::circle context) 
                                  name purpose domains accountabilities)))
-      {::role-data (:roles (get @circles circle-name)) 
+      {::role-data (:roles (get @anchor-circle circle-name)) 
        ::url-encoded-role-id (url-encode name)}
       (catch IllegalArgumentException e
         ;(.printStackTrace e)
@@ -128,7 +128,7 @@
       ret-val)))
 
 (defresource anchor-circle-resource
-  :handle-ok (fn[_] (json/generate-string @circles))
+  :handle-ok (fn[_] (json/generate-string @anchor-circle))
   :allowed-methods [:get])
 
 (defresource implicit-circle-resource
@@ -144,7 +144,7 @@
   :allowed-methods [:get]
   :known-content-type? #(check-content-type % ["application/json"])
   :exists? (fn [_]
-             (let [e (get @circles (url-decode id))]
+             (let [e (get @anchor-circle (url-decode id))]
                (if-not (nil? e)
                  {::circle e})))
   :available-media-types ["application/json"]
@@ -159,7 +159,7 @@
   :post! #(create-circle %)
   :new? true
   :handle-ok #(map (fn [id] (str (build-entry-url (get % :request) id)))
-                   (keys @circles))
+                   (keys @anchor-circle))
   :handle-created #(when (::create-failed %) 
                      (ring-response {:status 400 
                                      :body (::create-failed %)}))
@@ -212,4 +212,4 @@
 
 (defn reset-database []
   (dosync
-    (ref-set circles {})))
+    (ref-set anchor-circle {})))
