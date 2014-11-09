@@ -100,7 +100,25 @@
         (with response (http-get-request "/"))
         (it "should return an empty object"
           (should= 200 (:status @response))
-          (should= "{}" (:body @response)))))
+          (should= "{}" (:body @response))))
+
+      (should-return-4xx "with creating a role" 
+                       (fn [] "/")
+                       (json/generate-string {:command "addRole"
+                                              :params {:name "Test Role"}})
+                       400
+                       "IllegalArgumentException")
+
+      (context "with creating a role"
+        (context "with valid parameters"
+          (with response (http-post-request 
+                           "/" 
+                           (json/generate-string
+                             {:command "addRole",
+                              :params {:name "Test Circle!"
+                                       :lead-link-name "Bill"
+                                       :lead-link-email "bfinn@example.com"}})))
+          (it "should return the location of the newly created resource"))))
 
     (context "with creating the anchor circle"
       (should-return-4xx "with no paramaters" 

@@ -134,7 +134,14 @@
   true)
 
 (defn add-role [params]
-  true)
+  (let [{:keys [name purpose domains accountabilities]} params]
+    (try
+      (dosync (ref-set anchor-circle (g/add-role @anchor-circle
+                                 name purpose domains accountabilities)))
+      {::url-encoded-role-id (url-encode name)}
+      (catch IllegalArgumentException e
+        ;(.printStackTrace e)
+        {::create-failed (format "IllegalArgumentException: %s" (.getMessage e))}))))
 
 (defn create-anchor-circle [params]
   (let [{:keys [name lead-link-name lead-link-email]} params]
