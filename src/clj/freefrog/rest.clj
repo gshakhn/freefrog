@@ -84,12 +84,6 @@
   (let [[index value] pair]
     (some #{index} (get valid-reserved-word-indices value))))
 
-(defn valid-uri? [uri]
-  (let [tree (split uri #"/")
-        special-values (keep-indexed #(when (get #{"roles"} %2)
-                                        [(- %1 (count tree)) %2]) tree)]
-    (every? valid-special-value? special-values)))
-
 (defn circle-exists? [context index]
   (let [uri (get-in context [:request :uri])
         uri-list (split uri #"/")
@@ -138,7 +132,6 @@
   :allowed-methods [:get])
 
 (defresource implicit-circle-resource
-  :processable? #(valid-uri? (get-in % [:request :uri]))
   :allowed-methods [:get]
   :known-content-type? #(check-content-type % ["application/json"])
   :exists? #(circle-exists? % 1)
@@ -148,7 +141,6 @@
   :can-put-to-missing? false)
 
 (defresource circle-resource [id]
-  :processable? #(valid-uri? (get-in % [:request :uri]))
   :allowed-methods [:get]
   :known-content-type? #(check-content-type % ["application/json"])
   :exists? (fn [_]
@@ -161,7 +153,6 @@
   :can-put-to-missing? false)
 
 (defresource collective-circles-resource
-  :processable? #(valid-uri? (get-in % [:request :uri]))
   :available-media-types ["application/json"]
   :allowed-methods [:get :post]
   :malformed? #(malformed-json? %)
@@ -175,7 +166,6 @@
   :location (fn [ctx] (str (:uri (:request ctx)) "/" (::url-encoded-id ctx))))
 
 (defresource role-resource [role-id]
-  :processable? #(valid-uri? (get-in % [:request :uri]))
   :allowed-methods [:get]
   :known-content-type? #(check-content-type % ["application/json"])
   :exists? #(role-exists? % role-id)
@@ -185,7 +175,6 @@
   :can-put-to-missing? false)
 
 (defresource collective-roles-resource
-  :processable? #(valid-uri? (get-in % [:request :uri]))
   :exists? #(circle-exists? % 2)
   :available-media-types ["application/json"]
   :allowed-methods [:get :post]
