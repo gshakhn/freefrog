@@ -83,41 +83,41 @@
 
   (context "circles"
     (context "when no circles have been created"
-      (with response (http-get-request "c"))
+      (with response (http-get-request "circles"))
       (it "should return an empty array"
         (should= 200 (:status @response))
         (should= "[]" (:body @response))))
 
     (context "when creating a circle"
       (context "with valid parameters"
-        (with response (http-post-request "c" 
+        (with response (http-post-request "circles" 
                                           (json/generate-string 
                                             {:name "Test Circle!"
                                              :lead-link-name "Bill"
                                              :lead-link-email "bfinn@example.com"})))
         (it "should return the location of the newly created resource"
           (should= 201 (:status @response))
-          (should= (str "/c/" (url-encode "Test Circle!")) (get-location @response))))
+          (should= (str "/circles/" (url-encode "Test Circle!")) (get-location @response))))
 
       (should-return-4xx "with invalid paramaters" 
-                         (fn [] "c")
+                         (fn [] "circles")
                          (json/generate-string {:foo "Test Circle!"})
                          400
                          "IllegalArgumentException")
       (should-return-4xx "with missing paramaters" 
-                         (fn [] "c")
+                         (fn [] "circles")
                          (json/generate-string {:name "Test Circle!"})
                          400
                          "IllegalArgumentException")
       (should-return-4xx "with malformed JSON" 
-                         (fn [] "c")
+                         (fn [] "circles")
                          "{\"name\" :: \"Bill\""
                          400
                          "IOException"))
 
     (context "with a created circle and its location"
       (with location (get-location (http-post-request
-                                     "c" 
+                                     "circles" 
                                      (json/generate-string 
                                        {:name "Test Circle!"
                                         :lead-link-name "Bill"
@@ -130,21 +130,21 @@
                  (json/parse-string (:body @get-response)))))
 
     (context "when creating multiple circles"
-      (before (http-post-request "c" 
+      (before (http-post-request "circles" 
                                  (json/generate-string 
                                    {:name "Test Circle!"
                                     :lead-link-name "Bill"
                                     :lead-link-email "bfinn@example.com"})
                                  {:throw-exceptions true}))
 
-      (before (http-post-request "c" 
+      (before (http-post-request "circles" 
                                  (json/generate-string 
                                    {:name "Test Circle 2"
                                     :lead-link-name "Bill"
                                     :lead-link-email "bfinn@example.com"})
                                  {:throw-exceptions true}))
 
-      (with get-response (http-get-request "c"))
+      (with get-response (http-get-request "circles"))
 
       (it "should return an array of created circles"
         (should= 200 (:status @get-response))
@@ -154,13 +154,13 @@
 
   (context "roles"
     (context "when requesting the list of roles for a non-existent circle"
-      (with roles-response (http-get-request "c/New%20Circle/r"))
+      (with roles-response (http-get-request "circles/New%20Circle/r"))
       (it "should 404"
         (should= 404 (:status @roles-response))))
 
     (context "when posting a new role to a non-existent circle"
       (with roles-response (http-post-request 
-                             "c/New%20Circle/r"
+                             "circles/New%20Circle/r"
                              (json/generate-string {:name "My Role!"})))
       (it "should 422 with a helpful error message"
         (should= 404 (:status @roles-response))
@@ -168,7 +168,7 @@
 
     (context "with a circle"
       (with circle-location (get-location (http-post-request
-                                            "c" 
+                                            "circles" 
                                             (json/generate-string 
                                               {:name "Test Circle!"
                                                :lead-link-name "Bill"
@@ -189,7 +189,7 @@
 
           (it "should return the location of the newly created resource"
             (should= 201 (:status @roles-response))
-            (should= (str "/c/" (url-encode "Test Circle!") "/r/" 
+            (should= (str "/circles/" (url-encode "Test Circle!") "/r/" 
                           (url-encode "My Role!"))
                      (get-location @roles-response))))
 

@@ -187,8 +187,8 @@
   :location (fn [ctx] (str (:uri (:request ctx)) "/" (::url-encoded-role-id ctx))))
 
 (defroutes app
-  (ANY "*/c" [] collective-circles-resource)
-  (ANY "*/c/:id" [id] (circle-resource id))
+  (ANY "*/circles" [] collective-circles-resource)
+  (ANY "*/circles/:id" [id] (circle-resource id))
   (ANY "*/r" [] collective-roles-resource)
   (ANY "*/r/:id" [id] (role-resource id))
   (GET "*" [] collective-circles-resource)
