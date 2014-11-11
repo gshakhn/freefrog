@@ -40,9 +40,9 @@
    (http-put-request uri body nil))
   ([uri body options]
    (http-client/put (str "http://localhost:3000" uri) 
-                     (merge {:throw-exceptions false
-                             :content-type :json
-                             :body body} options))))
+                    (merge {:throw-exceptions false
+                            :content-type :json
+                            :body body} options))))
 (defn http-post-request 
   ([uri body]
    (http-post-request uri body nil))
@@ -127,12 +127,12 @@
 
       (context "with valid parameters"
         (with create-anchor-circle-response (http-post-request 
-                         "/" 
-                         (json/generate-string
-                           {:command "anchorCircle",
-                            :params {:name "Test Circle!"
-                                     :lead-link-name "Bill"
-                                     :lead-link-email "bfinn@example.com"}})))
+                                              "/" 
+                                              (json/generate-string
+                                                {:command "anchorCircle",
+                                                 :params {:name "Test Circle!"
+                                                          :lead-link-name "Bill"
+                                                          :lead-link-email "bfinn@example.com"}})))
         (before @create-anchor-circle-response)
 
         (it "should return the location of the newly created resource"
@@ -173,34 +173,64 @@
             (xit "should return the location of the updated resource")))
 
         (context "with creating a role"
-          (context "with valid parameters"
-            (with response (http-post-request 
-                             "/" 
-                             (json/generate-string
-                               {:command "addRole",
-                                :params {:name "Test Circle!"
-                                         :lead-link-name "Bill"
-                                         :lead-link-email "bfinn@example.com"}})))
-            (it "should return the location of the newly created resource"
-                 (should= 201 (:status @response))
-                 (should= (str "/" (url-encode "Test Circle!")) 
-                          (get-location @response))))))
+          (context "with invalid parameters"
+            (xit "should return an error code"))
 
-      (should-return-4xx "with invalid paramaters" 
-                         (fn [] "circles")
-                         (json/generate-string {:foo "Test Circle!"})
-                         400
-                         "IllegalArgumentException")
-      (should-return-4xx "with missing paramaters" 
-                         (fn [] "circles")
-                         (json/generate-string {:name "Test Circle!"})
-                         400
-                         "IllegalArgumentException")
-      (should-return-4xx "with malformed JSON" 
-                         (fn [] "circles")
-                         "{\"name\" :: \"Bill\""
-                         400
-                         "IOException"))
+          (context "with valid parameters"
+            (with create-role-response (http-post-request 
+                                         "/" 
+                                         (json/generate-string
+                                           {:command "addRole",
+                                            :params {:name "Test Circle!"
+                                                     :lead-link-name "Bill"
+                                                     :lead-link-email "bfinn@example.com"}})))
+            (before @create-role-response)
+            (it "should return the location of the newly created resource"
+              (should= 201 (:status @create-role-response))
+              (should= (str "/" (url-encode "Test Circle!")) 
+                (get-location @create-role-response)))
+            (context "with deleting the role"
+              (with delete-response 
+                    (http-client/delete (str "http://localhost:3000/" 
+                                             (url-encode "Test Circle!"))
+                                        {:throw-exceptions false}))
+              (before @delete-response)
+              (xit "should return a valid response code")
+
+              (context "with requesting the deleted role"
+                (with deleted-get-response 
+                      (http-get-request (str "/" (url-encode "Test Circle!"))))
+                (xit "should return a 404.")))
+
+            (context "with updating a role"
+              (with put-response 
+                (http-put-request (str "/" (url-encode "Test Circle!"))))
+              (xit "should update the role accordingly"))
+
+            (context "with converting a role to a circle"
+              (with convert-response 
+                    (http-post-request 
+                      (str "/" (url-encode "Test Circle!"))
+                      (json/generate-string
+                        {:command "convertRoleToCircle"})))
+              (xit "should convert the role to a circle")))))
+
+
+(should-return-4xx "with invalid paramaters" 
+                   (fn [] "circles")
+                   (json/generate-string {:foo "Test Circle!"})
+                   400
+                   "IllegalArgumentException")
+(should-return-4xx "with missing paramaters" 
+                   (fn [] "circles")
+                   (json/generate-string {:name "Test Circle!"})
+                   400
+                   "IllegalArgumentException")
+(should-return-4xx "with malformed JSON" 
+                   (fn [] "circles")
+                   "{\"name\" :: \"Bill\""
+                   400
+                   "IOException"))
 
 (context "with a created circle"
   (with location (get-location (http-post-request
