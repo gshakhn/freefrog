@@ -151,6 +151,25 @@
           (it "should return method-not-allowed."
             (should= 405 (:status @delete-response))))
 
+        (context "with updating the anchor circle"
+          (context "with invalid parameters"
+            (with response (http-put-request
+                             "/" 
+                             (json/generate-string
+                               {:command "anchorCircle",
+                                :params {:foo "Test Circle!"}})))
+            (xit "should return an error response"))
+
+          (context "with valid parameters"
+            (with response (http-put-request
+                             "/" 
+                             (json/generate-string
+                               {:command "anchorCircle",
+                                :params {:name "Test Circle!"
+                                         :lead-link-name "Bill"
+                                         :lead-link-email "bfinn@example.com"}})))
+            (xit "should return the location of the updated resource")))
+
         (context "with creating a role"
           (context "with valid parameters"
             (with response (http-post-request 
@@ -160,9 +179,10 @@
                                 :params {:name "Test Circle!"
                                          :lead-link-name "Bill"
                                          :lead-link-email "bfinn@example.com"}})))
-            (it "should return the location of the newly created resource"))))
-      ;(should= 201 (:status @response))
-      ;(should= (str "/circles/" (url-encode "Test Circle!")) (get-location @response))))))
+            (xit "should return the location of the newly created resource"
+                 (should= 201 (:status @response))
+                 (should= (str "/" (url-encode "Test Circle!")) 
+                          (get-location @response))))))
 
       (should-return-4xx "with invalid paramaters" 
                          (fn [] "circles")
