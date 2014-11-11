@@ -173,8 +173,14 @@
             (xit "should return the location of the updated resource")))
 
         (context "with creating a role"
+            (with create-role-response (http-post-request 
+                                         "/" 
+                                         (json/generate-string
+                                           {:command "addRole",
+                                            :params {:foo "Test Circle!"}})))
           (context "with invalid parameters"
-            (xit "should return an error code"))
+            (it "should return a failure"
+              (should= 400 (:status @create-role-response))))
 
           (context "with valid parameters"
             (with create-role-response (http-post-request 
