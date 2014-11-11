@@ -136,9 +136,10 @@
 (defn add-role [params]
   (let [{:keys [name purpose domains accountabilities]} params]
     (try
+      (prn @anchor-circle)
       (dosync (ref-set anchor-circle (g/add-role @anchor-circle
                                  name purpose domains accountabilities)))
-      {::url-encoded-role-id (url-encode name)}
+      {::url-encoded-location (url-encode name)}
       (catch IllegalArgumentException e
         ;(.printStackTrace e)
         {::create-failed (format "IllegalArgumentException: %s" (.getMessage e))}))))
@@ -149,6 +150,7 @@
       (dosync
         (ref-set anchor-circle 
                  (g/anchor-circle name lead-link-name lead-link-email)))
+      (prn @anchor-circle)
       {::circle-data (get @anchor-circle name) ::url-encoded-id (url-encode name)}
       (catch IllegalArgumentException e
         ;(.printStackTrace e)
@@ -180,7 +182,7 @@
   :handle-created #(when (::create-failed %) 
                      (ring-response {:status 400 
                                      :body (::create-failed %)}))
-  :location (fn [ctx] (:uri (:request ctx))))
+  :location #(str (:uri (:request %)) (::url-encoded-location %)))
 
 (defresource implicit-circle-resource
   :allowed-methods [:get]

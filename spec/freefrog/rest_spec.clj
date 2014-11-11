@@ -126,19 +126,21 @@
                          "IllegalArgumentException")
 
       (context "with valid parameters"
-        (with response (http-post-request 
+        (with create-anchor-circle-response (http-post-request 
                          "/" 
                          (json/generate-string
                            {:command "anchorCircle",
                             :params {:name "Test Circle!"
                                      :lead-link-name "Bill"
                                      :lead-link-email "bfinn@example.com"}})))
+        (before @create-anchor-circle-response)
+
         (it "should return the location of the newly created resource"
-          (should= 201 (:status @response))
-          (should= "/" (get-location @response)))
+          (should= 201 (:status @create-anchor-circle-response))
+          (should= "/" (get-location @create-anchor-circle-response)))
 
         (context "with retrieving the circle"
-          (with get-response (http-get-request (get-location @response)))
+          (with get-response (http-get-request (get-location @create-anchor-circle-response)))
           (it "should return the content that was created" 
             (should= 200 (:status @get-response))
             (should-contain "Test Circle!" (:body @get-response))
@@ -179,7 +181,7 @@
                                 :params {:name "Test Circle!"
                                          :lead-link-name "Bill"
                                          :lead-link-email "bfinn@example.com"}})))
-            (xit "should return the location of the newly created resource"
+            (it "should return the location of the newly created resource"
                  (should= 201 (:status @response))
                  (should= (str "/" (url-encode "Test Circle!")) 
                           (get-location @response))))))
