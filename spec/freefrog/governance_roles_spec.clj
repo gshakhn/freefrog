@@ -31,17 +31,17 @@
 (def sample-domain-2 "Tests")
 (def sample-domains [sample-domain-1 sample-domain-2])
 (def sample-anchor-with-domain
-  (g/add-domain sample-anchor-with-role role-name sample-domain-1))
+  (g/add-role-domain sample-anchor-with-role role-name sample-domain-1))
 (def sample-anchor-with-domains
-  (g/add-domain sample-anchor-with-domain role-name sample-domain-2))
+  (g/add-role-domain sample-anchor-with-domain role-name sample-domain-2))
 (def sample-acc-1 "Writing Code")
 (def sample-acc-2 "Testing their own stuff")
 (def sample-accountabilities [sample-acc-1 sample-acc-2])
 (def sample-anchor-with-acc
-  (g/add-accountability sample-anchor-with-role role-name sample-acc-1))
+  (g/add-role-accountability sample-anchor-with-role role-name sample-acc-1))
 (def sample-anchor-with-accs
-  (-> sample-anchor-with-role (g/add-accountability role-name sample-acc-1)
-      (g/add-accountability role-name sample-acc-2)))
+  (-> sample-anchor-with-role (g/add-role-accountability role-name sample-acc-1)
+      (g/add-role-accountability role-name sample-acc-2)))
 
 (defn- should-handle-collection-properly [add-fn remove-fn type type-str coll1
                                          coll2 val1 val2]
@@ -177,8 +177,8 @@
         "updating purpose" "Stuff"))
 
     ;; Section 1.1.b
-    (should-handle-collection-properly g/add-domain
-                                       g/remove-domain
+    (should-handle-collection-properly g/add-role-domain
+                                       g/remove-role-domain
                                        :domains "Domain"
                                        sample-anchor-with-domain
                                        sample-anchor-with-domains
@@ -186,8 +186,8 @@
                                        sample-domain-2)
 
     ;; Section 1.1.c
-    (should-handle-collection-properly g/add-accountability
-                                       g/remove-accountability
+    (should-handle-collection-properly g/add-role-accountability
+                                       g/remove-role-accountability
                                        :accountabilities "Accountability"
                                        sample-anchor-with-acc
                                        sample-anchor-with-accs

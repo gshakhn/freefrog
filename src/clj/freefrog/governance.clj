@@ -206,22 +206,22 @@
 ;; one another should they need to, adding a heavier burden on future
 ;; maintainers.
 
-(defn add-domain
+(defn add-role-domain
   "Add a domain to a role in the given circle."
   [circle role-name domain]
   (add-to circle role-name :domains domain))
 
-(defn remove-domain
+(defn remove-role-domain
   "Remove a domain from a role in the given circle."
   [circle role-name domain]
   (remove-from circle role-name :domains domain))
 
-(defn add-accountability
+(defn add-role-accountability
   "Add an accountability to a role in the given circle."
   [circle role-name accountability]
   (add-to circle role-name :accountabilities accountability))
 
-(defn remove-accountability
+(defn remove-role-accountability
   "Remove an accountability from a role in the given circle."
   [circle role-name accountability]
   (remove-from circle role-name :accountabilities accountability))
