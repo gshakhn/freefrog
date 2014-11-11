@@ -172,6 +172,11 @@
                                          :lead-link-email "bfinn@example.com"}})))
             (xit "should return the location of the updated resource")))
 
+        (context "with getting a non-existent role"
+          (with get-role-response (http-get-request "/DummyRole"))
+          (it "should return 404"
+            (should= 404 (:status @get-role-response))))
+
         (context "with creating a role"
             (with create-role-response (http-post-request 
                                          "/" 
@@ -201,7 +206,7 @@
                                              (url-encode "Test Circle!"))
                                         {:throw-exceptions false}))
               (before @delete-response)
-              (xit "should return a valid response code")
+              (xit "should return a valid response code of 204")
 
               (context "with requesting the deleted role"
                 (with deleted-get-response 
