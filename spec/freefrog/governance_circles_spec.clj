@@ -66,22 +66,20 @@
   (should-not-update-missing-or-empty-roles g/convert-to-role
                                             "convert to role"))
 
-(defn should-not-change-constitutional [desc fn role-name & params]
-  (it (format "doesn't let you %s the %s role" desc role-name)
+(defn should-not-change-constitutional [desc fn role-name params]
+  (it (format "doesn't %s the %s role" desc role-name)
     (should-throw IllegalArgumentException
       (format "'%s' role is defined in the Constitution." role-name)
       (apply fn (into [sample-anchor role-name] params)))))
 
 (describe "Constitutional Roles"
-  (for [role [g/lead-link g/rep-link g/secretary g/facilitator]]
-    (describe role
-      (for [op [["Add" g/add-role]
-                ["Remove" g/remove-role]]]
-        (should-not-change-constitutional (first op) (second op) role))
-      (should-not-change-constitutional "Rename" g/rename-role role "stuff")
-      (should-not-change-constitutional "Update the purpose of"
-                                        g/update-role-purpose
-                                        role "stuff"))))
+  (for [role [g/lead-link g/rep-link g/secretary g/facilitator]
+        op [["Add" g/add-role]
+            ["Remove" g/remove-role]
+            ["Rename" g/rename-role "stuff"]
+            ["Update the purpose of" g/update-role-purpose "Stuff"]]]
+    (should-not-change-constitutional (first op) (second op) role
+                                      (drop 2 op))))
 
 ;; Section 2.2.3
 (describe "Lead Link Role"
