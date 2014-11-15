@@ -21,7 +21,7 @@
   (:require [freefrog.governance :as g]
             [speclj.core :refer :all]))
 
-(def sample-anchor (g/anchor-circle "Amazing Corp"))
+(def sample-anchor (g/create-circle "Amazing Corp"))
 (def role-name "Programmer")
 
 (def sample-purpose "Building awesome software")
@@ -39,7 +39,7 @@
                                                   role-name)
         (apply fn (merge-params [sample-anchor role-name] params))))
 
-    (it "doesn't work with an empty role name"
+    (it "doesn't work with an empty name"
       (should-throw IllegalArgumentException "Name may not be empty"
         (apply fn (merge-params [sample-anchor-with-role nil] params)))
       (should-throw IllegalArgumentException "Name may not be empty"
