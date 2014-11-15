@@ -66,11 +66,33 @@
   (should-not-update-missing-or-empty-roles g/convert-to-role
                                             "convert to role"))
 
-;; Section 2.2
+(defn should-not-change-constitutional [desc fn role-name & params]
+  (it (format "doesn't let you %s the %s role" desc role-name)
+    (should-throw IllegalArgumentException
+      (format "'%s' role is defined in the Constitution." role-name)
+      (apply fn (into [sample-anchor role-name] params)))))
+
+(describe "Constitutional Roles"
+  (for [role [g/lead-link g/rep-link g/secretary g/facilitator]]
+    (describe role
+      (for [op [["Add" g/add-role]
+                ["Remove" g/remove-role]]]
+        (should-not-change-constitutional (first op) (second op) role))
+      (should-not-change-constitutional "Rename" g/rename-role role "stuff")
+      (should-not-change-constitutional "Update the purpose of"
+                                        g/update-role-purpose
+                                        role "stuff"))))
+
+;; Section 2.2.3
 (describe "Lead Link Role"
-  (it "doesn't let you create the Lead Link role")
-  (it "doesn't let you add domains to the Lead Link")
-  (it "doesn't let you add accountabilities to the Lead Link"))
+  (it "doesn't add domains to the Lead Link")
+  (it "doesn't add accountabilities to the Lead Link")
+  (it "doesn't remove domains from Lead Link")
+  (it "doesn't remove accountabilities from Lead Link")
+  (it "can delegate a predefined domain from Lead Link to a role")
+  (it "can delegate a predefined domain from Lead Link to a policy")
+  (it "can delegate a predefined accountability from Lead Link to a role")
+  (it "can delegate a predefined accountability from Lead Link to a policy"))
 
 ;; Section 2.4
 (describe "Role Assignment"
@@ -86,21 +108,15 @@
 
 ;; Section 2.5
 (describe "Elected Roles"
-  (it "doesn't let you create any of the elected roles")
-
   ;; Section 2.5.1
   (it "won't assign the person in the Lead Link role to the Facilitator
     or Rep Link role")
 
   ;; Section 2.5.3
-  (it "doesn't let you change the purpose of the special roles")
-  (it "allows you to add/remove domains to/from any of the elected roles")
-  (it "doesn't let you update/remove any of the constitutional domains of
-        the elected roles")
-  (it "allows you to add/remove accountabilities to/from any of the
-        elected roles")
-  (it "doesn't let you update/remove any of the constitutional
-        accountabilities of the elected roles"))
+  (it "can add/remove domains")
+  (it "doesn't update/remove any of the constitutional domains")
+  (it "can add/remove accountabilities")
+  (it "doesn't update/remove any of the constitutional accountabilities"))
 
 (def subcircle-name "Development")
 (def subcircle-role-name "Programmer")
@@ -147,7 +163,7 @@
       (format "Role '%s' is not a circle." subcircle-role-name)
       (pp/pprint (g/update-subcircle circle-with-subrole [subcircle-name
                                                           subcircle-role-name]
-                                     g/add-role "Secretary"
+                                     g/add-role "Something"
                                      "Whatever I want")))))
 
 (run-specs)
