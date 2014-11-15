@@ -34,6 +34,19 @@
 (ns freefrog.governance
   (:require [clojure.set :as s]))
 
+(def lead-link "Lead Link")
+(def rep-link "Rep Link")
+(def secretary "Secretary")
+(def facilitator "Facilitator")
+(def constitutional-roles "All roles defined in the Constitution"
+  #{lead-link rep-link secretary facilitator})
+
+(def delegatable-roles "Roles whose attributes can be delegated in governance"
+  #{lead-link})
+
+(def amendable-roles "Roles you can add attributes to in governance"
+  #{rep-link secretary facilitator})
+
 (defn- validate [valid? err-msg]
   (when-not valid? (throw (IllegalArgumentException. err-msg))))
 
@@ -47,8 +60,14 @@
 (defn- validate-role-name [role-name]
   (validate-not (empty? role-name) "Name may not be empty"))
 
+(defn- validate-constitutional [role-name]
+  (validate-not (constitutional-roles role-name)
+                (format "'%s' role is defined in the Constitution."
+                        role-name)))
+
 (defn- validate-role-updates [circle role-name]
   "Checks that the role name is not empty and that it exists in the circle."
+  (validate-constitutional role-name)
   (validate-role-name role-name)
   (validate-role-exists circle role-name))
 
@@ -96,23 +115,18 @@
        (assoc-if :domains domains)
        (assoc-if :accountabilities accountabilities))))
 
-(defn anchor-circle
-  "Create a new anchor circle.  If given lead-link-* parameters, will
-   assign a lead link."
-  ([name]
-   (validate-not (empty? name) "Name may not be empty")
-   (convert-to-circle (make-role name)))
-
-  ([name lead-link-name lead-link-email]
-   (validate-not (or (empty? name) (empty? lead-link-name)
-                     (empty? lead-link-email)) "No parameters may be empty")
-   (let [anchor-circle (anchor-circle name)]
-     (assoc anchor-circle :lead-link
-            {:name lead-link-name :email lead-link-email}))))
+(defn create-circle
+  "Create a new circle."
+  [name]
+  (validate-not (empty? name) "Name may not be empty")
+  (convert-to-circle (make-role name)))
 
 (defn add-role
   "Adds a role to a circle.  The role may not conflict with an existing role.
-   role-name may not be empty."
+   new-role-name may not be empty."
+  ([circle new-role-name]
+   (add-role circle new-role-name nil nil nil))
+
   ([circle new-role-name purpose]
    (add-role circle new-role-name purpose nil nil))
 
@@ -120,6 +134,7 @@
    (validate-role-name new-role-name)
    (validate (is-circle? circle)
              (format "Role '%s' is not a circle." (:name circle)))
+   (validate-constitutional new-role-name)
    (validate-not (get-in circle [:roles new-role-name])
                  (str "Role already exists: " new-role-name))
    (let [circle (if (contains? circle :roles)
