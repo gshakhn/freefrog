@@ -71,7 +71,8 @@
         op [["Add" g/add-role]
             ["Remove" g/remove-role]
             ["Rename" g/rename-role "stuff"]
-            ["Update the purpose of" g/update-role-purpose "Stuff"]]]
+            ["Update the purpose of" g/update-role-purpose "Stuff"]
+            ["Convert into a circle" g/convert-to-circle]]]
     (it (format "doesn't %s the %s role" (first op) role)
       (should-throw IllegalArgumentException
         (format "'%s' role is defined in the Constitution." role)
