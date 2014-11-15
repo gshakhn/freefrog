@@ -101,7 +101,7 @@
     (try
       (dosync
         (alter anchor-circle assoc name 
-               (g/anchor-circle name lead-link-name lead-link-email)))
+               (g/create-circle name)))
       {::circle-data (get @anchor-circle name) ::url-encoded-id (url-encode name)}
       (catch IllegalArgumentException e
         ;(.printStackTrace e)
@@ -149,7 +149,7 @@
     (try
       (dosync
         (ref-set anchor-circle 
-                 (g/anchor-circle name lead-link-name lead-link-email)))
+                 (g/create-circle name)))
       (prn @anchor-circle)
       {::circle-data (get @anchor-circle name) ::url-encoded-id (url-encode name)}
       (catch IllegalArgumentException e
