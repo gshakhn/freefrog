@@ -21,19 +21,28 @@
 ;;; Defines how circles may be updated.
 (ns freefrog.governance-circles-spec
   (:require [clojure.pprint :as pp]
+            [clojure.set :as s]
             [freefrog.governance :as g]
             [freefrog.governance-spec-helpers :refer :all]
             [speclj.core :refer :all]))
 
 (def sample-role-name "Test Thing")
 
-(def sample-circle
-  (->
-    (g/anchor-circle "My Circle")
-    (g/add-role sample-role-name nil)))
+(def sample-circle (g/add-role sample-anchor sample-role-name nil))
 
 ;; Section 2.1
 (describe "Circles"
+  (it "can create a circle"
+    (should= {:name       "Courage Labs"
+              :is-circle? true}
+      (g/create-circle "Courage Labs")))
+
+  (it "doesn't work with an empty name"
+    (should-throw IllegalArgumentException "Name may not be empty"
+      (g/create-circle nil))
+    (should-throw IllegalArgumentException "Name may not be empty"
+      (g/create-circle "")))
+
   (it "can tell you if a role is authorized to act as a circle"
     (should (g/is-circle? sample-circle))
     (should-not (g/is-circle? sample-circle sample-role-name)))
@@ -160,5 +169,51 @@
                                                           subcircle-role-name]
                                      g/add-role "Something"
                                      "Whatever I want")))))
+
+(def domain "domain")
+(def accountability "acc")
+(def alternate-circle-name "something else")
+
+(def circle-with-subcircle-with-domain
+  (g/add-role-domain circle-with-subcircle subcircle-name domain))
+
+(def circle-with-subcircle-with-acc
+  (g/add-role-accountability circle-with-subcircle subcircle-name
+                             accountability))
+
+(describe "using role operations on a circle is OK"
+  (it "can change the purpose of a circle"
+    (should= (update-in circle-with-subcircle [:roles subcircle-name]
+                        assoc :purpose "stuff")
+      (g/update-role-purpose circle-with-subcircle subcircle-name "stuff")))
+
+  (it "can add a domain to a circle"
+    (should= (update-in circle-with-subcircle [:roles subcircle-name]
+                        assoc :domains #{domain})
+      circle-with-subcircle-with-domain))
+
+  (it "can remove a domain from a circle"
+    (should= circle-with-subcircle
+      (g/remove-role-domain circle-with-subcircle-with-domain subcircle-name
+                            domain)))
+
+  (it "can add an accountability to a circle"
+    (should= (update-in circle-with-subcircle [:roles subcircle-name]
+                        assoc :accountabilities #{accountability})
+      circle-with-subcircle-with-acc))
+
+  (it "can remove an accountability from a circle"
+    (should= circle-with-subcircle
+      (g/remove-role-accountability circle-with-subcircle-with-acc
+                                    subcircle-name accountability)))
+
+  (it "can rename a circle"
+    (should= (update-in circle-with-subcircle [:roles]
+                        s/rename-keys {subcircle-name alternate-circle-name})
+      (g/rename-role circle-with-subcircle subcircle-name alternate-circle-name)))
+
+  (it "can remove a circle"
+    (should= sample-anchor
+      (g/remove-role circle-with-subcircle subcircle-name))))
 
 (run-specs)

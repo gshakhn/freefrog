@@ -115,23 +115,15 @@
        (assoc-if :domains domains)
        (assoc-if :accountabilities accountabilities))))
 
-(defn anchor-circle
-  "Create a new anchor circle.  If given lead-link-* parameters, will
-   assign a lead link."
-  ([name]
-   (validate-not (empty? name) "Name may not be empty")
-   (convert-to-circle (make-role name)))
-
-  ([name lead-link-name lead-link-email]
-   (validate-not (or (empty? name) (empty? lead-link-name)
-                     (empty? lead-link-email)) "No parameters may be empty")
-   (let [anchor-circle (anchor-circle name)]
-     (assoc anchor-circle :lead-link
-            {:name lead-link-name :email lead-link-email}))))
+(defn create-circle
+  "Create a new circle."
+  [name]
+  (validate-not (empty? name) "Name may not be empty")
+  (convert-to-circle (make-role name)))
 
 (defn add-role
   "Adds a role to a circle.  The role may not conflict with an existing role.
-   role-name may not be empty."
+   new-role-name may not be empty."
   ([circle new-role-name]
    (add-role circle new-role-name nil nil nil))
 
