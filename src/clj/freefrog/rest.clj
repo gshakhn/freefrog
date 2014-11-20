@@ -23,15 +23,17 @@
             [liberator.representation :refer [ring-response]]
             [ring.middleware.params :refer [wrap-params]]
             [freefrog.governance :as g]
+            [freefrog.governance-logs :as gl]
+            [freefrog.persistence :as p]
             [clojure.walk :refer [keywordize-keys]]
             [clojure.string :refer [split]]
             [clj-json.core :as json]
             [clojure.java.io :as io]
             [compojure.route :as route]
             [compojure.core :refer [defroutes ANY GET]])
-  (:use 
-        [ring.util.codec :only [url-encode url-decode]])
-  (:import java.net.URL))
+  (:use [ring.util.codec :only [url-encode url-decode]])
+  (:import java.net.URL
+           [javax.persistence EntityNotFoundException]))
 
 (defonce anchor-circle (ref {}))
 
@@ -136,7 +138,6 @@
 (defn add-role [params]
   (let [{:keys [name purpose domains accountabilities]} params]
     (try
-      (prn @anchor-circle)
       (dosync (ref-set anchor-circle (g/add-role @anchor-circle
                                  name purpose domains accountabilities)))
       {::url-encoded-location (url-encode name)}
@@ -150,7 +151,6 @@
       (dosync
         (ref-set anchor-circle 
                  (g/create-circle name)))
-      (prn @anchor-circle)
       {::circle-data (get @anchor-circle name) ::url-encoded-id (url-encode name)}
       (catch IllegalArgumentException e
         ;(.printStackTrace e)
@@ -172,6 +172,28 @@
         [false {:message (format "Invalid command '%s' received." command)}])
       [false {:message "No command specified for request"}])
     true))
+
+(defn new-governance-log [id]
+  (try 
+    {::new-governance-log-id (p/new-governance-log id (gl/create-governance-log))}
+    (catch EntityNotFoundException e
+      {::create-failed (format "IllegalArgumentException: %s" (.getMessage e))})))
+
+(defn get-governance-logs [id]
+  (try
+    [true {::governance-log (p/get-all-governance-logs id)}]
+    (catch EntityNotFoundException e
+      [false {:message (.getMessage e)}])))
+
+(defresource governance-resource [id]
+  :allowed-methods [:get :post]
+  :post! (fn [_] (new-governance-log id))
+  :exists? (fn [_] (get-governance-logs id))
+  :handle-ok #(json/generate-string (::governance-log %))
+  :handle-created #(when (::create-failed %) 
+                     (ring-response {:status 400 
+                                     :body (::create-failed %)}))
+  :location #(build-entry-url (:request %) (::new-governance-log-id %)))
 
 (defresource anchor-circle-resource
   :malformed? #(malformed-json? %)
@@ -249,6 +271,7 @@
   :allowed-methods [:get])
 
 (defroutes app
+  (ANY "/circles/:id/governance" [id] (governance-resource id))
   (ANY "/" [] anchor-circle-resource)
   (ANY "*/circles" [] collective-circles-resource)
   (ANY "*/circles/:id" [id] (circle-resource id))
@@ -263,6 +286,3 @@
   (-> app 
     (liberator.dev/wrap-trace :header :ui)))
 
-(defn reset-database []
-  (dosync
-    (ref-set anchor-circle {})))

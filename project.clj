@@ -34,6 +34,7 @@
                  [com.velisco/tagged "0.3.4"]
                  [clj-jgit "0.8.0"]
                  [clj-json "0.5.3"]
+                 [javax.persistence/persistence-api "1.0"]
                  [speclj "3.1.0"]]
 
   :profiles {:dev {:dependencies [[clj-http "1.0.1"]
