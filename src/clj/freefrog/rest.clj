@@ -173,23 +173,54 @@
       [false {:message "No command specified for request"}])
     true))
 
-(defn new-governance-log [id]
+(defn new-governance-log [circle-id]
   (try 
-    {::new-governance-log-id (p/new-governance-log id (gl/create-governance-log))}
+    {::new-governance-log-id (p/new-governance-log circle-id (gl/create-governance-log))}
     (catch EntityNotFoundException e
-      {::create-failed (format "IllegalArgumentException: %s" (.getMessage e))})))
+      {::create-failed (.getMessage e)})))
 
-(defn get-governance-logs [id]
+(defn get-governance-log [circle-id log-id]
   (try
-    [true {::governance-log (p/get-all-governance-logs id)}]
+    [true {::governance-log (p/get-governance-log circle-id log-id)}]
     (catch EntityNotFoundException e
       [false {:message (.getMessage e)}])))
 
-(defresource governance-resource [id]
+(defn get-governance-logs [circle-id]
+  (try
+    [true {::governance-logs (p/get-all-governance-logs circle-id)}]
+    (catch EntityNotFoundException e
+      [false {:message (.getMessage e)}])))
+
+(defn put-governance-log-agenda [circle-id gov-id context]
+  (try
+    (dosync
+      (let [gov-log (p/get-governance-log circle-id gov-id)]
+        (if (:is-open? gov-log)
+          (p/put-governance-log circle-id gov-id 
+                                (assoc gov-log
+                                       :agenda (:body context)))
+          {::create-failed "Agenda is closed."})))
+    (catch EntityNotFoundException e
+      {::create-failed (.getMessage e)})))
+
+(defn validate-context [ctx]
+  (when (::create-failed ctx)
+    (ring-response {:status 400 :body (::create-failed ctx)})))
+
+(defresource governance-agenda-resource [circle-id log-id]
+  :allowed-methods [:get :put]
+  :exists? (fn [_] (get-governance-log circle-id log-id))
+  :new? #(nil? (:agenda (::governance-log %)))
+  :put! #(put-governance-log-agenda circle-id log-id %)
+  :handle-ok #(str (:agenda (::governance-log %)))
+  :handle-created #(validate-context %)
+  :handle-no-content #(validate-context %))
+
+(defresource governance-resource [circle-id]
   :allowed-methods [:get :post]
-  :post! (fn [_] (new-governance-log id))
-  :exists? (fn [_] (get-governance-logs id))
-  :handle-ok #(json/generate-string (::governance-log %))
+  :post! (fn [_] (new-governance-log circle-id))
+  :exists? (fn [_] (get-governance-logs circle-id))
+  :handle-ok #(json/generate-string (::governance-logs %))
   :handle-created #(when (::create-failed %) 
                      (ring-response {:status 400 
                                      :body (::create-failed %)}))
@@ -271,7 +302,10 @@
   :allowed-methods [:get])
 
 (defroutes app
-  (ANY "/circles/:id/governance" [id] (governance-resource id))
+  (ANY "/circles/:circle-id/governance" [circle-id] 
+       (governance-resource circle-id))
+  (ANY "/circles/:circle-id/governance/:log-id/agenda" [circle-id log-id]
+       (governance-agenda-resource circle-id log-id))
   (ANY "/" [] anchor-circle-resource)
   (ANY "*/circles" [] collective-circles-resource)
   (ANY "*/circles/:id" [id] (circle-resource id))

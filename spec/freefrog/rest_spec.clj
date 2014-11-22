@@ -79,8 +79,11 @@
 
 (def sample-gov-log {:body "Add role\nRename accountability."})
 
-(defn entity-not-found-thrower [& args]
+(defn circle-not-found-thrower [& args]
   (throw (EntityNotFoundException. "Circle does not exist")))
+
+(defn govt-meeting-not-found-thrower [& args]
+  (throw (EntityNotFoundException. "Governance meeting does not exist")))
 
 (describe "governance rest api"
   (before-all (start-test-server))
@@ -88,8 +91,10 @@
 
   (context "with a non-existent circle"
     (around [it]
-      (with-redefs [p/get-all-governance-logs entity-not-found-thrower
-                    p/new-governance-log entity-not-found-thrower ]
+      (with-redefs [p/get-all-governance-logs circle-not-found-thrower
+                    p/new-governance-log circle-not-found-thrower
+                    p/get-governance-log circle-not-found-thrower
+                    p/put-governance-log circle-not-found-thrower]
         (it)))
     (context "requesting the governance endpoint"
       (with response (http-get-request "/circles/1234/governance"))
@@ -99,6 +104,13 @@
 
     (context "posting to the governance endpoint"
       (with response (http-post-request "/circles/1234/governance"))
+      (it "should return a 400"
+        (should= 400 (:status @response))
+        (should-contain "Circle does not exist" (:body @response))))
+
+    (context "putting to the agenda endpoint"
+      (with response (http-put-request "/circles/1234/governance/5678/agenda"
+                                       "New agenda"))
       (it "should return a 400"
         (should= 400 (:status @response))
         (should-contain "Circle does not exist" (:body @response)))))
@@ -119,7 +131,89 @@
       (it "should return a 201"
         (should= 201 (:status @response))
         (should= (str host-url "/circles/1234/governance/5678") 
-                 (get-location @response))))))
+                 (get-location @response))))
+
+    (context "with a non-existent governance endpoint"
+      (around [it]
+        (with-redefs [p/get-governance-log govt-meeting-not-found-thrower]
+          (it)))
+      (context "putting to the agenda endpoint"
+        (with response (http-put-request "/circles/1234/governance/5678/agenda"
+                                         "New agenda"))
+        (it "should return a 400"
+          (should= 400 (:status @response))
+          (should-contain "Governance meeting does not exist" (:body @response)))))
+
+    (context "with a governance endpoint"
+      (context "with an empty open agenda"
+        (around [it]
+          (with-redefs [p/get-governance-log (fn [& args] {:is-open? true :agenda nil})]
+            (it)))
+
+        (context "putting to the agenda endpoint"
+          (with response (http-put-request "/circles/1234/governance/5678/agenda"
+                                           "New agenda"))
+
+          (it "should return a 201"
+            (should= 201 (:status @response))))
+
+        (context "getting the agenda endpoint"
+          (with response (http-get-request "/circles/1234/governance/5678/agenda"))
+          (it "should return an empty agenda"
+            (should= 200 (:status @response))
+            (should-contain "text/plain" (get-in @response
+                                                 [:headers "Content-Type"]))
+            (should= "" (:body @response)))))
+
+      (context "with an existing open agenda"
+        (around [it]
+          (with-redefs [p/get-governance-log (fn [& args] {:is-open? true :agenda "Current agenda"})]
+            (it)))
+
+        (context "putting to the agenda endpoint"
+          (with response (http-put-request "/circles/1234/governance/5678/agenda"
+                                           "New agenda"))
+
+          (it "should return a 204"
+            (should= 204 (:status @response))))
+
+        (context "getting the agenda endpoint"
+          (with response (http-get-request "/circles/1234/governance/5678/agenda"))
+          (it "should return an empty agenda"
+            (should= 200 (:status @response))
+            (should-contain "text/plain" (get-in @response
+                                                 [:headers "Content-Type"]))
+            (should= "Current agenda" (:body @response)))))
+
+      (context "with an existing closed agenda"
+        (around [it]
+          (with-redefs [p/get-governance-log (fn [& args] {:is-open? false :agenda "Current agenda"})]
+            (it)))
+
+        (context "putting to the agenda endpoint"
+          (with response (http-put-request "/circles/1234/governance/5678/agenda"
+                                           "New agenda"))
+
+          (it "should return a 400"
+            (should= 400 (:status @response))))
+
+        (context "getting the agenda endpoint"
+          (with response (http-get-request "/circles/1234/governance/5678/agenda"))
+          (it "should return an empty agenda"
+            (should= 200 (:status @response))
+            (should-contain "text/plain" (get-in @response
+                                                 [:headers "Content-Type"]))
+            (should= "Current agenda" (:body @response))))))))
+
+;      (context "putting to the agenda endpoint"
+;        (with response (http-put-request "/circles/1234/governance/5678/agenda"
+;                                         "New agenda"))
+;
+;        (it "should return a 201"
+;          (should= 201 (:status @response)))))))
+;          (should-invoke p/put-governance-log {:times 1}
+;                         @response)
+;          (should-contain "Governance meeting does not exist" (:body @response)))))))
 
 ;    (context "with nothing having been created"
 ;      (context "requesting the root resource"
