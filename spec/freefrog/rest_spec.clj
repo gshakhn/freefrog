@@ -39,45 +39,23 @@
 
 (def host-url "http://localhost:3000")
 
-(defn http-put-request 
-  ([uri]
-   (http-put-request uri nil))
-  ([uri body]
-   (http-put-request uri body nil))
-  ([uri body options]
-   (http-client/put (str host-url uri) 
-                    (merge {:throw-exceptions false
-                            :content-type "text/plain"
-                            :body body} options))))
-(defn http-post-request 
-  ([uri]
-   (http-post-request uri nil))
-  ([uri body]
-   (http-post-request uri body nil))
-  ([uri body options]
-   (http-client/post (str "http://localhost:3000/" uri) 
-                     (merge {:throw-exceptions false
-                             :content-type "text/plain"
-                             :body body} options))))
+(def http-request-fns
+  {:get http-client/get 
+   :put http-client/put 
+   :post http-client/post})
 
-(defn http-get-request 
-  ([]
-   (http-get-request "" nil))
-  ([uri]
-   (http-get-request uri nil))
-  ([uri options]
-   (http-client/get (str "http://localhost:3000/" uri) (merge {:throw-exceptions false} options))))
+(defn http-request 
+  ([method uri]
+   (http-request method uri nil))
+  ([method uri options]
+   (apply (get http-request-fns method) 
+          [(str host-url uri) 
+           (merge {:throw-exceptions false
+                   :content-type "text/plain"
+                   :body ""} options)])))
 
 (defn get-location [response]
   (get (:headers response) "Location"))
-
-(defn should-return-4xx [spec-context uri-fn request-content 
-                         response-code response-content]
-  (context spec-context
-    (with response (http-post-request (uri-fn) request-content))
-    (it "should return a bad request"
-      (should= response-code (:status @response))
-      (should-contain response-content (:body @response)))))
 
 (def sample-gov-log {:body "Add role\nRename accountability."})
 
@@ -98,21 +76,23 @@
                     p/get-governance-log circle-not-found-thrower
                     p/put-governance-log circle-not-found-thrower]
         (it)))
+
     (context "requesting the governance endpoint"
-      (with response (http-get-request "/circles/1234/governance"))
+      (with response (http-request :get "/circles/1234/governance"))
       (it "should return a 404"
         (should= 404 (:status @response))
         (should= "Circle does not exist" (:body @response))))
 
     (context "posting to the governance endpoint"
-      (with response (http-post-request "/circles/1234/governance"))
+      (with response (http-request :post "/circles/1234/governance"))
       (it "should return a 400"
         (should= 400 (:status @response))
         (should-contain "Circle does not exist" (:body @response))))
 
     (context "putting to the agenda endpoint"
-      (with response (http-put-request "/circles/1234/governance/5678/agenda"
-                                       "New agenda"))
+      (with response (http-request :put 
+                                   "/circles/1234/governance/5678/agenda"
+                                   {:body "New agenda"}))
       (it "should return a 400"
         (should= 400 (:status @response))
         (should-contain "Circle does not exist" (:body @response)))))
@@ -122,21 +102,22 @@
       (with-redefs [p/get-all-governance-logs (fn [id] sample-gov-log)
                     p/new-governance-log (fn [& args] 5678)]
         (it)))
+
     (context "requesting the governance endpoint"
-      (with response (http-get-request "/circles/1234/governance"))
+      (with response (http-request :get "/circles/1234/governance"))
       (it "should return the entire governance document"
         (should= 200 (:status @response))
         (should= (json/generate-string sample-gov-log) (:body @response))))
 
     (context "posting to the governance endpoint with an unsupported content-type"
-      (with response (http-post-request "/circles/1234/governance" 
-                                        nil 
-                                        {:content-type "application/json"}))
+      (with response (http-request :post 
+                                   "/circles/1234/governance" 
+                                   {:content-type "application/json"}))
       (it "should return a 415"
         (should= 415 (:status @response))))
 
     (context "posting to the governance endpoint"
-      (with response (http-post-request "/circles/1234/governance"))
+      (with response (http-request :post "/circles/1234/governance"))
       (it "should return a 201"
         (should= 201 (:status @response))
         (should= (str host-url "/circles/1234/governance/5678") 
@@ -146,9 +127,11 @@
       (around [it]
         (with-redefs [p/get-governance-log govt-meeting-not-found-thrower]
           (it)))
+
       (context "putting to the agenda endpoint"
-        (with response (http-put-request "/circles/1234/governance/5678/agenda"
-                                         "New agenda"))
+        (with response (http-request :put 
+                                     "/circles/1234/governance/5678/agenda"
+                                     {:body "New agenda"}))
         (it "should return a 400"
           (should= 400 (:status @response))
           (should-contain "Governance meeting does not exist" (:body @response)))))
@@ -160,21 +143,23 @@
             (it)))
 
         (context "putting to the agenda endpoint with an unsupported media type"
-          (with response (http-put-request "/circles/1234/governance/5678/agenda"
-                                           "New agenda"
-                                           {:content-type "application/json"}))
+          (with response (http-request :put
+                                       "/circles/1234/governance/5678/agenda"
+                                       {:body "New agenda"
+                                        :content-type "application/json"}))
           (it "should return a 415"
             (should= 415 (:status @response))))
 
         (context "putting to the agenda endpoint"
-          (with response (http-put-request "/circles/1234/governance/5678/agenda"
-                                           "New agenda"))
+          (with response (http-request :put
+                                       "/circles/1234/governance/5678/agenda"
+                                       {:body "New agenda"}))
 
           (it "should return a 201"
             (should= 201 (:status @response))))
 
         (context "getting the agenda endpoint"
-          (with response (http-get-request "/circles/1234/governance/5678/agenda"))
+          (with response (http-request :get "/circles/1234/governance/5678/agenda"))
           (it "should return an empty agenda"
             (should= 200 (:status @response))
             (should-contain "text/plain" (get-in @response
@@ -187,7 +172,7 @@
             (it)))
 
         (context "getting the governance resource"
-          (with response (http-get-request "/circles/1234/governance/5678"))
+          (with response (http-request :get "/circles/1234/governance/5678"))
           (it "should return a 200"
             (should= 200 (:status @response)))
           (it "should return that an open meeting exists"
@@ -195,20 +180,21 @@
                                            [:headers "Open-Meeting"]))))
 
         (context "putting to the governance resource"
-          (with response (http-put-request "/circles/1234/governance/5678"))
+          (with response (http-request :put "/circles/1234/governance/5678"))
           ;(xit "should persist a closed governance log")
           (it "should return a 204"
             (should= 204 (:status @response))))
 
         (context "putting to the agenda endpoint"
-          (with response (http-put-request "/circles/1234/governance/5678/agenda"
-                                           "New agenda"))
+          (with response (http-request :put 
+                                       "/circles/1234/governance/5678/agenda"
+                                       {:body "New agenda"}))
 
           (it "should return a 204"
             (should= 204 (:status @response))))
 
         (context "getting the agenda endpoint"
-          (with response (http-get-request "/circles/1234/governance/5678/agenda"))
+          (with response (http-request :get "/circles/1234/governance/5678/agenda"))
           (it "should return an empty agenda"
             (should= 200 (:status @response))
             (should-contain "text/plain" (get-in @response
@@ -222,7 +208,7 @@
             (it)))
 
         (context "getting the governance resource"
-          (with response (http-get-request "/circles/1234/governance/5678"))
+          (with response (http-request :get "/circles/1234/governance/5678"))
           (it "should return a 200"
             (should= 200 (:status @response)))
           (it "should return the details of the governance resource"
@@ -230,20 +216,21 @@
                             (:body @response))))
 
         (context "putting to the governance resource"
-          (with response (http-put-request "/circles/1234/governance/5678"))
+          (with response (http-request :put "/circles/1234/governance/5678"))
           (it "should return a 204"
             (should= 204 (:status @response))))
 
         (context "putting to the agenda endpoint"
-          (with response (http-put-request "/circles/1234/governance/5678/agenda"
-                                           "New agenda"))
+          (with response (http-request :put
+                                       "/circles/1234/governance/5678/agenda"
+                                       {:body "New agenda"}))
 
           (it "should return a 400"
             (should= 400 (:status @response))
             (should-contain "Agenda is closed" (:body @response))))
 
         (context "getting the agenda endpoint"
-          (with response (http-get-request "/circles/1234/governance/5678/agenda"))
+          (with response (http-request :get "/circles/1234/governance/5678/agenda"))
           (it "should return 400"
             (should= 400 (:status @response))
             (should-contain "Agenda is closed" (:body @response))))))))
