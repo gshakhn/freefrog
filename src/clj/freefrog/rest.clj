@@ -185,6 +185,16 @@
     (catch EntityNotFoundException e
       [false {:message (.getMessage e)}])))
 
+(defn put-governance-log [circle-id gov-id context]
+  (try
+    (dosync
+      (let [gov-log (p/get-governance-log circle-id gov-id)]
+        (when (:is-open? gov-log)
+          (p/put-governance-log circle-id gov-id 
+                                (assoc gov-log
+                                       :is-open? false)))))
+    (catch EntityNotFoundException e
+      {::create-failed (.getMessage e)})))
 (defn get-governance-logs [circle-id]
   (try
     [true {::governance-logs (p/get-all-governance-logs circle-id)}]
@@ -212,11 +222,25 @@
   :exists? (fn [_] (get-governance-log circle-id log-id))
   :new? #(nil? (:agenda (::governance-log %)))
   :put! #(put-governance-log-agenda circle-id log-id %)
-  :handle-ok #(str (:agenda (::governance-log %)))
+  :handle-ok #(if (:is-open? (::governance-log %))
+                (ring-response {:status 200 
+                                :headers {"Content-Type" "text/plain"}
+                                :body (str (:agenda (::governance-log %)))})
+                (ring-response {:status 400 :body "Agenda is closed."}))
   :handle-created #(validate-context %)
   :handle-no-content #(validate-context %))
 
-(defresource governance-resource [circle-id]
+(defresource specific-governance-resource [circle-id log-id]
+  :allowed-methods [:put :get]
+  :exists? (fn [_] (get-governance-log circle-id log-id))
+  :new? #(nil? (::governance-log %))
+  :put! #(put-governance-log circle-id log-id %)
+  :handle-ok #(if (:is-open? (::governance-log %))
+                (ring-response {:status 200 :headers {"Open-Meeting" "true"}})
+                (json/generate-string (::governance-log %)))
+  :handle-no-content #(validate-context %))
+
+(defresource general-governance-resource [circle-id]
   :allowed-methods [:get :post]
   :post! (fn [_] (new-governance-log circle-id))
   :exists? (fn [_] (get-governance-logs circle-id))
@@ -303,7 +327,9 @@
 
 (defroutes app
   (ANY "/circles/:circle-id/governance" [circle-id] 
-       (governance-resource circle-id))
+       (general-governance-resource circle-id))
+  (ANY "/circles/:circle-id/governance/:log-id" [circle-id log-id] 
+       (specific-governance-resource circle-id log-id))
   (ANY "/circles/:circle-id/governance/:log-id/agenda" [circle-id log-id]
        (governance-agenda-resource circle-id log-id))
   (ANY "/" [] anchor-circle-resource)

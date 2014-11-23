@@ -40,6 +40,8 @@
 (def host-url "http://localhost:3000")
 
 (defn http-put-request 
+  ([uri]
+   (http-put-request uri nil))
   ([uri body]
    (http-put-request uri body nil))
   ([uri body options]
@@ -49,7 +51,7 @@
                             :body body} options))))
 (defn http-post-request 
   ([uri]
-   (http-post-request uri nil nil))
+   (http-post-request uri nil))
   ([uri body]
    (http-post-request uri body nil))
   ([uri body options]
@@ -144,7 +146,7 @@
           (should= 400 (:status @response))
           (should-contain "Governance meeting does not exist" (:body @response)))))
 
-    (context "with a governance endpoint"
+    (context "with an existing governance endpoint"
       (context "with an empty open agenda"
         (around [it]
           (with-redefs [p/get-governance-log (fn [& args] {:is-open? true :agenda nil})]
@@ -170,6 +172,20 @@
           (with-redefs [p/get-governance-log (fn [& args] {:is-open? true :agenda "Current agenda"})]
             (it)))
 
+        (context "getting the governance resource"
+          (with response (http-get-request "/circles/1234/governance/5678"))
+          (it "should return a 200"
+            (should= 200 (:status @response)))
+          (it "should return that an open meeting exists"
+            (should-contain "true" (get-in @response
+                                           [:headers "Open-Meeting"]))))
+
+        (context "putting to the governance resource"
+          (with response (http-put-request "/circles/1234/governance/5678"))
+          ;(xit "should persist a closed governance log")
+          (it "should return a 204"
+            (should= 204 (:status @response))))
+
         (context "putting to the agenda endpoint"
           (with response (http-put-request "/circles/1234/governance/5678/agenda"
                                            "New agenda"))
@@ -187,23 +203,36 @@
 
       (context "with an existing closed agenda"
         (around [it]
-          (with-redefs [p/get-governance-log (fn [& args] {:is-open? false :agenda "Current agenda"})]
+          (with-redefs [p/get-governance-log (fn [& args] {:is-open? false 
+                                                           :agenda "Current closed agenda"})]
             (it)))
+
+        (context "getting the governance resource"
+          (with response (http-get-request "/circles/1234/governance/5678"))
+          (it "should return a 200"
+            (should= 200 (:status @response)))
+          (it "should return the details of the governance resource"
+            (should-contain "{\"agenda\":\"Current closed agenda\"" 
+                            (:body @response))))
+
+        (context "putting to the governance resource"
+          (with response (http-put-request "/circles/1234/governance/5678"))
+          (it "should return a 204"
+            (should= 204 (:status @response))))
 
         (context "putting to the agenda endpoint"
           (with response (http-put-request "/circles/1234/governance/5678/agenda"
                                            "New agenda"))
 
           (it "should return a 400"
-            (should= 400 (:status @response))))
+            (should= 400 (:status @response))
+            (should-contain "Agenda is closed" (:body @response))))
 
         (context "getting the agenda endpoint"
           (with response (http-get-request "/circles/1234/governance/5678/agenda"))
-          (it "should return an empty agenda"
-            (should= 200 (:status @response))
-            (should-contain "text/plain" (get-in @response
-                                                 [:headers "Content-Type"]))
-            (should= "Current agenda" (:body @response))))))))
+          (it "should return 400"
+            (should= 400 (:status @response))
+            (should-contain "Agenda is closed" (:body @response))))))))
 
 ;      (context "putting to the agenda endpoint"
 ;        (with response (http-put-request "/circles/1234/governance/5678/agenda"
