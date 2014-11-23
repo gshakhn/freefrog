@@ -116,7 +116,7 @@
        (assoc-if :accountabilities accountabilities))))
 
 (defn create-circle
-  "Create a new circle."
+  "Create a new circle with no parent."
   [name]
   (validate-not (empty? name) "Name may not be empty")
   (convert-to-circle (make-role name)))
