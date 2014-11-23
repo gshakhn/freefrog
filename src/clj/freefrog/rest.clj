@@ -20,6 +20,7 @@
 (ns freefrog.rest
   (:require [liberator.core :refer [resource defresource]]
             [liberator.representation :refer [ring-response]]
+            [liberator.dev]
             [ring.middleware.params :refer [wrap-params]]
             [freefrog.governance :as g]
             [freefrog.governance-logs :as gl]
