@@ -55,7 +55,7 @@
   (try 
     {::new-governance-log-id (p/new-governance-log circle-id (gl/create-governance-log))}
     (catch EntityNotFoundException e
-      {::create-failed (.getMessage e)})))
+      {::failed (.getMessage e)})))
 
 (defn get-governance-log [circle-id log-id]
   (try
@@ -65,6 +65,8 @@
 
 (defn put-governance-log [circle-id gov-id context]
   (try
+    ;;I don't think that dosync is right here, but definitely want to do this
+    ;;transactionally.
     (dosync
       (let [gov-log (p/get-governance-log circle-id gov-id)]
         (when (:is-open? gov-log)
@@ -72,7 +74,7 @@
                                 (assoc gov-log
                                        :is-open? false)))))
     (catch EntityNotFoundException e
-      {::create-failed (.getMessage e)})))
+      {::failed (.getMessage e)})))
 
 (defn get-governance-logs [circle-id]
   (try
@@ -88,13 +90,13 @@
           (p/put-governance-log circle-id gov-id 
                                 (assoc gov-log
                                        :agenda (:body context)))
-          {::create-failed "Agenda is closed."})))
+          {::failed "Agenda is closed."})))
     (catch EntityNotFoundException e
-      {::create-failed (.getMessage e)})))
+      {::failed (.getMessage e)})))
 
 (defn validate-context [ctx]
-  (when (::create-failed ctx)
-    (ring-response {:status 400 :body (::create-failed ctx)})))
+  (when (::failed ctx)
+    (ring-response {:status 400 :body (::failed ctx)})))
 
 (defresource governance-agenda-resource [circle-id log-id]
   :allowed-methods [:get :put]
@@ -127,9 +129,7 @@
   :post! (fn [_] (new-governance-log circle-id))
   :exists? (fn [_] (get-governance-logs circle-id))
   :handle-ok #(json/generate-string (::governance-logs %))
-  :handle-created #(when (::create-failed %) 
-                     (ring-response {:status 400 
-                                     :body (::create-failed %)}))
+  :handle-created #(validate-context %)
   :location #(build-entry-url (:request %) (::new-governance-log-id %)))
 
 (defroutes app
@@ -139,6 +139,9 @@
        (specific-governance-resource circle-id log-id))
   (ANY "/circles/:circle-id/governance/:log-id/agenda" [circle-id log-id]
        (governance-agenda-resource circle-id log-id))
+  ;;TODO
+  ;(ANY "/circles/:circle-id/governance/:log-id/current" [circle-id log-id]
+       ;(governance-current-resource circle-id log-id))
   (route/not-found "<h1>:-(</hi>"))
 
 (def handler 
