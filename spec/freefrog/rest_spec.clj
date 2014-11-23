@@ -128,6 +128,13 @@
         (should= 200 (:status @response))
         (should= (json/generate-string sample-gov-log) (:body @response))))
 
+    (context "posting to the governance endpoint with an unsupported content-type"
+      (with response (http-post-request "/circles/1234/governance" 
+                                        nil 
+                                        {:content-type "application/json"}))
+      (it "should return a 415"
+        (should= 415 (:status @response))))
+
     (context "posting to the governance endpoint"
       (with response (http-post-request "/circles/1234/governance"))
       (it "should return a 201"
@@ -151,6 +158,13 @@
         (around [it]
           (with-redefs [p/get-governance-log (fn [& args] {:is-open? true :agenda nil})]
             (it)))
+
+        (context "putting to the agenda endpoint with an unsupported media type"
+          (with response (http-put-request "/circles/1234/governance/5678/agenda"
+                                           "New agenda"
+                                           {:content-type "application/json"}))
+          (it "should return a 415"
+            (should= 415 (:status @response))))
 
         (context "putting to the agenda endpoint"
           (with response (http-put-request "/circles/1234/governance/5678/agenda"
