@@ -47,7 +47,7 @@
   ([uri body options]
    (http-client/put (str host-url uri) 
                     (merge {:throw-exceptions false
-                            :content-type :json
+                            :content-type "text/plain"
                             :body body} options))))
 (defn http-post-request 
   ([uri]
@@ -57,7 +57,7 @@
   ([uri body options]
    (http-client/post (str "http://localhost:3000/" uri) 
                      (merge {:throw-exceptions false
-                             :content-type :json
+                             :content-type "text/plain"
                              :body body} options))))
 
 (defn http-get-request 
