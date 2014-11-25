@@ -50,51 +50,40 @@
    (URL. (format "%s/%s" (build-entry-url request) (str id)))))
 
 (defn new-governance-log [circle-id]
-  (try 
-    {::new-governance-log-id (p/new-governance-log circle-id (gl/create-governance-log))}
-    (catch EntityNotFoundException e
-      {::failed (.getMessage e)})))
+  {::new-governance-log-id (p/new-governance-log 
+                             circle-id 
+                             (gl/create-governance-log))})
 
 (defn get-governance-log [circle-id log-id]
-  (try
-    [true {::governance-log (p/get-governance-log circle-id log-id)}]
-    (catch EntityNotFoundException e
-      [false {:message (.getMessage e)}])))
+  [true {::governance-log (p/get-governance-log circle-id log-id)}])
 
 (defn put-governance-log [circle-id gov-id context]
-  (try
-    ;;I don't think that dosync is right here, but definitely want to do this
-    ;;transactionally.
-    (dosync
-      (let [gov-log (p/get-governance-log circle-id gov-id)]
-        (when (:is-open? gov-log)
-          (p/put-governance-log circle-id gov-id 
-                                (assoc gov-log
-                                       :is-open? false)))))
-    (catch EntityNotFoundException e
-      {::failed (.getMessage e)})))
+  (let [gov-log (p/get-governance-log circle-id gov-id)]
+    (when (:is-open? gov-log)
+      (p/put-governance-log circle-id gov-id 
+                            (assoc gov-log
+                                   :is-open? false)))))
 
 (defn get-governance-logs [circle-id]
-  (try
-    [true {::governance-logs (p/get-all-governance-logs circle-id)}]
-    (catch EntityNotFoundException e
-      [false {:message (.getMessage e)}])))
+  [true {::governance-logs (p/get-all-governance-logs circle-id)}])
 
 (defn put-governance-log-agenda [circle-id gov-id context]
-  (try
-    (dosync
-      (let [gov-log (p/get-governance-log circle-id gov-id)]
-        (if (:is-open? gov-log)
-          (p/put-governance-log circle-id gov-id 
-                                (assoc gov-log
-                                       :agenda (:body context)))
-          {::failed "Agenda is closed."})))
-    (catch EntityNotFoundException e
-      {::failed (.getMessage e)})))
+  (let [gov-log (p/get-governance-log circle-id gov-id)]
+    (if (:is-open? gov-log)
+      (p/put-governance-log circle-id gov-id 
+                            (assoc gov-log
+                                   :agenda (:body context)))
+      {::failed "Agenda is closed."})))
 
 (defn validate-context [ctx]
   (when (::failed ctx)
     (ring-response {:status 400 :body (::failed ctx)})))
+
+(defn handle-exception [ctx]
+  (let [exception (:exception ctx)]
+    (when (= (type exception)
+             javax.persistence.EntityNotFoundException)
+      (ring-response {:status 404 :body (.getMessage exception)}))))
 
 (defresource governance-agenda-resource [circle-id log-id]
   :allowed-methods [:get :put]
@@ -109,6 +98,7 @@
                 (ring-response {:status 400 :body "Agenda is closed."}))
   :handle-created #(validate-context %)
   :handle-no-content #(validate-context %)
+  :handle-exception #(handle-exception %)
   :location #(build-entry-url (:request %)))
 
 (defresource specific-governance-resource [circle-id log-id]
@@ -120,6 +110,7 @@
   :handle-ok #(if (:is-open? (::governance-log %))
                 (ring-response {:status 200 :headers {"Open-Meeting" "true"}})
                 (json/generate-string (::governance-log %)))
+  :handle-exception #(handle-exception %)
   :handle-no-content #(validate-context %))
 
 (defresource general-governance-resource [circle-id]
@@ -129,6 +120,7 @@
   :exists? (fn [_] (get-governance-logs circle-id))
   :handle-ok #(json/generate-string (::governance-logs %))
   :handle-created #(validate-context %)
+  :handle-exception #(handle-exception %)
   :location #(build-entry-url (:request %) (::new-governance-log-id %)))
 
 (defroutes app

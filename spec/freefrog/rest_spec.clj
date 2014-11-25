@@ -99,14 +99,14 @@
     (context "posting to the governance endpoint"
       (with response (http-request :post "/circles/1234/governance"))
 
-      (it-responds-with-status HttpStatus/SC_BAD_REQUEST @response)
+      (it-responds-with-status HttpStatus/SC_NOT_FOUND @response)
       (it-responds-with-body "Circle does not exist" @response))
 
     (context "putting to the agenda endpoint"
       (with response (http-request :put 
                                    "/circles/1234/governance/5678/agenda"
                                    {:body "New agenda"}))
-      (it-responds-with-status HttpStatus/SC_BAD_REQUEST @response)
+      (it-responds-with-status HttpStatus/SC_NOT_FOUND @response)
       (it-responds-with-body "Circle does not exist" @response)))
 
   (context "with a circle"
@@ -146,7 +146,7 @@
         (with response (http-request :put 
                                      "/circles/1234/governance/5678/agenda"
                                      {:body "New agenda"}))
-        (it-responds-with-status HttpStatus/SC_BAD_REQUEST @response)
+        (it-responds-with-status HttpStatus/SC_NOT_FOUND @response)
         (it-responds-with-body "Governance meeting does not exist" 
                                           @response)))
 
