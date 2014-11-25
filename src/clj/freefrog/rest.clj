@@ -21,17 +21,12 @@
   (:require [liberator.core :refer [resource defresource]]
             [liberator.representation :refer [ring-response]]
             [liberator.dev]
-            [ring.middleware.params :refer [wrap-params]]
             [freefrog.governance :as g]
             [freefrog.governance-logs :as gl]
             [freefrog.persistence :as p]
-            [clojure.walk :refer [keywordize-keys]]
-            [clojure.string :refer [split]]
             [clj-json.core :as json]
-            [clojure.java.io :as io]
             [compojure.route :as route]
             [compojure.core :refer [defroutes ANY GET]])
-  (:use [ring.util.codec :only [url-encode url-decode]])
   (:import java.net.URL
            [javax.persistence EntityNotFoundException]))
 
