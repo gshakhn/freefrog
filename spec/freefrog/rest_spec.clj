@@ -23,7 +23,7 @@
             [clj-http.client :as http-client]
             [freefrog.rest :as r]
             [freefrog.persistence :as p])
-  (:use [ring.adapter.jetty] [ring.util.codec :only [url-encode]])
+  (:use [ring.adapter.jetty])
   (:import [javax.persistence EntityNotFoundException]
            [org.apache.http HttpStatus]))
 
