@@ -128,9 +128,9 @@
 
   ;; Section 2.5.3
   (it "can add/remove domains")
-  (it "doesn't update/remove any of the constitutional domains")
+  (it "won't update/remove any of the constitutional domains")
   (it "can add/remove accountabilities")
-  (it "doesn't update/remove any of the constitutional accountabilities"))
+  (it "won't update/remove any of the constitutional accountabilities"))
 
 (def subcircle-name "Development")
 (def subcircle-role-name "Programmer")
