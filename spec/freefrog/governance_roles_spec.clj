@@ -201,6 +201,10 @@
 (def sample-anchor-with-policy (g/add-role-policy sample-anchor-with-domain
                                                   role-name sample-policy-name
                                                   sample-policy-text))
+(def sample-anchor-with-policies (g/add-role-policy sample-anchor-with-policy
+                                                    role-name
+                                                    sample-policy2-name
+                                                    sample-policy2-text))
 
 (defn- my-add-policy
   ([circle name text]
@@ -228,11 +232,26 @@
   (it (str "won't add a policy granting access to a domain that the role"
            "doesn't control")
     (should-throw IllegalArgumentException
-      (format "Role %s doesn't control domain %s" role-name sample-domain-2)
+      (format "Role '%s' doesn't control domain '%s'" role-name sample-domain-2)
       (g/add-role-policy sample-anchor-with-domain role-name
                          "Don't test my stuff!" "Only I can test stuff"
                          sample-domain-2)))
-  (it "won't add a policy with the same name as one that already exists")
-  (it "can remove a policy")
-  (it "won't remove a policy that doesn't exist"))
+  (it "won't add a policy with the same name as one that already exists"
+    (should-throw IllegalArgumentException
+      (format "Role '%s' already has a policy called '%s'" role-name
+              sample-policy-name)
+      (g/add-role-policy sample-anchor-with-policy role-name sample-policy-name
+                         "More coding stuff!")))
+  (it "can remove a policy"
+    (should= sample-anchor-with-policy
+      (g/remove-role-policy sample-anchor-with-policies role-name
+                            sample-policy2-name))
+    (should= sample-anchor-with-domain
+      (g/remove-role-policy sample-anchor-with-policy role-name
+                            sample-policy-name)))
+  (it "won't remove a policy that doesn't exist"
+    (should-throw IllegalArgumentException
+      (format "Role '%s' doesn't have a policy called '%s'" role-name
+              sample-policy-name)
+      (g/remove-role-policy sample-anchor-with-domain role-name sample-policy-name))))
 (run-specs)

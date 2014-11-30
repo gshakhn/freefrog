@@ -53,7 +53,7 @@
 
   (it "refuses to convert a role that is already a circle into a circle"
     (should-throw IllegalArgumentException
-      (format "Role %s is already a circle!" sample-role-name)
+      (format "Role '%s' is already a circle" sample-role-name)
       (-> sample-circle
           (g/convert-to-circle sample-role-name)
           (g/convert-to-circle sample-role-name))))
@@ -65,7 +65,7 @@
 
   (it "refuses to convert a non-empty circle into a role"
     (should-throw IllegalArgumentException
-      (format "Circle %s still contains roles!" sample-role-name)
+      (format "Circle %s still contains roles" sample-role-name)
       (let [circle-with-full-subcircle
             (-> sample-circle
                 (g/convert-to-circle sample-role-name)
@@ -75,7 +75,7 @@
 
   (it "refuses to convert a role that isn't a circle into a role"
     (should-throw IllegalArgumentException
-      (format "Role %s is not a circle!" sample-role-name)
+      (format "Role '%s' is not a circle" sample-role-name)
       (g/convert-to-role sample-circle sample-role-name)))
 
   (should-not-update-missing-or-empty-roles g/convert-to-circle
