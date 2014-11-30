@@ -229,6 +229,8 @@
     (update-role-entity circle role-name [:policies] assoc policy-name
                         {:name policy-name :text policy-text}))
   ([circle role-name policy-name policy-text domain]
+    (validate (contains? (get-entity circle role-name :domains) domain)
+              (format "Role %s doesn't control domain %s" role-name domain))
     (-> (add-role-policy circle role-name policy-name policy-text)
         (update-role-entity role-name [:policies policy-name] assoc
                             :domain domain))))

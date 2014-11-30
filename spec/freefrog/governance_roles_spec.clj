@@ -227,7 +227,11 @@
                          sample-policy-name sample-policy-text sample-domain-1)))
   (it (str "won't add a policy granting access to a domain that the role"
            "doesn't control")
-    )
+    (should-throw IllegalArgumentException
+      (format "Role %s doesn't control domain %s" role-name sample-domain-2)
+      (g/add-role-policy sample-anchor-with-domain role-name
+                         "Don't test my stuff!" "Only I can test stuff"
+                         sample-domain-2)))
   (it "won't add a policy with the same name as one that already exists")
   (it "can remove a policy")
   (it "won't remove a policy that doesn't exist"))
