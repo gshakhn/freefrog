@@ -241,6 +241,8 @@
   [circle role-name accountability]
   (remove-from circle role-name :accountabilities accountability))
 
+;; ## General purpose utility functions ##
+
 (defn update-subcircle
   "Generalizes any circle manipulation to unlimited subcircles. The path given
    is a series of role names starting from (but not including) the anchor
