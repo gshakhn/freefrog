@@ -22,6 +22,7 @@
 (ns freefrog.governance-circles-spec
   (:require [clojure.pprint :as pp]
             [clojure.set :as s]
+            [freefrog.core-roles :as c]
             [freefrog.governance :as g]
             [freefrog.governance-spec-helpers :refer :all]
             [speclj.core :refer :all]))
@@ -84,7 +85,8 @@
                                             "convert to role"))
 
 (describe "Constitutional Roles"
-  (for [role [g/lead-link g/rep-link g/secretary g/facilitator]
+  (for [role [c/lead-link-name c/rep-link-name c/secretary-name
+              c/facilitator-name]
         op [["Add" g/add-role]
             ["Remove" g/remove-role]
             ["Rename" g/rename-role "stuff"]
@@ -97,10 +99,10 @@
 
 ;; Section 2.2.3
 (describe "Lead Link Role"
-  (it "doesn't add domains to the Lead Link")
-  (it "doesn't add accountabilities to the Lead Link")
-  (it "doesn't remove domains from Lead Link")
-  (it "doesn't remove accountabilities from Lead Link")
+  (it "won't add domains to the Lead Link")
+  (it "won't add accountabilities to the Lead Link")
+  (it "won't remove domains from Lead Link")
+  (it "won't remove accountabilities from Lead Link")
   (it "can delegate a predefined domain from Lead Link to a role")
   (it "can delegate a predefined domain from Lead Link to a policy")
   (it "can delegate a predefined accountability from Lead Link to a role")

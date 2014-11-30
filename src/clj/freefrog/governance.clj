@@ -32,20 +32,15 @@
 ;;; one place so one can more easily reason about it.
 
 (ns freefrog.governance
-  (:require [clojure.set :as s]))
-
-(def lead-link "Lead Link")
-(def rep-link "Rep Link")
-(def secretary "Secretary")
-(def facilitator "Facilitator")
-(def constitutional-roles "All roles defined in the Constitution"
-  #{lead-link rep-link secretary facilitator})
+  (:require [clojure.set :as s]
+            [freefrog.governance-utils :as u]
+            [freefrog.core-roles :as c]))
 
 (def delegatable-roles "Roles whose attributes can be delegated in governance"
-  #{lead-link})
+  #{c/lead-link-name})
 
 (def amendable-roles "Roles you can add attributes to in governance"
-  #{rep-link secretary facilitator})
+  #{c/rep-link-name c/secretary-name c/facilitator-name})
 
 ;; ## General purpose utility functions ##
 
@@ -132,7 +127,7 @@
   (validate-not (empty? role-name) "Name may not be empty"))
 
 (defn- validate-constitutional [role-name]
-  (validate-not (constitutional-roles role-name)
+  (validate-not (c/constitutional-roles role-name)
                 (format "'%s' role is defined in the Constitution."
                         role-name)))
 
@@ -168,28 +163,11 @@
             (format "Circle %s still contains roles" role-name))
   (update-role circle role-name dissoc :is-circle?))
 
-(defn- assoc-if [map key value]
-  "Associate a value with a key only if the value is non-nil."
-  (if value (assoc map key value) map))
-
-(defn- make-role
-  "Make a role with the given name, purpose, domains and accountabilities.
-   Any of these items can be nil or empty, and they won't be added to the role.
-   This particular function doesn't validate anything, so be careful to
-   validate before using it!"
-  ([role-name]
-    {:name role-name})
-  ([role-name purpose domains accountabilities]
-    (-> (make-role role-name)
-        (assoc-if :purpose purpose)
-        (assoc-if :domains domains)
-        (assoc-if :accountabilities accountabilities))))
-
 (defn create-circle
   "Create a new circle with no parent."
   [name]
   (validate-not (empty? name) "Name may not be empty")
-  (convert-to-circle (make-role name)))
+  (convert-to-circle (u/make-role name)))
 
 (defn add-role
   "Adds a role to a circle.  The role may not conflict with an existing role.
@@ -211,7 +189,8 @@
                    circle
                    (assoc circle :roles {}))]
       (update-in circle [:roles] assoc new-role-name
-                 (make-role new-role-name purpose domains accountabilities)))))
+                 (u/make-role new-role-name purpose domains
+                              accountabilities)))))
 
 (defn remove-role
   "Remove a role from a circle."
