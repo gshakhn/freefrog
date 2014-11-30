@@ -181,6 +181,8 @@
 (def domain "domain")
 (def accountability "acc")
 (def alternate-circle-name "something else")
+(def policy "Policy1")
+(def policy-text "Policy1 Text")
 
 (def circle-with-subcircle-with-domain
   (g/add-role-domain circle-with-subcircle subcircle-name domain))
@@ -188,6 +190,9 @@
 (def circle-with-subcircle-with-acc
   (g/add-role-accountability circle-with-subcircle subcircle-name
                              accountability))
+
+(def circle-with-subcircle-with-policy
+  (g/add-role-policy circle-with-subcircle subcircle-name policy policy-text))
 
 (describe "using role operations on a circle is OK"
   (it "can change the purpose of a circle"
@@ -209,6 +214,24 @@
     (should= (update-in circle-with-subcircle [:roles subcircle-name]
                         assoc :accountabilities #{accountability})
       circle-with-subcircle-with-acc))
+
+  (it "can add a policy to a circle"
+    (should= (update-in circle-with-subcircle [:roles subcircle-name]
+                        assoc :policies {policy {:name policy
+                                                 :text policy-text}})
+      circle-with-subcircle-with-policy)
+    (should= (update-in circle-with-subcircle-with-domain
+                        [:roles subcircle-name]
+                        assoc :policies {policy {:name policy
+                                                 :text policy-text
+                                                 :domain domain}})
+      (g/add-role-policy circle-with-subcircle-with-domain subcircle-name policy
+                         policy-text domain)))
+
+  (it "can remove a policy from a circle"
+    (should= circle-with-subcircle
+      (g/remove-role-policy circle-with-subcircle-with-policy subcircle-name
+                            policy)))
 
   (it "can remove an accountability from a circle"
     (should= circle-with-subcircle
