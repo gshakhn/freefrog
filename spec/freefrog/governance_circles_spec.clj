@@ -96,7 +96,7 @@
         (apply (second op) (into [sample-anchor role] (drop 2 op)))))))
 
 ;; Section 2.2.3
-#_(describe "Lead Link Role"
+(describe "Lead Link Role"
   (it "doesn't add domains to the Lead Link")
   (it "doesn't add accountabilities to the Lead Link")
   (it "doesn't remove domains from Lead Link")
@@ -107,7 +107,7 @@
   (it "can delegate a predefined accountability from Lead Link to a policy"))
 
 ;; Section 2.4
-#_(describe "Role Assignment"
+(describe "Role Assignment"
   ;; Appendix A/Lead Link
   (it "can assign someone to a role")
 
@@ -119,7 +119,7 @@
   (it "can remove someone from a role"))
 
 ;; Section 2.5
-#_(describe "Elected Roles"
+(describe "Elected Roles"
   ;; Section 2.5.1
   (it "won't assign the person in the Lead Link role to the Facilitator
     or Rep Link role")
