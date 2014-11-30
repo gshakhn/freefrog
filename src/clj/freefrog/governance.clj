@@ -126,15 +126,15 @@
 
 (defn- validate-role-exists [circle role-name]
   (validate-not (empty? (get-role circle role-name))
-    (str "Role not found: " role-name)))
+                (str "Role not found: " role-name)))
 
 (defn- validate-role-name [role-name]
   (validate-not (empty? role-name) "Name may not be empty"))
 
 (defn- validate-constitutional [role-name]
   (validate-not (constitutional-roles role-name)
-    (format "'%s' role is defined in the Constitution."
-            role-name)))
+                (format "'%s' role is defined in the Constitution."
+                        role-name)))
 
 (defn- validate-role-updates [circle role-name]
   "Checks that the role name is not empty and that it exists in the circle."
@@ -151,7 +151,7 @@
    an exception."
   ([role]
     (validate-not (is-circle? role)
-      (format "Role '%s' is already a circle" (:name role)))
+                  (format "Role '%s' is already a circle" (:name role)))
     (assoc role :is-circle? true))
   ([circle role-name]
     (validate-role-updates circle role-name)
@@ -206,7 +206,7 @@
               (format "Role '%s' is not a circle." (:name circle)))
     (validate-constitutional new-role-name)
     (validate-not (get-in circle [:roles new-role-name])
-      (str "Role already exists: " new-role-name))
+                  (str "Role already exists: " new-role-name))
     (let [circle (if (contains? circle :roles)
                    circle
                    (assoc circle :roles {}))]
@@ -237,32 +237,9 @@
     (update-role circle role-name dissoc :purpose)
     (update-role circle role-name assoc :purpose new-purpose)))
 
-(defn add-role-policy
-  "Publish a policy to grant/revoke access to a domain on the given role in
-   the given circle. If you give a domain, that will be added, too."
-  ([circle role-name policy-name policy-text]
-    (validate-not (get-entity circle role-name :policies policy-name)
-      (format "Role '%s' already has a policy called '%s'"
-              role-name policy-name))
-    (update-role-entity circle role-name [:policies] assoc policy-name
-                        {:name policy-name :text policy-text}))
-  ([circle role-name policy-name policy-text domain]
-    (validate (contains? (get-entity circle role-name :domains) domain)
-              (format "Role '%s' doesn't control domain '%s'" role-name domain))
-    (-> (add-role-policy circle role-name policy-name policy-text)
-        (update-role-entity role-name [:policies policy-name] assoc
-                            :domain domain))))
-
-(defn remove-role-policy
-  "Remove a policy from a role in the given circle."
-  [circle role-name policy-name]
-  (validate (get-entity circle role-name :policies policy-name)
-            (format "Role '%s' doesn't have a policy called '%s'" role-name
-                    policy-name))
-  (remove-and-purge circle role-name :policies dissoc policy-name))
-
 (def ^:private err-types {:domains          "Domain"
-                          :accountabilities "Accountability"})
+                          :accountabilities "Accountability"
+                          :policies         "Policy"})
 
 (defn- validate-things
   "Abstract function to validate collections of things in a circle. Checks that
@@ -329,3 +306,25 @@
   "Remove an accountability from a role in the given circle."
   [circle role-name accountability]
   (remove-from circle role-name :accountabilities accountability))
+
+(defn add-role-policy
+  "Publish a policy to grant/revoke access to a domain on the given role in
+   the given circle. If you give a domain, that will be added, too."
+  ([circle role-name policy-name policy-text]
+    (validate-things circle role-name :policies policy-name contains?
+                     "%s '%s' already exists on role '%s'")
+    (update-role-entity circle role-name [:policies] assoc policy-name
+                        {:name policy-name :text policy-text}))
+  ([circle role-name policy-name policy-text domain]
+    (validate (contains? (get-entity circle role-name :domains) domain)
+              (format "Role '%s' doesn't control domain '%s'" role-name domain))
+    (-> (add-role-policy circle role-name policy-name policy-text)
+        (update-role-entity role-name [:policies policy-name] assoc
+                            :domain domain))))
+
+(defn remove-role-policy
+  "Remove a policy from a role in the given circle."
+  [circle role-name policy-name]
+  (validate-things circle role-name :policies policy-name (comp not contains?)
+                   "%s '%s' doesn't exist on role '%s'")
+  (remove-and-purge circle role-name :policies dissoc policy-name))

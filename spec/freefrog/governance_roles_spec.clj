@@ -216,6 +216,9 @@
 
 ;; Section 1.3
 (describe "policies"
+  (should-not-update-missing-or-empty-roles g/add-role-policy "policy"
+                                            sample-policy-name sample-policy-text)
+
   (it "can add a policy granting access to all domains"
     (should= (my-add-policy sample-anchor-with-domain sample-policy-name
                             sample-policy-text)
@@ -224,6 +227,7 @@
                             sample-policy2-text)
       (g/add-role-policy sample-anchor-with-policy role-name
                          sample-policy2-name sample-policy2-text)))
+
   (it "can add a policy granting access to a domain"
     (should= (my-add-policy sample-anchor-with-domain sample-policy-name
                             sample-policy-text sample-domain-1)
@@ -238,10 +242,14 @@
                          sample-domain-2)))
   (it "won't add a policy with the same name as one that already exists"
     (should-throw IllegalArgumentException
-      (format "Role '%s' already has a policy called '%s'" role-name
-              sample-policy-name)
+      (format "Policy '%s' already exists on role '%s'" sample-policy-name
+              role-name)
       (g/add-role-policy sample-anchor-with-policy role-name sample-policy-name
                          "More coding stuff!")))
+
+  (should-not-update-missing-or-empty-roles g/remove-role-policy "policy"
+                                            sample-policy-name)
+
   (it "can remove a policy"
     (should= sample-anchor-with-policy
       (g/remove-role-policy sample-anchor-with-policies role-name
@@ -251,7 +259,7 @@
                             sample-policy-name)))
   (it "won't remove a policy that doesn't exist"
     (should-throw IllegalArgumentException
-      (format "Role '%s' doesn't have a policy called '%s'" role-name
-              sample-policy-name)
+      (format "Policy '%s' doesn't exist on role '%s'" sample-policy-name
+              role-name)
       (g/remove-role-policy sample-anchor-with-domain role-name sample-policy-name))))
 (run-specs)
