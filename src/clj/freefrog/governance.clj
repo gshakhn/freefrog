@@ -84,16 +84,27 @@
   (apply update-in
          (concat [circle (entity-path role-name entities) fn] args)))
 
-(defn- update-role-entity
-  "Same as update-role-raw, but a bit easier to use. Includes an entity."
-  [circle role-name entity-path fn & args]
-  (update-role-raw circle role-name entity-path fn args))
-
 (defn- update-role
   "Sames as update-role-raw, but a bit easier to use. Doesn't include an
   entity."
   [circle role-name fn & args]
   (update-role-raw circle role-name nil fn args))
+
+(defn- update-role-entity
+  "Same as update-role-raw, but a bit easier to use. Includes an entity."
+  [circle role-name entity-path fn & args]
+  (update-role-raw circle role-name entity-path fn args))
+
+(defn- remove-and-purge
+  "Abstract function that removes a thing from a collection of things in a role
+   in a circle. Doesn't do ANY validation. Removes the collection if it's
+   empty. Uses the given rmfn because you could be operating on any kind of
+   collection."
+  [circle role-name type rmfn thing]
+  (let [result (update-role-entity circle role-name [type] rmfn thing)]
+    (if (empty? (get-entity result role-name type))
+      (update-role result role-name dissoc type)
+      result)))
 
 (defn update-subcircle
   "Generalizes any circle manipulation to unlimited subcircles. The path given
@@ -241,17 +252,6 @@
     (-> (add-role-policy circle role-name policy-name policy-text)
         (update-role-entity role-name [:policies policy-name] assoc
                             :domain domain))))
-
-(defn- remove-and-purge
-  "Abstract function that removes a thing from a collection of things in a role
-   in a circle. Doesn't do ANY validation. Removes the collection if it's
-   empty. Uses the given rmfn because you could be operating on any kind of
-   collection."
-  [circle role-name type rmfn thing]
-  (let [result (update-role-entity circle role-name [type] rmfn thing)]
-    (if (empty? (get-entity result role-name type))
-      (update-role result role-name dissoc type)
-      result)))
 
 (defn remove-role-policy
   "Remove a policy from a role in the given circle."
