@@ -18,7 +18,6 @@
 ;
 
 ;;; ### These are the core rules defined in the Holacracy Constitution ###
-;;; See Appendix A for the below core role definitions:
 (ns freefrog.core-roles
   (:require [freefrog.governance-utils :as u]))
 
