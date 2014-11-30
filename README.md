@@ -8,7 +8,7 @@ You can find the project's latest documentation in
 [Our S3 Artifact Bucket](http://s3.amazonaws.com/freefrog/docs/uberdoc.html).
 
 This project is being integrated using
-[Travis-CI](https://travis-ci.org/courage-labs/freefrog).
+[Travis-CI](https://travis-ci.org/couragelabs/freefrog).
 
 ## Development
 
