@@ -60,7 +60,7 @@
     (should-not-update-missing-or-empty-roles add-fn
       (str "adding a " type-str) val1)
 
-    (it (str "refuses to add the same " type-str " twice")
+    (it (str "won't add the same " type-str " twice")
       (should-throw IllegalArgumentException
         (format "%s '%s' already exists on role '%s'" type-str val1 role-name)
         (add-fn coll1 role-name val1)))
@@ -71,7 +71,7 @@
     (it (str "removes the " type-str "s array when there are none left")
       (should= sample-anchor-with-role (remove-fn coll1 role-name val1)))
 
-    (it (str "refuses to remove a " type-str " that doesn't exist")
+    (it (str "won't remove a " type-str " that doesn't exist")
       (should-throw IllegalArgumentException
         (format "%s '%s' doesn't exist on role '%s'" type-str val2 role-name)
         (remove-fn coll1 role-name val2)))
