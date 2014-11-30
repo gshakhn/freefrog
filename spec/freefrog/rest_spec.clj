@@ -168,7 +168,10 @@
                                        "/circles/1234/governance/5678/agenda"
                                        {:body "New agenda"}))
 
-          (it-responds-with-status HttpStatus/SC_CREATED @response))
+          (it-responds-with-status HttpStatus/SC_CREATED @response)
+          (it "should return the location of the newly created governance log"
+            (should= (str host-url "/circles/1234/governance/5678/agenda") 
+                     (get-location @response))))
 
         (context "getting the agenda endpoint"
           (with response (http-request :get "/circles/1234/governance/5678/agenda"))

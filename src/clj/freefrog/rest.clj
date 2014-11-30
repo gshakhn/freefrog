@@ -44,13 +44,15 @@
         [false {:message "Unsupported Content-Type"}])
     true))
 
-(defn build-entry-url [request id]
-  (URL. (format "%s://%s:%s%s/%s"
-                (name (:scheme request))
-                (:server-name request)
-                (:server-port request)
-                (:uri request)
-                (str id))))
+(defn build-entry-url
+  ([request]
+   (URL. (format "%s://%s:%s%s"
+                 (name (:scheme request))
+                 (:server-name request)
+                 (:server-port request)
+                 (:uri request))))
+  ([request id]
+   (URL. (format "%s/%s" (build-entry-url request) (str id)))))
 
 (defn new-governance-log [circle-id]
   (try 
@@ -111,7 +113,8 @@
                                 :body (str (:agenda (::governance-log %)))})
                 (ring-response {:status 400 :body "Agenda is closed."}))
   :handle-created #(validate-context %)
-  :handle-no-content #(validate-context %))
+  :handle-no-content #(validate-context %)
+  :location #(build-entry-url (:request %)))
 
 (defresource specific-governance-resource [circle-id log-id]
   :allowed-methods [:put :get]
