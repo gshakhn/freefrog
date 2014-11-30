@@ -243,8 +243,10 @@
                             :domain domain))))
 
 (defn- remove-and-purge
-  "Abstract function that removes a thing from a set of things in a role in a
-   circle. Performs all validation and so forth. Removes the set if it's empty."
+  "Abstract function that removes a thing from a collection of things in a role
+   in a circle. Doesn't do ANY validation. Removes the collection if it's
+   empty. Uses the given rmfn because you could be operating on any kind of
+   collection."
   [circle role-name type rmfn thing]
   (let [result (update-role-entity circle role-name [type] rmfn thing)]
     (if (empty? (get-entity result role-name type))
