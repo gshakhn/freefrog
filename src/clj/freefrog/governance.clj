@@ -96,6 +96,8 @@
   (validate-role-updates circle role-name)
   (validate (is-circle? circle role-name)
             (format "Role %s is not a circle!" role-name))
+  (validate (empty? (get-in circle [:roles role-name :roles]))
+            (format "Circle %s still contains roles!" role-name))
   (update-in circle [:roles role-name] dissoc :is-circle?))
 
 (defn- assoc-if [map key value]

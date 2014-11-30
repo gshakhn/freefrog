@@ -63,7 +63,15 @@
                                (g/convert-to-circle sample-role-name)
                                (g/convert-to-role sample-role-name))))
 
-  (it "refuses to convert a non-empty circle into a role")
+  (it "refuses to convert a non-empty circle into a role"
+    (should-throw IllegalArgumentException
+      (format "Circle %s still contains roles!" sample-role-name)
+      (let [circle-with-full-subcircle
+            (-> sample-circle
+                (g/convert-to-circle sample-role-name)
+                (g/update-subcircle [sample-role-name] g/add-role
+                                    "Fun"))]
+        (println (g/convert-to-role circle-with-full-subcircle sample-role-name)))))
 
   (it "refuses to convert a role that isn't a circle into a role"
     (should-throw IllegalArgumentException
