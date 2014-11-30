@@ -44,7 +44,7 @@
       (g/add-role-accountability role-name sample-acc-2)))
 
 (defn- should-handle-collection-properly [add-fn remove-fn type type-str coll1
-                                         coll2 val1 val2]
+                                          coll2 val1 val2]
   (describe type-str
     (it (str "can add a " type-str " to a role with no " type-str "s")
       (should= (update-in sample-anchor-with-role [:roles role-name]
@@ -58,7 +58,7 @@
           (add-fn coll1 role-name val2))))
 
     (should-not-update-missing-or-empty-roles add-fn
-      (str "adding a " type-str) val1)
+                                              (str "adding a " type-str) val1)
 
     (it (str "won't add the same " type-str " twice")
       (should-throw IllegalArgumentException
@@ -77,7 +77,7 @@
         (remove-fn coll1 role-name val2)))
 
     (should-not-update-missing-or-empty-roles remove-fn
-      (str "removing a " type-str) val1)))
+                                              (str "removing a " type-str) val1)))
 
 ;; Section 3.1.a
 (describe "Role Manipulation"
@@ -154,7 +154,7 @@
                               {role-name new-name})
             (g/rename-role sample-anchor-with-role role-name new-name)))
         (should-not-update-missing-or-empty-roles g/rename-role "renaming role"
-          new-name)))
+                                                  new-name)))
 
     ;; Section 1.1.a
     (describe "purpose"
@@ -174,7 +174,7 @@
           (g/update-role-purpose sample-anchor-with-role role-name "")))
 
       (should-not-update-missing-or-empty-roles g/update-role-purpose
-        "updating purpose" "Stuff"))
+                                                "updating purpose" "Stuff"))
 
     ;; Section 1.1.b
     (should-handle-collection-properly g/add-role-domain
@@ -193,4 +193,42 @@
                                        sample-anchor-with-accs
                                        sample-acc-1
                                        sample-acc-2)))
+
+(def sample-policy-name "Pull requests")
+(def sample-policy-text "You gotta use pull requests to contribute any code.")
+(def sample-policy2-name "Straight to Master")
+(def sample-policy2-text "Just tell someone what the commit has was.")
+(def sample-anchor-with-policy (g/add-role-policy sample-anchor-with-domain
+                                                  role-name sample-policy-name
+                                                  sample-policy-text))
+
+(defn- my-add-policy
+  ([circle name text]
+    (update-in circle [:roles role-name :policies]
+               assoc name {:name name :text text}))
+  ([circle name text domain]
+    (update-in (my-add-policy circle name text)
+               [:roles role-name :policies name] assoc :domain domain)))
+
+;; Section 1.3
+(describe "policies"
+  (it "can add a policy granting access to all domains"
+    (should= (my-add-policy sample-anchor-with-domain sample-policy-name
+                            sample-policy-text)
+      sample-anchor-with-policy)
+    (should= (my-add-policy sample-anchor-with-policy sample-policy2-name
+                            sample-policy2-text)
+      (g/add-role-policy sample-anchor-with-policy role-name
+                         sample-policy2-name sample-policy2-text)))
+  (it "can add a policy granting access to a domain"
+    (should= (my-add-policy sample-anchor-with-domain sample-policy-name
+                            sample-policy-text sample-domain-1)
+      (g/add-role-policy sample-anchor-with-domain role-name
+                         sample-policy-name sample-policy-text sample-domain-1)))
+  (it (str "won't add a policy granting access to a domain that the role"
+           "doesn't control")
+    )
+  (it "won't add a policy with the same name as one that already exists")
+  (it "can remove a policy")
+  (it "won't remove a policy that doesn't exist"))
 (run-specs)
