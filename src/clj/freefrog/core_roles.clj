@@ -25,7 +25,7 @@
 (def rep-link-name "Rep Link")
 (def secretary-name "Secretary")
 (def facilitator-name "Facilitator")
-(def constitutional-roles "All roles defined in the Constitution"
+(def core-roles "All roles defined in the Constitution"
   #{lead-link-name rep-link-name secretary-name facilitator-name})
 
 (def lead-link

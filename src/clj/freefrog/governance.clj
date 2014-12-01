@@ -36,12 +36,6 @@
             [freefrog.governance-utils :as u]
             [freefrog.core-roles :as c]))
 
-(def delegatable-roles "Roles whose attributes can be delegated in governance"
-  #{c/lead-link-name})
-
-(def amendable-roles "Roles you can add attributes to in governance"
-  #{c/rep-link-name c/secretary-name c/facilitator-name})
-
 ;; ## General purpose utility functions ##
 
 (defn- entity-path
@@ -127,7 +121,7 @@
   (validate-not (empty? role-name) "Name may not be empty"))
 
 (defn- validate-constitutional [role-name]
-  (validate-not (c/constitutional-roles role-name)
+  (validate-not (c/core-roles role-name)
                 (format "'%s' role is defined in the Constitution."
                         role-name)))
 
@@ -185,12 +179,9 @@
     (validate-constitutional new-role-name)
     (validate-not (get-in circle [:roles new-role-name])
                   (str "Role already exists: " new-role-name))
-    (let [circle (if (contains? circle :roles)
-                   circle
-                   (assoc circle :roles {}))]
-      (update-in circle [:roles] assoc new-role-name
-                 (u/make-role new-role-name purpose domains
-                              accountabilities)))))
+    (update-in circle [:roles] assoc new-role-name
+               (u/make-role new-role-name purpose domains
+                            accountabilities))))
 
 (defn remove-role
   "Remove a role from a circle."
@@ -307,3 +298,57 @@
   (validate-things circle role-name :policies policy-name (comp not contains?)
                    "%s '%s' doesn't exist on role '%s'")
   (remove-and-purge circle role-name :policies dissoc policy-name))
+
+;; ## Core Role Manipulation Functions ##
+
+(defn- validate-core-role-basics
+  [circle role-name descriptor]
+  (validate (is-circle? circle) "Please provide a valid Circle")
+  (validate (c/core-roles role-name)
+            (format "'%s' is not a Core Role" role-name))
+  (validate-not (= c/lead-link-name role-name)
+                (format "Domains may not be %s '%s' role" descriptor
+                        role-name)))
+
+(defn add-core-role-domain
+  "Add a domain to a core role."
+  [circle role-name domain]
+  (validate-core-role-basics circle role-name "added to")
+  (validate-not (get-in circle [:core-roles role-name :domains domain])
+                (format "Core Role '%s' already has domain '%s'"
+                        role-name domain))
+  (let [domains (get-in circle [:core-roles role-name :domains])
+        circle (if domains
+                 circle
+                 (update-in circle [:core-roles role-name] assoc
+                            :domains #{}))]
+    (update-in circle [:core-roles role-name :domains] conj domain)))
+
+(defn remove-core-role-domain
+  "Remove a domain from a core role."
+  [circle role-name domain]
+  (validate-core-role-basics circle role-name "removed from")
+  (validate (get-in circle [:core-roles role-name :domains domain])
+            (format "Core Role '%s' doesn't have domain '%s'" role-name domain))
+  (let [result (update-in circle [:core-roles role-name :domains] disj domain)
+        result (if (empty? (get-in result [:core-roles role-name :domains]))
+                 (update-in result [:core-roles role-name] dissoc :domains)
+                 result)
+        result (if (empty? (get-in result [:core-roles role-name]))
+                 (update-in result [:core-roles] dissoc role-name)
+                 result)
+        result (if (empty? (:core-roles result))
+                 (dissoc result :core-roles)
+                 result)]
+    result))
+
+(defn add-core-role-accountability
+  "Add an accountability to a core role."
+  [circle role-name accountability]
+  (let [accountabilities (get-in circle [:core-roles role-name :accountabilities])
+        circle (if accountabilities
+                 circle
+                 (update-in circle [:core-roles role-name] assoc
+                            :accountabilities #{}))]
+    (update-in circle [:core-roles role-name :accountabilities] conj
+               accountability)))
