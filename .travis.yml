@@ -1,4 +1,5 @@
 language: clojure
+jdk: oraclejdk8
 script: >
   lein spec &&
   lein junit &&
