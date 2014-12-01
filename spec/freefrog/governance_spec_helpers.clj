@@ -27,20 +27,15 @@
 (def sample-purpose "Building awesome software")
 (def sample-anchor-with-role (g/add-role sample-anchor role-name sample-purpose))
 
-(defn merge-params [fixed-params variable-params]
-  (if variable-params
-    (merge fixed-params variable-params)
-    fixed-params))
-
 (defn should-not-update-missing-or-empty-roles [fn type-str & params]
   (describe (format "%s problems" type-str)
     (it "doesn't work with a role that doesn't exist"
       (should-throw IllegalArgumentException (str "Role not found: "
                                                   role-name)
-        (apply fn (merge-params [sample-anchor role-name] params))))
+        (apply fn (concat [sample-anchor role-name] params))))
 
     (it "doesn't work with an empty name"
       (should-throw IllegalArgumentException "Name may not be empty"
-        (apply fn (merge-params [sample-anchor-with-role nil] params)))
+        (apply fn (concat [sample-anchor-with-role nil] params)))
       (should-throw IllegalArgumentException "Name may not be empty"
-        (apply fn (merge-params [sample-anchor-with-role ""] params))))))
+        (apply fn (concat [sample-anchor-with-role ""] params))))))

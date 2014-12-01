@@ -44,7 +44,7 @@
       (g/add-role-accountability role-name sample-acc-2)))
 
 (defn- should-handle-collection-properly [add-fn remove-fn type type-str coll1
-                                         coll2 val1 val2]
+                                          coll2 val1 val2]
   (describe type-str
     (it (str "can add a " type-str " to a role with no " type-str "s")
       (should= (update-in sample-anchor-with-role [:roles role-name]
@@ -58,9 +58,9 @@
           (add-fn coll1 role-name val2))))
 
     (should-not-update-missing-or-empty-roles add-fn
-      (str "adding a " type-str) val1)
+                                              (str "adding a " type-str) val1)
 
-    (it (str "refuses to add the same " type-str " twice")
+    (it (str "won't add the same " type-str " twice")
       (should-throw IllegalArgumentException
         (format "%s '%s' already exists on role '%s'" type-str val1 role-name)
         (add-fn coll1 role-name val1)))
@@ -71,13 +71,13 @@
     (it (str "removes the " type-str "s array when there are none left")
       (should= sample-anchor-with-role (remove-fn coll1 role-name val1)))
 
-    (it (str "refuses to remove a " type-str " that doesn't exist")
+    (it (str "won't remove a " type-str " that doesn't exist")
       (should-throw IllegalArgumentException
         (format "%s '%s' doesn't exist on role '%s'" type-str val2 role-name)
         (remove-fn coll1 role-name val2)))
 
     (should-not-update-missing-or-empty-roles remove-fn
-      (str "removing a " type-str) val1)))
+                                              (str "removing a " type-str) val1)))
 
 ;; Section 3.1.a
 (describe "Role Manipulation"
@@ -154,7 +154,7 @@
                               {role-name new-name})
             (g/rename-role sample-anchor-with-role role-name new-name)))
         (should-not-update-missing-or-empty-roles g/rename-role "renaming role"
-          new-name)))
+                                                  new-name)))
 
     ;; Section 1.1.a
     (describe "purpose"
@@ -174,7 +174,7 @@
           (g/update-role-purpose sample-anchor-with-role role-name "")))
 
       (should-not-update-missing-or-empty-roles g/update-role-purpose
-        "updating purpose" "Stuff"))
+                                                "updating purpose" "Stuff"))
 
     ;; Section 1.1.b
     (should-handle-collection-properly g/add-role-domain
@@ -193,4 +193,73 @@
                                        sample-anchor-with-accs
                                        sample-acc-1
                                        sample-acc-2)))
+
+(def sample-policy-name "Pull requests")
+(def sample-policy-text "You gotta use pull requests to contribute any code.")
+(def sample-policy2-name "Straight to Master")
+(def sample-policy2-text "Just tell someone what the commit has was.")
+(def sample-anchor-with-policy (g/add-role-policy sample-anchor-with-domain
+                                                  role-name sample-policy-name
+                                                  sample-policy-text))
+(def sample-anchor-with-policies (g/add-role-policy sample-anchor-with-policy
+                                                    role-name
+                                                    sample-policy2-name
+                                                    sample-policy2-text))
+
+(defn- my-add-policy
+  ([circle name text]
+    (update-in circle [:roles role-name :policies]
+               assoc name {:name name :text text}))
+  ([circle name text domain]
+    (update-in (my-add-policy circle name text)
+               [:roles role-name :policies name] assoc :domain domain)))
+
+;; Section 1.3
+(describe "policies"
+  (should-not-update-missing-or-empty-roles g/add-role-policy "policy"
+                                            sample-policy-name sample-policy-text)
+
+  (it "can add a policy granting access to all domains"
+    (should= (my-add-policy sample-anchor-with-domain sample-policy-name
+                            sample-policy-text)
+      sample-anchor-with-policy)
+    (should= (my-add-policy sample-anchor-with-policy sample-policy2-name
+                            sample-policy2-text)
+      (g/add-role-policy sample-anchor-with-policy role-name
+                         sample-policy2-name sample-policy2-text)))
+
+  (it "can add a policy granting access to a domain"
+    (should= (my-add-policy sample-anchor-with-domain sample-policy-name
+                            sample-policy-text sample-domain-1)
+      (g/add-role-policy sample-anchor-with-domain role-name
+                         sample-policy-name sample-policy-text sample-domain-1)))
+  (it (str "won't add a policy granting access to a domain that the role"
+           "doesn't control")
+    (should-throw IllegalArgumentException
+      (format "Role '%s' doesn't control domain '%s'" role-name sample-domain-2)
+      (g/add-role-policy sample-anchor-with-domain role-name
+                         "Don't test my stuff!" "Only I can test stuff"
+                         sample-domain-2)))
+  (it "won't add a policy with the same name as one that already exists"
+    (should-throw IllegalArgumentException
+      (format "Policy '%s' already exists on role '%s'" sample-policy-name
+              role-name)
+      (g/add-role-policy sample-anchor-with-policy role-name sample-policy-name
+                         "More coding stuff!")))
+
+  (should-not-update-missing-or-empty-roles g/remove-role-policy "policy"
+                                            sample-policy-name)
+
+  (it "can remove a policy"
+    (should= sample-anchor-with-policy
+      (g/remove-role-policy sample-anchor-with-policies role-name
+                            sample-policy2-name))
+    (should= sample-anchor-with-domain
+      (g/remove-role-policy sample-anchor-with-policy role-name
+                            sample-policy-name)))
+  (it "won't remove a policy that doesn't exist"
+    (should-throw IllegalArgumentException
+      (format "Policy '%s' doesn't exist on role '%s'" sample-policy-name
+              role-name)
+      (g/remove-role-policy sample-anchor-with-domain role-name sample-policy-name))))
 (run-specs)

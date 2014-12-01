@@ -2,27 +2,34 @@
 
 Exquisite Organization -- For Free
 
+## Information
+
+You can find the project's latest documentation in
+[Our S3 Artifact Bucket](http://s3.amazonaws.com/freefrog/docs/uberdoc.html).
+
+This project is being integrated using
+[Travis-CI](https://travis-ci.org/couragelabs/freefrog).
+
 ## Development
-    
+
 Running the specs once (SLOW):
 
     lein spec
-    
+
 Or autotest (SLOW to start, then FAST to develop):
-    
+
     lein autotest
-    
+
 To see what the documentation looks like:
-    
+
     lein marg && open docs/uberdoc.html
-    
-## Information
-    
-You can find the project's latest documentation in 
-[Our S3 Artifact Bucket](http://s3.amazonaws.com/freefrog/docs/uberdoc.html).
-   
-This project is being integrated using 
-[Travis-CI](https://travis-ci.org/courage-labs/freefrog).
+
+## Getting Help
+
+If the information above isn't telling you what you need to know, come chat
+with us! We hang out in
+[our IRC Channel](https://kiwiirc.com/client/irc.freenode.net/?nick=guest|?#couragelabs)
+pretty regularly.
 
 ## License
 

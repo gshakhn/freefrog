@@ -14,3 +14,4 @@ freefrog.iml
 .DS_Store
 /docs/
 .nrepl-port
+.floo*
