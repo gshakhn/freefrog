@@ -1,6 +1,7 @@
 language: clojure
 script: >
   lein spec &&
+  lein junit &&
   lein docs &&
   lein ancient > docs/ancient.txt &&
   lein kibit > docs/kibit.txt

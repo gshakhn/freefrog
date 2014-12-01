@@ -26,18 +26,23 @@
   :min-lein-version "2.3.4"
 
   :source-paths ["src/clj"]
+  :java-source-paths ["src/java" "test/java"]
 
-  :dependencies [[org.clojure/clojure "1.6.0"]
-                 [com.velisco/tagged "0.3.4"]
+  :dependencies [[com.velisco/tagged "0.3.4"]
                  [clj-jgit "0.8.0"]
+                 [junit/junit "4.11"]
+                 [org.clojure/clojure "1.6.0"]
+                 [org.pcollections/pcollections "2.1.2"]
                  [speclj "3.1.0"]]
 
-  :plugins [[speclj "3.1.0"]
+  :plugins [[lein-ancient "0.5.5"]
             [lein-marginalia "0.8.0"]
-            [lein-ancient "0.5.5"]
-            [lein-kibit "0.0.8"]]
+            [lein-junit "1.1.2"]
+            [lein-kibit "0.0.8"]
+            [speclj "3.1.0"]]
 
   :test-paths ["spec"]
+  :junit ["test/java"]
 
   :aliases {"autotest" ["spec" "-a"]
             "docs" ["marg" "src" "spec"]})
