@@ -36,14 +36,19 @@ public class Role {
     return domains;
   }
 
+  protected void validateRoleState(boolean condition, String format,
+                                   String value) {
+    if (condition) {
+      throw new IllegalStateException(format(format, value));
+    }
+  }
+
   /**
    * @return a new Role with the given domain added
    */
   public Role addDomain(String domain) {
-    if (domains.contains(domain)) {
-      throw new IllegalStateException(format("Domain '%s' already exists.",
-          domain));
-    }
+    validateRoleState(domains.contains(domain), "Domain '%s' already exists.",
+        domain);
     return new Role(purpose, domains.plus(domain));
   }
 
@@ -51,6 +56,8 @@ public class Role {
    * @return a new Role with the given domain removed
    */
   public Role removeDomain(String domain) {
+    validateRoleState(!domains.contains(domain), "Domain '%s' doesn't exist.",
+        domain);
     return new Role(purpose, domains.minus(domain));
   }
 }
