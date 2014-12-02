@@ -27,17 +27,6 @@ public class RoleTest {
     assertPurposeUpdates(new Role());
   }
 
-  @SuppressWarnings("unchecked")
-  @SafeVarargs
-  public static <T extends Role> void assertPurposeUpdates(
-      Role r, Consumer<T>... postAsserts) {
-    final T thingToTest = (T) r.addDomain(DOMAIN);
-    assertNull("Purpose should be null", thingToTest.getPurpose());
-    assertEquals(PURPOSE, thingToTest.updatePurpose(PURPOSE).getPurpose());
-    assertEquals(HashTreePSet.singleton(DOMAIN), thingToTest.getDomains());
-    postAssert(postAsserts, thingToTest);
-  }
-
   @Test
   public void itUpdatesDomains() {
     assertDomainManipulation(new Role());
@@ -45,16 +34,27 @@ public class RoleTest {
 
   @SuppressWarnings("unchecked")
   @SafeVarargs
+  public static <T extends Role> void assertPurposeUpdates(
+      Role r, Consumer<T>... postAsserts) {
+    final T thingToTest = r.addDomain(DOMAIN);
+    assertNull("Purpose should be null", thingToTest.getPurpose());
+    assertEquals(PURPOSE, thingToTest.updatePurpose(PURPOSE).getPurpose());
+    assertEquals(HashTreePSet.singleton(DOMAIN), thingToTest.getDomains());
+    postAssert(postAsserts, thingToTest);
+  }
+
+  @SuppressWarnings("unchecked")
+  @SafeVarargs
   public static <T extends Role> void assertDomainManipulation
       (Role testRole, Consumer<T>... postAsserts) {
-    final T withDomain = (T) testRole.addDomain(DOMAIN);
+    final T withDomain = testRole.addDomain(DOMAIN);
     assertEquals(HashTreePSet.singleton(DOMAIN), withDomain.getDomains());
     assertThrows(IllegalStateException.class,
         format("Domain '%s' already exists.", DOMAIN),
         () -> withDomain.addDomain(DOMAIN));
     postAssert(postAsserts, withDomain);
 
-    final T removed = (T) withDomain.removeDomain(DOMAIN);
+    final T removed = withDomain.removeDomain(DOMAIN);
     assertEquals(HashTreePSet.<String>empty(), removed.getDomains());
     assertThrows(IllegalStateException.class,
         format("Domain '%s' doesn't exist.", "nonexistent"),

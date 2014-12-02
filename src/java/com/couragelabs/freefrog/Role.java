@@ -46,18 +46,24 @@ public class Role {
   /**
    * @return a new Role with the given domain added
    */
-  public Role addDomain(String domain) {
+  @SuppressWarnings("unchecked")
+  public <T extends Role> T addDomain(String domain) {
     validateRoleState(domains.contains(domain), "Domain '%s' already exists.",
         domain);
-    return new Role(purpose, domains.plus(domain));
+    return (T) changeDomains(domains.plus(domain));
   }
 
   /**
    * @return a new Role with the given domain removed
    */
-  public Role removeDomain(String domain) {
+  @SuppressWarnings("unchecked")
+  public <T extends Role> T removeDomain(String domain) {
     validateRoleState(!domains.contains(domain), "Domain '%s' doesn't exist.",
         domain);
-    return new Role(purpose, domains.minus(domain));
+    return (T) changeDomains(domains.minus(domain));
+  }
+
+  protected Role changeDomains(PSet<String> newDomains) {
+    return new Role(purpose, newDomains);
   }
 }

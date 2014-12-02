@@ -84,22 +84,8 @@ public class Circle extends Role {
     return new Circle(name, purpose, getDomains(), roles);
   }
 
-  /**
-   * @return a new Circle with the given domain added
-   */
   @Override
-  public Circle addDomain(String domain) {
-    validateRoleState(getDomains().contains(domain), "Domain '%s' already " +
-        "exists.", domain);
-    return new Circle(name, getPurpose(), getDomains().plus(domain),
-        roles);
-  }
-
-  @Override
-  public Circle removeDomain(String domain) {
-    validateRoleState(!getDomains().contains(domain), "Domain '%s' doesn't " +
-        "exist.", domain);
-    return new Circle(name, getPurpose(), getDomains().minus(domain),
-        roles);
+  protected Circle changeDomains(PSet<String> newDomains) {
+    return new Circle(name, getPurpose(), newDomains, roles);
   }
 }
