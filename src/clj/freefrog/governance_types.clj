@@ -17,7 +17,19 @@
 ; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ;
 
-(ns freefrog.governance-utils)
+(ns freefrog.governance-types)
+
+(defprotocol GovernanceRecord
+  (is-circle? [r]))
+
+(defrecord Role [name purpose domains accountabilities policies]
+  GovernanceRecord
+  (is-circle? [_] false))
+
+;;todo This re-definition of fields in Circle is ridiculous.
+(defrecord Circle [name purpose domains accountabilities policies roles]
+  GovernanceRecord
+  (is-circle? [_] true))
 
 (defn- assoc-if [map key value]
   "Associate a value with a key only if the value is non-nil."
@@ -29,7 +41,7 @@
    This particular function doesn't validate anything, so be careful to
    validate before using it!"
   ([role-name]
-    {:name role-name})
+    (map->Role {:name role-name}))
   ([role-name purpose domains accountabilities]
     (-> (make-role role-name)
         (assoc-if :purpose purpose)

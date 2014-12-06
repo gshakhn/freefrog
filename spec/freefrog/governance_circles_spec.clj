@@ -24,6 +24,7 @@
             [clojure.set :as s]
             [freefrog.governance :as g]
             [freefrog.governance-spec-helpers :refer :all]
+            [freefrog.governance-types :as t]
             [speclj.core :refer :all]))
 
 (def sample-role-name "Test Thing")
@@ -33,8 +34,7 @@
 ;; Section 2.1
 (describe "Circles"
   (it "can create a circle"
-    (should= {:name       "Courage Labs"
-              :is-circle? true}
+    (should= (t/map->Circle {:name "Courage Labs"})
       (g/create-circle "Courage Labs")))
 
   (it "doesn't work with an empty name"
@@ -44,7 +44,7 @@
       (g/create-circle "")))
 
   (it "can tell you if a role is authorized to act as a circle"
-    (should (g/is-circle? sample-circle))
+    (should (t/is-circle? sample-circle))
     (should-not (g/is-circle? sample-circle sample-role-name)))
 
   (it "can convert a role into a circle"

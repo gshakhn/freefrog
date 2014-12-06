@@ -25,7 +25,8 @@
   (:require [clojure.set :as s]
             [freefrog.governance :as g]
             [freefrog.governance-spec-helpers :refer :all]
-            [speclj.core :refer :all]))
+            [speclj.core :refer :all]
+            [freefrog.governance-types :as t]))
 
 (def sample-domain-1 "Code")
 (def sample-domain-2 "Tests")
@@ -83,9 +84,10 @@
 (describe "Role Manipulation"
   (describe "adding"
     (it "can add a role to a circle with name and purpose"
-      (should= (assoc sample-anchor :roles {role-name
-                                            {:name    role-name
-                                             :purpose sample-purpose}})
+      (should= (assoc sample-anchor :roles
+                      {role-name
+                       (t/map->Role {:name    role-name
+                                     :purpose sample-purpose})})
         sample-anchor-with-role))
 
     (it "can add a role to a circle that already has roles"
@@ -93,34 +95,40 @@
             second-role-purpose "Making sure Programmers don't screw up"]
         (should= (update-in sample-anchor-with-role [:roles] assoc
                             second-role-name
-                            {:name    second-role-name
-                             :purpose second-role-purpose})
+                            (t/map->Role {:name    second-role-name
+                                          :purpose second-role-purpose}))
           (g/add-role sample-anchor-with-role second-role-name
                       second-role-purpose))))
 
     (it "can add a role to a circle with name and accountabilities"
       (should= (assoc sample-anchor :roles
-                      {role-name {:name             role-name
-                                  :accountabilities sample-accountabilities}})
+                      {role-name
+                       (t/map->Role {:name             role-name
+                                     :accountabilities sample-accountabilities})})
         (g/add-role sample-anchor role-name
                     nil nil sample-accountabilities)))
 
     (it "can add a role to a circle with name, purpose, and domains"
-      (should= (assoc sample-anchor :roles {role-name {:name    role-name
-                                                       :domains sample-domains}})
+      (should= (assoc sample-anchor :roles
+                      {role-name
+                       (t/map->Role {:name    role-name
+                                     :domains sample-domains})})
         (g/add-role sample-anchor role-name nil sample-domains nil)))
 
     (it "can add a role to a circle with name, purpose, and accountabilities"
-      (should= (assoc sample-anchor :roles {role-name {:name    role-name
-                                                       :domains sample-domains}})
+      (should= (assoc sample-anchor :roles
+                      {role-name
+                       (t/map->Role {:name    role-name
+                                     :domains sample-domains})})
         (g/add-role sample-anchor role-name nil sample-domains nil)))
 
     (it "can add a role to a circle with everything"
       (should= (assoc sample-anchor :roles
-                      {role-name {:name             role-name
-                                  :purpose          sample-purpose
-                                  :domains          sample-domains
-                                  :accountabilities sample-accountabilities}})
+                      {role-name
+                       (t/map->Role {:name             role-name
+                                     :purpose          sample-purpose
+                                     :domains          sample-domains
+                                     :accountabilities sample-accountabilities})})
         (g/add-role sample-anchor role-name sample-purpose sample-domains
                     sample-accountabilities)))
 
@@ -166,11 +174,11 @@
                                    new-purpose))))
 
       (it "can clear a role's purpose"
-        (should= (update-in sample-anchor-with-role [:roles role-name] dissoc
-                            :purpose)
+        (should= (update-in sample-anchor-with-role [:roles role-name] assoc
+                            :purpose nil)
           (g/update-role-purpose sample-anchor-with-role role-name nil))
-        (should= (update-in sample-anchor-with-role [:roles role-name] dissoc
-                            :purpose)
+        (should= (update-in sample-anchor-with-role [:roles role-name] assoc
+                            :purpose nil)
           (g/update-role-purpose sample-anchor-with-role role-name "")))
 
       (should-not-update-missing-or-empty-roles g/update-role-purpose
