@@ -39,7 +39,6 @@
             [speclj "3.1.0"]]
 
   :test-paths ["spec"]
-  :junit ["test/java"]
 
   :aliases {"autotest" ["spec" "-a"]
             "docs" ["marg" "src" "spec"]})
