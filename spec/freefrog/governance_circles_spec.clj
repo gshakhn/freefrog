@@ -22,7 +22,6 @@
 (ns freefrog.governance-circles-spec
   (:require [clojure.pprint :as pp]
             [clojure.set :as s]
-            [freefrog.core-roles :as c]
             [freefrog.governance :as g]
             [freefrog.governance-spec-helpers :refer :all]
             [speclj.core :refer :all]))
@@ -85,31 +84,13 @@
                                             "convert to role"))
 
 (describe "Constitutional Roles"
-  (for [role [c/lead-link-name c/rep-link-name c/secretary-name
-              c/facilitator-name]
-        op [["Add" g/add-role]
-            ["Remove" g/remove-role]
-            ["Rename" g/rename-role "stuff"]
-            ["Update the purpose of" g/update-role-purpose "Stuff"]
-            ["Convert into a circle" g/convert-to-circle]]]
-    (it (format "doesn't %s the %s role" (first op) role)
-      (should-throw IllegalArgumentException
-        (format "'%s' role is defined in the Constitution." role)
-        (apply (second op) (into [sample-anchor role] (drop 2 op)))))))
+  )
 
 ;; Section 2.2.3
 (describe "Lead Link Role"
-  (it "won't add domains to the Lead Link"
-    (should-throw IllegalArgumentException
-      (format "Domains may not be added to '%s' role" c/lead-link-name)
-      (g/add-core-role-domain sample-anchor c/lead-link-name "Wonderfulness")))
-
+  (it "won't add domains to the Lead Link")
   (it "won't add accountabilities to the Lead Link")
-  (it "won't remove domains from Lead Link"
-    (should-throw IllegalArgumentException
-      (format "Domains may not be removed from '%s' role" c/lead-link-name)
-      (g/remove-core-role-domain sample-anchor c/lead-link-name
-                                 "Something")))
+  (it "won't remove domains from Lead Link")
   (it "won't remove accountabilities from Lead Link")
   (it "can delegate a predefined domain from Lead Link to a role")
   (it "can delegate a predefined domain from Lead Link to a policy")
@@ -118,7 +99,7 @@
   (it "can create policies"))
 
 ;; Section 2.4
-#_(describe "Role Assignment"
+(describe "Role Assignment"
   ;; Appendix A/Lead Link
   (it "can assign someone to a role")
 
@@ -129,39 +110,6 @@
   ;; Section 2.4.3, Appendix A/Lead Link
   (it "can remove someone from a role"))
 
-
-(def domain1 "Fun Times")
-(def domain2 "Sad Times")
-
-(def acc1 "Making people happy")
-(def acc2 "Making people sad")
-
-(def sample-anchor-with-core-domain
-  (g/add-core-role-domain sample-anchor c/secretary-name domain1))
-
-(def sample-anchor-with-core-domains
-  (g/add-core-role-domain sample-anchor-with-core-domain
-                          c/secretary-name domain2))
-
-(def sample-anchor-with-core-acc
-  (g/add-core-role-accountability sample-anchor c/secretary-name acc1))
-
-(def sample-anchor-with-core-accs
-  (g/add-core-role-accountability sample-anchor-with-core-acc
-                                  c/secretary-name acc2))
-
-(def sample-anchor-with-both
-  (g/add-core-role-accountability sample-anchor-with-core-domain
-                                  c/secretary-name acc1))
-
-(def sample-anchor-with-facilitator-acc
-  (g/add-core-role-accountability sample-anchor
-                                  c/facilitator-name acc1))
-
-(def sample-anchor-with-multiple-core-roles
-  (g/add-core-role-accountability sample-anchor-with-core-domain
-                                  c/facilitator-name acc1))
-
 ;; Section 2.5
 (describe "Elected Roles"
   ;; Section 2.5.1
@@ -169,81 +117,9 @@
     or Rep Link role")
 
   ;; Section 2.5.3
-  (it "can add domains"
-    (should= (update-in sample-anchor [:core-roles c/secretary-name]
-                        assoc :domains #{domain1})
-      sample-anchor-with-core-domain)
-    (should= (update-in sample-anchor [:core-roles c/secretary-name]
-                        assoc :domains #{domain1 domain2})
-      (-> sample-anchor
-          (g/add-core-role-domain c/secretary-name domain1)
-          (g/add-core-role-domain c/secretary-name domain2)))
-    (should= (update-in sample-anchor [:core-roles c/facilitator-name]
-                        assoc :domains #{domain1})
-      (g/add-core-role-domain sample-anchor c/facilitator-name domain1)))
-
-  (it "won't add the same domain twice to the same core role"
-    (should-throw IllegalArgumentException
-      (format "Core Role '%s' already has domain '%s'" c/secretary-name
-              domain1)
-      (g/add-core-role-domain sample-anchor-with-core-domain
-                              c/secretary-name domain1))
-    (should-throw IllegalArgumentException
-      (format "Core Role '%s' already has domain '%s'" c/secretary-name
-              domain2)
-      (g/add-core-role-domain sample-anchor-with-core-domains
-                              c/secretary-name domain2)))
-
-  (it "can remove domains"
-    (should= sample-anchor-with-core-domain
-      (g/remove-core-role-domain sample-anchor-with-core-domains
-                                 c/secretary-name domain2))
-    (should= sample-anchor
-      (g/remove-core-role-domain sample-anchor-with-core-domain
-                                 c/secretary-name domain1))
-
-    (should= sample-anchor-with-core-acc
-      (g/remove-core-role-domain sample-anchor-with-both
-                                 c/secretary-name domain1))
-
-    (should= sample-anchor-with-facilitator-acc
-      (g/remove-core-role-domain sample-anchor-with-multiple-core-roles
-                                 c/secretary-name domain1)))
-
-  (it "won't remove a domain that doesn't exist"
-    (should-throw IllegalArgumentException
-      (format "Core Role '%s' doesn't have domain '%s'" c/secretary-name
-              domain1)
-      (g/remove-core-role-domain sample-anchor
-                                 c/secretary-name domain1)))
-
-  (it "won't manipulate role domains on non-circles"
-    (should-throw IllegalArgumentException "Please provide a valid Circle"
-      (g/add-core-role-domain {} c/secretary-name domain1))
-    (should-throw IllegalArgumentException "Please provide a valid Circle"
-      (g/remove-core-role-domain {} c/secretary-name domain1)))
-
-  (it "won't manipulate domains on non-core roles"
-    (should-throw IllegalArgumentException
-      (format "'%s' is not a Core Role" role-name)
-      (g/add-core-role-domain sample-anchor role-name domain1))
-    (should-throw IllegalArgumentException
-      (format "'%s' is not a Core Role" role-name)
-      (g/remove-core-role-domain sample-anchor role-name domain1)))
-
-  (it "can add accountabilities"
-    (should= (update-in sample-anchor [:core-roles c/secretary-name]
-                        assoc :accountabilities #{acc1})
-      sample-anchor-with-core-acc)
-    (should= (update-in sample-anchor [:core-roles c/secretary-name]
-                        assoc :accountabilities #{acc1 acc2})
-      (-> sample-anchor
-          (g/add-core-role-accountability c/secretary-name acc1)
-          (g/add-core-role-accountability c/secretary-name acc2)))
-    (should= (update-in sample-anchor [:core-roles c/facilitator-name]
-                        assoc :accountabilities #{acc1})
-      (g/add-core-role-accountability sample-anchor c/facilitator-name acc1)))
-
+  (it "can add domains")
+  (it "can remove domains")
+  (it "can add accountabilities")
   (it "won't add the same accountability twice to the same core role")
   (it "can remove accountabilities")
   (it "won't remove an accountability that doesn't exist")
