@@ -34,6 +34,45 @@
 (ns freefrog.governance
   (:require [clojure.set :as s]))
 
+;; ## General purpose utility functions ##
+
+(defn- entity-path
+  [role-name entities]
+  (concat [:roles role-name] entities))
+
+(defn- role-path
+  [role-name & entities]
+  (entity-path role-name entities))
+
+(defn- get-role [circle role-name]
+  (get-in circle (role-path role-name)))
+
+(defn- get-entity-raw
+  [circle role-name entities]
+  (get-in circle (entity-path role-name entities)))
+
+(defn- get-entity
+  "Same as get-entity-raw but nicer."
+  [circle role-name & entities]
+  (get-entity-raw circle role-name entities))
+
+;; ## Validators ##
+
+(defn- validate [valid? err-msg]
+  (when-not valid? (throw (IllegalArgumentException. err-msg))))
+
+(defn- validate-not [invalid? err-msg]
+  (validate (not invalid?) err-msg))
+
+(defn- validate-role-exists [circle role-name]
+  (validate-not (empty? (get-role circle role-name))
+                (str "Role not found: " role-name)))
+
+(defn- validate-role-name [role-name]
+  (validate-not (empty? role-name) "Name may not be empty"))
+
+;; ## Types ##
+
 (defprotocol GovernanceRecord
   (is-circle? [r]))
 
@@ -63,33 +102,19 @@
         (assoc-if :domains domains)
         (assoc-if :accountabilities accountabilities))))
 
-;; ## General purpose utility functions ##
-
-(defn- entity-path
-  [role-name entities]
-  (concat [:roles role-name] entities))
-
-(defn- role-path
-  [role-name & entities]
-  (entity-path role-name entities))
-
-(defn- get-role [circle role-name]
-  (get-in circle (role-path role-name)))
-
-(defn- get-entity-raw
-  [circle role-name entities]
-  (get-in circle (entity-path role-name entities)))
-
-(defn- get-entity
-  "Same as get-entity-raw but nicer."
-  [circle role-name & entities]
-  (get-entity-raw circle role-name entities))
+(defn create-circle
+  "Create a new circle with no parent."
+  [name]
+  (validate-not (empty? name) "Name may not be empty")
+  (map->Circle {:name name}))
 
 (defn is-subrole-circle?
   "Returns true if the given circle really is a circle. If you give it a
   role, it will tell you if the given role inside the given circle is a circle."
   [circle role-name]
   (is-circle? (get-role circle role-name)))
+
+;; ## Generalization Functions ##
 
 (defn- update-role-raw
   "Generalizes any role manipulation. The entity-path is the path to the entity
@@ -132,21 +157,6 @@
         (concat [circle (interleave (repeat :roles) path) fn] params)]
     (apply update-in update-args)))
 
-;; ## Validators ##
-
-(defn- validate [valid? err-msg]
-  (when-not valid? (throw (IllegalArgumentException. err-msg))))
-
-(defn- validate-not [invalid? err-msg]
-  (validate (not invalid?) err-msg))
-
-(defn- validate-role-exists [circle role-name]
-  (validate-not (empty? (get-role circle role-name))
-                (str "Role not found: " role-name)))
-
-(defn- validate-role-name [role-name]
-  (validate-not (empty? role-name) "Name may not be empty"))
-
 
 (defn- validate-role-updates [circle role-name]
   "Checks that the role name is not empty and that it exists in the circle."
@@ -180,12 +190,6 @@
   (-> circle
       (update-role role-name map->Role)
       (update-role role-name dissoc :roles)))
-
-(defn create-circle
-  "Create a new circle with no parent."
-  [name]
-  (validate-not (empty? name) "Name may not be empty")
-  (map->Circle {:name name}))
 
 (defn add-role
   "Adds a role to a circle.  The role may not conflict with an existing role.
