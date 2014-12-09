@@ -32,9 +32,36 @@
 ;;; one place so one can more easily reason about it.
 
 (ns freefrog.governance
-  (:require [clojure.set :as s]
-            [freefrog.governance-types :as t]
-            [freefrog.core-roles :as c]))
+  (:require [clojure.set :as s]))
+
+(defprotocol GovernanceRecord
+  (is-circle? [r]))
+
+(defrecord Role [name purpose domains accountabilities policies]
+  GovernanceRecord
+  (is-circle? [_] false))
+
+;;todo This re-definition of fields in Circle is ridiculous.
+(defrecord Circle [name purpose domains accountabilities policies roles]
+  GovernanceRecord
+  (is-circle? [_] true))
+
+(defn- assoc-if [map key value]
+  "Associate a value with a key only if the value is non-nil."
+  (if value (assoc map key value) map))
+
+(defn make-role
+  "Make a role with the given name, purpose, domains and accountabilities.
+   Any of these items can be nil or empty, and they won't be added to the role.
+   This particular function doesn't validate anything, so be careful to
+   validate before using it!"
+  ([role-name]
+    (map->Role {:name role-name}))
+  ([role-name purpose domains accountabilities]
+    (-> (make-role role-name)
+        (assoc-if :purpose purpose)
+        (assoc-if :domains domains)
+        (assoc-if :accountabilities accountabilities))))
 
 ;; ## General purpose utility functions ##
 
@@ -58,11 +85,11 @@
   [circle role-name & entities]
   (get-entity-raw circle role-name entities))
 
-(defn is-circle?
+(defn is-subrole-circle?
   "Returns true if the given circle really is a circle. If you give it a
   role, it will tell you if the given role inside the given circle is a circle."
   [circle role-name]
-  (t/is-circle? (get-role circle role-name)))
+  (is-circle? (get-role circle role-name)))
 
 (defn- update-role-raw
   "Generalizes any role manipulation. The entity-path is the path to the entity
@@ -120,14 +147,9 @@
 (defn- validate-role-name [role-name]
   (validate-not (empty? role-name) "Name may not be empty"))
 
-(defn- validate-constitutional [role-name]
-  (validate-not (c/core-roles role-name)
-                (format "'%s' role is defined in the Constitution."
-                        role-name)))
 
 (defn- validate-role-updates [circle role-name]
   "Checks that the role name is not empty and that it exists in the circle."
-  (validate-constitutional role-name)
   (validate-role-name role-name)
   (validate-role-exists circle role-name))
 
@@ -139,9 +161,9 @@
    inside of a circle into a circle. If the role is already a circle, expect
    an exception."
   ([role]
-    (validate-not (t/is-circle? role)
+    (validate-not (is-circle? role)
                   (format "Role '%s' is already a circle" (:name role)))
-    (t/map->Circle (into {} role)))
+    (map->Circle (into {} role)))
   ([circle role-name]
     (validate-role-updates circle role-name)
     (update-role circle role-name convert-to-circle)))
@@ -151,19 +173,19 @@
    an exception."
   [circle role-name]
   (validate-role-updates circle role-name)
-  (validate (is-circle? circle role-name)
+  (validate (is-subrole-circle? circle role-name)
             (format "Role '%s' is not a circle" role-name))
   (validate (empty? (get-entity circle role-name :roles))
             (format "Circle %s still contains roles" role-name))
   (-> circle
-      (update-role role-name t/map->Role)
+      (update-role role-name map->Role)
       (update-role role-name dissoc :roles)))
 
 (defn create-circle
   "Create a new circle with no parent."
   [name]
   (validate-not (empty? name) "Name may not be empty")
-  (t/map->Circle {:name name}))
+  (map->Circle {:name name}))
 
 (defn add-role
   "Adds a role to a circle.  The role may not conflict with an existing role.
@@ -176,13 +198,12 @@
 
   ([circle new-role-name purpose domains accountabilities]
     (validate-role-name new-role-name)
-    (validate (t/is-circle? circle)
+    (validate (is-circle? circle)
               (format "Role '%s' is not a circle." (:name circle)))
-    (validate-constitutional new-role-name)
     (validate-not (get-in circle [:roles new-role-name])
                   (str "Role already exists: " new-role-name))
     (update-in circle [:roles] assoc new-role-name
-               (t/make-role new-role-name purpose domains
+               (make-role new-role-name purpose domains
                             accountabilities))))
 
 (defn remove-role

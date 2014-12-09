@@ -19,17 +19,15 @@
 
 ;;; ### These are the core rules defined in the Holacracy Constitution ###
 (ns freefrog.core-roles
-  (:require [freefrog.governance-types :as t]))
+  (:require [freefrog.governance :as g]))
 
 (def lead-link-name "Lead Link")
 (def rep-link-name "Rep Link")
 (def secretary-name "Secretary")
 (def facilitator-name "Facilitator")
-(def core-roles "All roles defined in the Constitution"
-  #{lead-link-name rep-link-name secretary-name facilitator-name})
 
 (def lead-link
-  (t/make-role
+  (g/make-role
     lead-link-name
     (str "The Lead Link Role shall be deemed to hold the purpose of the "
          "overall Circle.")
@@ -47,7 +45,7 @@
           "enactment of its Accountabilities")]))
 
 (def rep-link
-  (t/make-role
+  (g/make-role
     rep-link-name
     (str "Within the Super-Circle, the Rep Link Role shall be deemed to "
          "hold the purpose of the overall Circle so represented; within "
@@ -65,7 +63,7 @@
           "checklist items assigned to the overall Circle")]))
 
 (def facilitator
-  (t/make-role
+  (g/make-role
     facilitator-name
     (str "Circle governance and operational practices aligned with the core "
          "rules and processes of this Constitution.") nil
@@ -80,7 +78,7 @@
           "a Sub-Circle")]))
 
 (def secretary
-  (t/make-role
+  (g/make-role
     secretary-name
     (str "Stabilize the Circle's Governance over time as a steward of the "
          "Circle's formal records and record-keeping process")
