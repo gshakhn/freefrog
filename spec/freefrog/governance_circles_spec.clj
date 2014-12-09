@@ -28,7 +28,7 @@
 
 (def sample-role-name "Test Thing")
 
-(def sample-circle (g/add-role sample-anchor sample-role-name nil))
+(def sample-circle (g/add-role-to-circle sample-anchor sample-role-name nil))
 
 ;; Section 2.1
 (describe "Circles"
@@ -68,7 +68,7 @@
       (let [circle-with-full-subcircle
             (-> sample-circle
                 (g/convert-to-circle sample-role-name)
-                (g/update-subcircle [sample-role-name] g/add-role
+                (g/update-subcircle [sample-role-name] g/add-role-to-circle
                                     "Fun"))]
         (println (g/convert-to-role circle-with-full-subcircle sample-role-name)))))
 
@@ -131,20 +131,20 @@
 (def subcircle-role-purpose "Coding")
 (def circle-with-subcircle
   (-> sample-anchor
-      (g/add-role subcircle-name "Great software")
+      (g/add-role-to-circle subcircle-name "Great software")
       (g/convert-to-circle subcircle-name)))
 (def circle-with-subrole
   (g/update-subcircle circle-with-subcircle [subcircle-name]
-                      g/add-role role-name
+                      g/add-role-to-circle role-name
                       subcircle-role-purpose))
 
 (describe "Subcircle manipulation"
   (it "can add a role to a subcircle"
     (let [expected (update-in circle-with-subcircle [:roles subcircle-name]
-                              g/add-role subcircle-role-name
+                              g/add-role-to-circle subcircle-role-name
                               subcircle-role-purpose)
           actual (g/update-subcircle circle-with-subcircle [subcircle-name]
-                                     g/add-role subcircle-role-name
+                                     g/add-role-to-circle subcircle-role-name
                                      subcircle-role-purpose)]
       (should= expected actual)))
 
@@ -164,15 +164,7 @@
           (g/update-subcircle circle-with-subrole [subcircle-name
                                                    subcircle-role-name]
                               g/convert-to-circle)]
-      (should= expected actual)))
-
-  (it "refuses to add a role to a role that isn't a circle"
-    (should-throw IllegalArgumentException
-      (format "Role '%s' is not a circle." subcircle-role-name)
-      (pp/pprint (g/update-subcircle circle-with-subrole [subcircle-name
-                                                          subcircle-role-name]
-                                     g/add-role "Something"
-                                     "Whatever I want")))))
+      (should= expected actual))))
 
 (def domain "domain")
 (def accountability "acc")

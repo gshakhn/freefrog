@@ -71,10 +71,20 @@
 (defn- validate-role-name [role-name]
   (validate-not (empty? role-name) "Name may not be empty"))
 
+(defn- validate-role-updates [circle role-name]
+  "Checks that the role name is not empty and that it exists in the circle."
+  (validate-role-name role-name)
+  (validate-role-exists circle role-name))
+
 ;; ## Types ##
 
 (defprotocol GovernanceRecord
   (is-circle? [r]))
+
+(defprotocol RoleContainer
+  (add-role [circle role])
+  (remove-role [circle role-name])
+  (rename-role [circle role-name new-name]))
 
 (defrecord Role [name purpose domains accountabilities policies]
   GovernanceRecord
@@ -83,12 +93,34 @@
 ;;todo This re-definition of fields in Circle is ridiculous.
 (defrecord Circle [name purpose domains accountabilities policies roles]
   GovernanceRecord
-  (is-circle? [_] true))
+  (is-circle? [_] true)
+
+  RoleContainer
+  (add-role [circle role]
+    (let [new-role-name (:name role)]
+      (validate-role-name new-role-name)
+      (validate-not (get-in circle [:roles new-role-name])
+                    (str "Role already exists: " new-role-name))
+      (update-in circle [:roles] assoc new-role-name role)))
+
+  (remove-role [circle role-name]
+    (validate-role-updates circle role-name)
+    (let [result (update-in circle [:roles] dissoc role-name)]
+      (if (empty? (:roles result))
+        (assoc result :roles nil)
+        result)))
+
+  (rename-role [circle role-name new-name]
+    (validate-role-updates circle role-name)
+    (update-in circle [:roles]
+               s/rename-keys {role-name new-name})))
 
 (defn- assoc-if [map key value]
   "Associate a value with a key only if the value is non-nil."
   (if value (assoc map key value) map))
 
+;todo Consider making this a destructured map, or better yet just use the
+; defrecord itself
 (defn make-role
   "Make a role with the given name, purpose, domains and accountabilities.
    Any of these items can be nil or empty, and they won't be added to the role.
@@ -158,12 +190,6 @@
     (apply update-in update-args)))
 
 
-(defn- validate-role-updates [circle role-name]
-  "Checks that the role name is not empty and that it exists in the circle."
-  (validate-role-name role-name)
-  (validate-role-exists circle role-name))
-
-
 ;; ## Role manipulation ##
 
 (defn convert-to-circle
@@ -191,40 +217,18 @@
       (update-role role-name map->Role)
       (update-role role-name dissoc :roles)))
 
-(defn add-role
+(defn add-role-to-circle
   "Adds a role to a circle.  The role may not conflict with an existing role.
    new-role-name may not be empty."
   ([circle new-role-name]
-    (add-role circle new-role-name nil nil nil))
+    (add-role-to-circle circle new-role-name nil nil nil))
 
   ([circle new-role-name purpose]
-    (add-role circle new-role-name purpose nil nil))
+    (add-role-to-circle circle new-role-name purpose nil nil))
 
   ([circle new-role-name purpose domains accountabilities]
-    (validate-role-name new-role-name)
-    (validate (is-circle? circle)
-              (format "Role '%s' is not a circle." (:name circle)))
-    (validate-not (get-in circle [:roles new-role-name])
-                  (str "Role already exists: " new-role-name))
-    (update-in circle [:roles] assoc new-role-name
-               (make-role new-role-name purpose domains
-                            accountabilities))))
-
-(defn remove-role
-  "Remove a role from a circle."
-  [circle role-name]
-  (validate-role-updates circle role-name)
-  (let [result (update-in circle [:roles] dissoc role-name)]
-    (if (empty? (:roles result))
-      (assoc result :roles nil)
-      result)))
-
-(defn rename-role
-  "Rename a role in the given circle."
-  [circle role-name new-name]
-  (validate-role-updates circle role-name)
-  (update-in circle [:roles]
-             s/rename-keys {role-name new-name}))
+    (add-role circle
+              (make-role new-role-name purpose domains accountabilities))))
 
 (defn update-role-purpose
   "Update the purpose of a role in the given circle."

@@ -96,7 +96,7 @@
                             second-role-name
                             (g/map->Role {:name    second-role-name
                                           :purpose second-role-purpose}))
-          (g/add-role sample-anchor-with-role second-role-name
+          (g/add-role-to-circle sample-anchor-with-role second-role-name
                       second-role-purpose))))
 
     (it "can add a role to a circle with name and accountabilities"
@@ -104,7 +104,7 @@
                       {role-name
                        (g/map->Role {:name             role-name
                                      :accountabilities sample-accountabilities})})
-        (g/add-role sample-anchor role-name
+        (g/add-role-to-circle sample-anchor role-name
                     nil nil sample-accountabilities)))
 
     (it "can add a role to a circle with name, purpose, and domains"
@@ -112,14 +112,14 @@
                       {role-name
                        (g/map->Role {:name    role-name
                                      :domains sample-domains})})
-        (g/add-role sample-anchor role-name nil sample-domains nil)))
+        (g/add-role-to-circle sample-anchor role-name nil sample-domains nil)))
 
     (it "can add a role to a circle with name, purpose, and accountabilities"
       (should= (assoc sample-anchor :roles
                       {role-name
                        (g/map->Role {:name    role-name
                                      :domains sample-domains})})
-        (g/add-role sample-anchor role-name nil sample-domains nil)))
+        (g/add-role-to-circle sample-anchor role-name nil sample-domains nil)))
 
     (it "can add a role to a circle with everything"
       (should= (assoc sample-anchor :roles
@@ -128,24 +128,24 @@
                                      :purpose          sample-purpose
                                      :domains          sample-domains
                                      :accountabilities sample-accountabilities})})
-        (g/add-role sample-anchor role-name sample-purpose sample-domains
+        (g/add-role-to-circle sample-anchor role-name sample-purpose sample-domains
                     sample-accountabilities)))
 
     (it "doesn't let you use empty names"
       (should-throw IllegalArgumentException "Name may not be empty"
-        (g/add-role sample-anchor nil nil nil nil))
+        (g/add-role-to-circle sample-anchor nil nil nil nil))
       (should-throw IllegalArgumentException "Name may not be empty"
-        (g/add-role sample-anchor "" nil nil nil)))
+        (g/add-role-to-circle sample-anchor "" nil nil nil)))
 
     (it "doesn't let you overwrite an existing role"
       (should-throw IllegalArgumentException (str "Role already exists: "
                                                   role-name)
-        (g/add-role sample-anchor-with-role role-name nil nil nil))))
+        (g/add-role-to-circle sample-anchor-with-role role-name nil nil nil))))
 
   (describe "removing"
     (it "can remove a role"
       (should= sample-anchor-with-role (-> sample-anchor-with-role
-                                           (g/add-role "test" "test")
+                                           (g/add-role-to-circle "test" "test")
                                            (g/remove-role "test"))))
 
     (it "removes the roles array if deleting a role causes it to be empty"
