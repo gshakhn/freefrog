@@ -112,8 +112,9 @@
 
   (rename-role [circle role-name new-name]
     (validate-role-updates circle role-name)
-    (update-in circle [:roles]
-               s/rename-keys {role-name new-name})))
+    (-> circle
+        (update-in [:roles] s/rename-keys {role-name new-name})
+        (update-in [:roles new-name] assoc :name new-name))))
 
 (defn- assoc-if [map key value]
   "Associate a value with a key only if the value is non-nil."

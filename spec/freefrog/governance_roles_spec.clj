@@ -153,15 +153,17 @@
 
     (should-not-update-missing-or-empty-roles g/remove-role "role itself"))
 
+  (def new-name "Code Monkey")
   (describe "updating"
     (describe "name"
-      (let [new-name "Code Monkey"]
-        (it "can rename a role"
-          (should= (update-in sample-anchor-with-role [:roles] s/rename-keys
-                              {role-name new-name})
-            (g/rename-role sample-anchor-with-role role-name new-name)))
-        (should-not-update-missing-or-empty-roles g/rename-role "renaming role"
-                                                  new-name)))
+      (it "can rename a role"
+        (should= (-> sample-anchor-with-role
+                     (update-in [:roles] s/rename-keys {role-name new-name})
+                     (update-in [:roles new-name] assoc :name new-name))
+
+          (g/rename-role sample-anchor-with-role role-name new-name)))
+      (should-not-update-missing-or-empty-roles g/rename-role "renaming role"
+                                                new-name))
 
     ;; Section 1.1.a
     (describe "purpose"
