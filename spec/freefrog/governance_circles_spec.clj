@@ -160,10 +160,12 @@
 (describe "Role Assignment"
   ;; Appendix A/Lead Link
   (it "can assign someone to a role")
+  (it "can assign someone to Lead Link role")
 
   ;; Section 2.4.2
   (it "can assign multiple people to a role")
   (it "can assign multiple people to a role with focuses")
+  (it "won't assign multiple people to core roles")
 
   ;; Section 2.4.3, Appendix A/Lead Link
   (it "can remove someone from a role"))
@@ -173,6 +175,9 @@
   ;; Section 2.5.1
   (it "won't assign the person in the Lead Link role to the Facilitator
     or Rep Link role")
+
+  ;; Section 2.5.2
+  (it "will only assign someone to an elected role with a term expiration date")
 
   ;; Section 2.5.3
   (it "can add domains")
