@@ -21,17 +21,12 @@
 (ns freefrog.core-roles
   (:require [freefrog.governance :as g]))
 
-(def lead-link-name "Lead Link")
-(def rep-link-name "Rep Link")
-(def secretary-name "Secretary")
-(def facilitator-name "Facilitator")
-
 (def lead-link
   (g/make-role
-    lead-link-name
+    g/lead-link-name
     (str "The Lead Link Role shall be deemed to hold the purpose of the "
          "overall Circle.")
-    ["Role assignments within the Circle"]
+    [g/role-assignments-domain]
     [(str "Differentiating and organizing the Circle's overall work into "
           "segmented Roles and other requisite Governance")
      (str "Assigning Partners to the Circle's Roles, monitoring fit between "
@@ -46,7 +41,7 @@
 
 (def rep-link
   (g/make-role
-    rep-link-name
+    g/rep-link-name
     (str "Within the Super-Circle, the Rep Link Role shall be deemed to "
          "hold the purpose of the overall Circle so represented; within "
          "such Circle, the Rep Link Role's Purpose shall be: Tensions "
@@ -64,7 +59,7 @@
 
 (def facilitator
   (g/make-role
-    facilitator-name
+    g/facilitator-name
     (str "Circle governance and operational practices aligned with the core "
          "rules and processes of this Constitution.") nil
     [(str "Facilitating the Circle's Governance Meetings and Tactical "
@@ -79,12 +74,10 @@
 
 (def secretary
   (g/make-role
-    secretary-name
+    g/secretary-name
     (str "Stabilize the Circle's Governance over time as a steward of the "
          "Circle's formal records and record-keeping process")
-    [(str "All records required of a Circle under this Constitution, and any "
-          "record-keeping processes and systems required to create and "
-          "maintain such records for the Circle")]
+    [g/governance-records-domain]
     [(str "Maintaining all records of a Circle required by this "
           "Constitution, including capturing the outputs of the Circle's "
           "governance process and Tactical Meetings, maintaining a "

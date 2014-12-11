@@ -34,6 +34,18 @@
 (ns freefrog.governance
   (:require [clojure.set :as s]))
 
+(def lead-link-name "Lead Link")
+(def role-assignments-domain "Role assignments within the Circle")
+
+(def rep-link-name "Rep Link")
+(def secretary-name "Secretary")
+(def governance-records-domain
+  (str "All records required of a Circle under this Constitution, and any "
+       "record-keeping processes and systems required to create and "
+       "maintain such records for the Circle"))
+
+(def facilitator-name "Facilitator")
+
 ;; ## General purpose utility functions ##
 
 (defn- entity-path
@@ -318,11 +330,13 @@
     (update-role-entity circle role-name [:policies] assoc policy-name
                         {:name policy-name :text policy-text}))
   ([circle role-name policy-name policy-text domain]
-    (validate (contains? (get-entity circle role-name :domains) domain)
-              (format "Role '%s' doesn't control domain '%s'" role-name domain))
-    (-> (add-role-policy circle role-name policy-name policy-text)
-        (update-role-entity role-name [:policies policy-name] assoc
-                            :domain domain))))
+    (let [with-added-policy (add-role-policy circle role-name policy-name
+                                             policy-text)
+          _ (validate (contains? (get-entity circle role-name :domains) domain)
+                      (format "Role '%s' doesn't control domain '%s'" role-name
+                              domain))]
+      (update-role-entity with-added-policy role-name [:policies policy-name]
+                          assoc :domain domain))))
 
 (defn remove-role-policy
   "Remove a policy from a role in the given circle."

@@ -227,7 +227,9 @@
 (describe "policies"
   (should-not-update-missing-or-empty-roles g/add-role-policy "policy"
                                             sample-policy-name sample-policy-text)
-
+  (should-not-update-missing-or-empty-roles g/add-role-policy "policy"
+                                            sample-policy-name
+                                            sample-policy-text sample-domain-1)
   (it "can add a policy granting access to all domains"
     (should= (my-add-policy sample-anchor-with-domain sample-policy-name
                             sample-policy-text)
