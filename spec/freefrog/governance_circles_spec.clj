@@ -48,7 +48,7 @@
 
   (it "can convert a role into a circle"
     (should (g/is-subrole-circle? (g/convert-to-circle sample-circle sample-role-name)
-                          sample-role-name)))
+                                  sample-role-name)))
 
   (it "refuses to convert a role that is already a circle into a circle"
     (should-throw IllegalArgumentException
@@ -82,20 +82,79 @@
   (should-not-update-missing-or-empty-roles g/convert-to-role
                                             "convert to role"))
 
-(describe "Constitutional Roles"
-  )
+
+(def sample-policy-name "Do whatever")
+(def sample-policy-text "Anybody can join/leave roles whenever")
+(def sample-policies {sample-policy-name {:name   sample-policy-name
+                                          :domain g/role-assignments-domain
+                                          :text   sample-policy-text}})
+
+(def sample-policy-name2 "Fire everybody")
+(def sample-policy-text2 "Anybody can remove anybody else")
+
+(def sample-anchor-with-lead-link-policy
+  (g/add-role-policy sample-anchor g/lead-link-name sample-policy-name
+                     sample-policy-text g/role-assignments-domain))
+
+(def sample-anchor-with-lead-link-policies
+  (g/add-role-policy sample-anchor-with-lead-link-policy g/lead-link-name
+                     sample-policy-name2 sample-policy-text2))
 
 ;; Section 2.2.3
 (describe "Lead Link Role"
-  (it "won't add domains to the Lead Link")
-  (it "won't add accountabilities to the Lead Link")
-  (it "won't remove domains from Lead Link")
-  (it "won't remove accountabilities from Lead Link")
-  (it "can delegate a predefined domain from Lead Link to a role")
-  (it "can delegate a predefined domain from Lead Link to a policy")
-  (it "can delegate a predefined accountability from Lead Link to a role")
-  (it "can delegate a predefined accountability from Lead Link to a policy")
-  (it "can create policies"))
+  (it "won't add domains to the Lead Link"
+    (should-throw IllegalArgumentException
+      (format "May not add Domain to '%s'" g/lead-link-name)
+      (g/add-role-domain sample-anchor g/lead-link-name "test"))
+    (should-throw IllegalArgumentException
+      (format "May not add Domain to '%s'" g/lead-link-name)
+      (g/add-role-domain sample-anchor-with-lead-link-policy
+                         g/lead-link-name "test")))
+
+  (it "won't add accountabilities to the Lead Link"
+    (should-throw IllegalArgumentException
+      (format "May not add Accountability to '%s'" g/lead-link-name)
+      (g/add-role-accountability sample-anchor g/lead-link-name "test"))
+    (should-throw IllegalArgumentException
+      (format "May not add Accountability to '%s'" g/lead-link-name)
+      (g/add-role-accountability sample-anchor-with-lead-link-policy
+                         g/lead-link-name "test")))
+
+  (describe "adding policies"
+    (it "can delegate a predefined domain from Lead Link"
+      (should=
+        (update-in sample-anchor [:roles] assoc g/lead-link-name
+                   (g/map->Role {:name     g/lead-link-name
+                                 :policies sample-policies}))
+        sample-anchor-with-lead-link-policy))
+
+    (it "won't create policies for domains Lead Link doesn't have"
+      (should-throw IllegalArgumentException
+        "Role 'Lead Link' doesn't control domain 'domain it doesn't have'"
+        (g/add-role-policy sample-anchor g/lead-link-name sample-policy-name
+                           sample-policy-text "domain it doesn't have")))
+
+    (it "can create multiple policies"
+      (should=
+        (update-in sample-anchor [:roles] assoc g/lead-link-name
+                   (g/map->Role {:name g/lead-link-name
+                                 :policies
+                                       (assoc sample-policies
+                                              sample-policy-name2
+                                              {:name sample-policy-name2
+                                               :text sample-policy-text2})}))
+        sample-anchor-with-lead-link-policies)))
+
+  (describe "removing policies"
+    (it "removes Lead Link when it is empty"
+      (should= sample-anchor
+        (g/remove-role-policy sample-anchor-with-lead-link-policy
+                              g/lead-link-name sample-policy-name)))
+
+    (it "doesn't remove Lead Link when it isn't empty"
+      (should= sample-anchor-with-lead-link-policy
+        (g/remove-role-policy sample-anchor-with-lead-link-policies
+                              g/lead-link-name sample-policy-name2)))))
 
 ;; Section 2.4
 (describe "Role Assignment"
@@ -124,7 +183,8 @@
   (it "won't remove an accountability that doesn't exist")
   (it "won't manipulate role domains on non-circles")
   (it "won't remove any of the constitutional accountabilities")
-  (it "can create policies"))
+  (it "can create policies")
+  (it "can create policies with predefined domains"))
 
 (def subcircle-name "Development")
 (def subcircle-role-name "Programmer")

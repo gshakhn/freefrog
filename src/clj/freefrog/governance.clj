@@ -68,6 +68,9 @@
   [circle role-name & entities]
   (get-entity-raw circle role-name entities))
 
+(defn- role-missing? [circle role-name]
+  (empty? (get-role circle role-name)))
+
 ;; ## Validators ##
 
 (defn- validate [valid? err-msg]
@@ -77,7 +80,7 @@
   (validate (not invalid?) err-msg))
 
 (defn- validate-role-exists [circle role-name]
-  (validate-not (empty? (get-role circle role-name))
+  (validate-not (role-missing? circle role-name)
                 (str "Role not found: " role-name)))
 
 (defn- validate-role-name [role-name]
@@ -272,11 +275,16 @@
   (validate-not (check-fn (get-entity circle role-name type) thing)
                 (format err-msg-fmt (err-types type) thing role-name)))
 
+(defn is-lead-link? [role-name]
+  (= lead-link-name role-name))
+
 (defn- add-to
   "Abstract function that adds anything to a set of things in a role in a
    circle. Performs all validation and so forth. Creates the set if it doesn't
    exist."
   [circle role-name type thing]
+  (validate-not (is-lead-link? role-name)
+                (format "May not add %s to '%s'" (err-types type) role-name))
   (validate-things circle role-name type thing contains?
                    "%s '%s' already exists on role '%s'")
   (let [things (get-entity circle role-name type)
@@ -325,14 +333,21 @@
   "Publish a policy to grant/revoke access to a domain on the given role in
    the given circle. If you give a domain, that will be added, too."
   ([circle role-name policy-name policy-text]
-    (validate-things circle role-name :policies policy-name contains?
-                     "%s '%s' already exists on role '%s'")
-    (update-role-entity circle role-name [:policies] assoc policy-name
-                        {:name policy-name :text policy-text}))
+    (let [circle (if (and (is-lead-link? role-name)
+                          (role-missing? circle role-name))
+                   (add-role-to-circle circle lead-link-name)
+                   circle)]
+      (validate-things circle role-name :policies policy-name contains?
+                       "%s '%s' already exists on role '%s'")
+      (update-role-entity circle role-name [:policies] assoc policy-name
+                          {:name policy-name :text policy-text})))
   ([circle role-name policy-name policy-text domain]
     (let [with-added-policy (add-role-policy circle role-name policy-name
                                              policy-text)
-          _ (validate (contains? (get-entity circle role-name :domains) domain)
+          _ (validate (or (and (is-lead-link? role-name)
+                               (= role-assignments-domain domain))
+                          (contains? (get-entity circle role-name :domains)
+                                     domain))
                       (format "Role '%s' doesn't control domain '%s'" role-name
                               domain))]
       (update-role-entity with-added-policy role-name [:policies policy-name]
@@ -343,4 +358,9 @@
   [circle role-name policy-name]
   (validate-things circle role-name :policies policy-name (comp not contains?)
                    "%s '%s' doesn't exist on role '%s'")
-  (remove-and-purge circle role-name :policies dissoc policy-name))
+  (let [result
+        (remove-and-purge circle role-name :policies dissoc policy-name)]
+    (if (and (is-lead-link? role-name)
+             (empty? (get-entity result role-name :policies)))
+      (remove-role result role-name)
+      result)))
