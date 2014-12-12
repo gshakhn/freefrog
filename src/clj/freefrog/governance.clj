@@ -94,12 +94,12 @@
 ;; ## Types ##
 
 (defprotocol GovernanceRecord
-  (is-circle? [r]))
+  (is-circle? [record]))
 
 (defprotocol RoleContainer
-  (add-role [circle role])
-  (remove-role [circle role-name])
-  (rename-role [circle role-name new-name]))
+  (add-role [container role])
+  (remove-role [container role-name])
+  (rename-role [container role-name new-name]))
 
 (defrecord Role [name purpose domains accountabilities policies]
   GovernanceRecord
@@ -130,25 +130,6 @@
     (-> circle
         (update-in [:roles] s/rename-keys {role-name new-name})
         (update-in [:roles new-name] assoc :name new-name))))
-
-(defn- assoc-if [map key value]
-  "Associate a value with a key only if the value is non-nil."
-  (if value (assoc map key value) map))
-
-;todo Consider making this a destructured map, or better yet just use the
-; defrecord itself
-(defn make-role
-  "Make a role with the given name, purpose, domains and accountabilities.
-   Any of these items can be nil or empty, and they won't be added to the role.
-   This particular function doesn't validate anything, so be careful to
-   validate before using it!"
-  ([role-name]
-    (map->Role {:name role-name}))
-  ([role-name purpose domains accountabilities]
-    (-> (make-role role-name)
-        (assoc-if :purpose purpose)
-        (assoc-if :domains domains)
-        (assoc-if :accountabilities accountabilities))))
 
 (defn create-circle
   "Create a new circle with no parent."
@@ -243,8 +224,8 @@
     (add-role-to-circle circle new-role-name purpose nil nil))
 
   ([circle new-role-name purpose domains accountabilities]
-    (add-role circle
-              (make-role new-role-name purpose domains accountabilities))))
+    (add-role circle (Role. new-role-name purpose domains accountabilities
+                            nil))))
 
 (defn update-role-purpose
   "Update the purpose of a role in the given circle."
