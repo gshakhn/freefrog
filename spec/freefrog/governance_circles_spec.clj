@@ -161,6 +161,7 @@
   ;; Appendix A/Lead Link
   (it "can assign someone to a role")
   (it "can assign someone to Lead Link role")
+  (it "can assign someone to a role with a term expiration date")
 
   ;; Section 2.4.2
   (it "can assign multiple people to a role")
@@ -183,13 +184,11 @@
   (it "can add domains")
   (it "can remove domains")
   (it "can add accountabilities")
-  (it "won't add the same accountability twice to the same core role")
   (it "can remove accountabilities")
-  (it "won't remove an accountability that doesn't exist")
-  (it "won't manipulate role domains on non-circles")
-  (it "won't remove any of the constitutional accountabilities")
   (it "can create policies")
-  (it "can create policies with predefined domains"))
+  (it "can create policies with predefined domains")
+  (it "can remove policies")
+  (it "removes elected roles when they have no additions"))
 
 (def subcircle-name "Development")
 (def subcircle-role-name "Programmer")

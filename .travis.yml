@@ -1,7 +1,7 @@
 language: clojure
 jdk: oraclejdk8
 script: >
-  lein spec &&
+  lein spec -f d -C > docs/specs.txt &&
   lein docs &&
   lein ancient > docs/ancient.txt &&
   lein kibit > docs/kibit.txt
