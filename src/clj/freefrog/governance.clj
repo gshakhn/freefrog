@@ -146,8 +146,8 @@
 ;; ## Generalization Functions ##
 
 (defn- update-role-raw
-  "Generalizes any role manipulation. The entity-path is the path to the entity
-   inside the role you want to manipulate. The function given is what
+  "Generalizes any role manipulation. The entities vector is the path to the
+   entity inside the role you want to manipulate. The function given is what
    gets applied to the final entity, and the params are the arguments passed to
    that function."
   [circle role-name entities fn args]
@@ -156,12 +156,12 @@
 
 (defn- update-role
   "Sames as update-role-raw, but a bit easier to use. Doesn't include an
-  entity."
+   entity path."
   [circle role-name fn & args]
   (update-role-raw circle role-name nil fn args))
 
 (defn- update-role-entity
-  "Same as update-role-raw, but a bit easier to use. Includes an entity."
+  "Same as update-role-raw, but a bit easier to use. Includes an entity path."
   [circle role-name entity-path fn & args]
   (update-role-raw circle role-name entity-path fn args))
 
@@ -235,9 +235,9 @@
     (update-role circle role-name assoc :purpose nil)
     (update-role circle role-name assoc :purpose new-purpose)))
 
-(def ^:private err-types {:domains          "Domain"
-                          :accountabilities "Accountability"
-                          :policies         "Policy"})
+(def ^:private sets-of-things {:domains          "Domain"
+                               :accountabilities "Accountability"
+                               :policies         "Policy"})
 
 (defn- validate-things
   "Abstract function to validate collections of things in a circle. Checks that
@@ -254,33 +254,34 @@
   [circle role-name type thing check-fn err-msg-fmt]
   (validate-role-updates circle role-name)
   (validate-not (check-fn (get-entity circle role-name type) thing)
-                (format err-msg-fmt (err-types type) thing role-name)))
+                (format err-msg-fmt (sets-of-things type) thing role-name)))
 
 (defn is-lead-link? [role-name]
   (= lead-link-name role-name))
 
 (defn- add-to
-  "Abstract function that adds anything to a set of things in a role in a
+  "Abstract function that adds anything to a set-of-things in a role in a
    circle. Performs all validation and so forth. Creates the set if it doesn't
-   exist."
-  [circle role-name type thing]
+   exist. The sets that can be manipulated are defined in sets-of-things."
+  [circle role-name set-of-things thing]
   (validate-not (is-lead-link? role-name)
-                (format "May not add %s to '%s'" (err-types type) role-name))
-  (validate-things circle role-name type thing contains?
+                (format "May not add %s to '%s'"
+                        (sets-of-things set-of-things) role-name))
+  (validate-things circle role-name set-of-things thing contains?
                    "%s '%s' already exists on role '%s'")
-  (let [things (get-entity circle role-name type)
+  (let [things (get-entity circle role-name set-of-things)
         circle (if things
                  circle
-                 (update-role circle role-name assoc type #{}))]
-    (update-role-entity circle role-name [type] conj thing)))
+                 (update-role circle role-name assoc set-of-things #{}))]
+    (update-role-entity circle role-name [set-of-things] conj thing)))
 
 (defn- remove-from
-  "Abstract function that removes a thing from a set of things in a role in a
+  "Abstract function that removes a thing from a set-of-things in a role in a
    circle. Performs all validation and so forth. Removes the set if it's empty."
-  [circle role-name type thing]
-  (validate-things circle role-name type thing (comp not contains?)
+  [circle role-name set-of-things thing]
+  (validate-things circle role-name set-of-things thing (comp not contains?)
                    "%s '%s' doesn't exist on role '%s'")
-  (remove-and-purge circle role-name type disj thing))
+  (remove-and-purge circle role-name set-of-things disj thing))
 
 ;; ## Role Collection Manipulation Functions ##
 ;; These functions are critical to maintaining namespace encapsulation. Simply
@@ -324,13 +325,13 @@
                           {:name policy-name :text policy-text})))
   ([circle role-name policy-name policy-text domain]
     (let [with-added-policy (add-role-policy circle role-name policy-name
-                                             policy-text)
-          _ (validate (or (and (is-lead-link? role-name)
-                               (= role-assignments-domain domain))
-                          (contains? (get-entity circle role-name :domains)
-                                     domain))
-                      (format "Role '%s' doesn't control domain '%s'" role-name
-                              domain))]
+                                             policy-text)]
+      (validate (or (and (is-lead-link? role-name)
+                         (= role-assignments-domain domain))
+                    (contains? (get-entity circle role-name :domains)
+                               domain))
+                (format "Role '%s' doesn't control domain '%s'" role-name
+                        domain))
       (update-role-entity with-added-policy role-name [:policies policy-name]
                           assoc :domain domain))))
 
