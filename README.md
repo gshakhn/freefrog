@@ -4,11 +4,17 @@ Exquisite Organization -- For Free
 
 ## Information
 
-You can find the project's latest documentation in
-[Our S3 Artifact Bucket](http://s3.amazonaws.com/freefrog/docs/uberdoc.html).
-
 This project is being integrated using
 [Travis-CI](https://travis-ci.org/couragelabs/freefrog).
+
+Artifacts generated:
+
+ * [API Documentation](http://s3.amazonaws.com/freefrog/docs/uberdoc.html)
+ * [Specs](http://s3.amazonaws.com/freefrog/docs/specs.txt)
+ * [Code Cleanliness Reports]
+   (http://s3.amazonaws.com/freefrog/docs/kibit.txt) (empty is good)
+ * [Outdated Library Reports]
+   (http://s3.amazonaws.com/freefrog/docs/ancient.html) (empty is good)
 
 ## Development
 

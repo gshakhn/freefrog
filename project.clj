@@ -28,9 +28,7 @@
   :source-paths ["src/clj"]
 
   :dependencies [[com.velisco/tagged "0.3.4"]
-                 [clj-jgit "0.8.0"]
                  [org.clojure/clojure "1.6.0"]
-                 [org.pcollections/pcollections "2.1.2"]
                  [speclj "3.1.0"]]
 
   :plugins [[lein-ancient "0.5.5"]
