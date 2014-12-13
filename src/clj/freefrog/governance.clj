@@ -260,7 +260,7 @@
   (= lead-link-name role-name))
 
 (defn is-core-role? [role-name]
-  (#{lead-link-name secretary-name} role-name))
+  (#{lead-link-name secretary-name facilitator-name rep-link-name} role-name))
 
 (defn- add-to
   "Very abstract function that adds things to things in a role, making sure

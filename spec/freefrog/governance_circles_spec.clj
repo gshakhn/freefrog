@@ -181,6 +181,68 @@
   (g/add-role-domain sample-anchor-with-secretary-with-domain
                      g/secretary-name sample-domain2))
 
+(def sample-anchor-with-facilitator-with-domain
+  (g/add-role-domain sample-anchor g/facilitator-name sample-domain1))
+
+(def sample-anchor-with-facilitator-with-domains
+  (g/add-role-domain sample-anchor-with-facilitator-with-domain
+                     g/facilitator-name sample-domain2))
+
+(def sample-anchor-with-rep-link-with-domain
+  (g/add-role-domain sample-anchor g/rep-link-name sample-domain1))
+
+(def sample-anchor-with-rep-link-with-domains
+  (g/add-role-domain sample-anchor-with-rep-link-with-domain
+                     g/rep-link-name sample-domain2))
+
+(def sample-acc1 "doing stuff")
+(def sample-acc2 "doing bits")
+
+(def sample-anchor-with-secretary-with-acc
+  (g/add-role-accountability sample-anchor g/secretary-name sample-acc1))
+
+(def sample-anchor-with-secretary-with-accs
+  (g/add-role-accountability sample-anchor-with-secretary-with-acc
+                             g/secretary-name sample-acc2))
+
+(def sample-anchor-with-facilitator-with-acc
+  (g/add-role-accountability sample-anchor g/facilitator-name sample-acc1))
+
+(def sample-anchor-with-facilitator-with-accs
+  (g/add-role-accountability sample-anchor-with-facilitator-with-acc
+                             g/facilitator-name sample-acc2))
+
+(def sample-anchor-with-rep-link-with-acc
+  (g/add-role-accountability sample-anchor g/rep-link-name sample-acc1))
+
+(def sample-anchor-with-rep-link-with-accs
+  (g/add-role-accountability sample-anchor-with-rep-link-with-acc
+                             g/rep-link-name sample-acc2))
+
+(defn- should-manipulate-things-in-core-role
+  [role-name description which-things sample-with-one sample-with-two first
+   second removal-fn]
+  (describe (format "%s %s" role-name description)
+    (it "can add to secretary role"
+      (should= (update-in sample-anchor [:roles] assoc role-name
+                          (g/map->Role {:name        role-name
+                                        which-things #{first}}))
+        sample-with-one))
+
+    (it "can add second one to secretary role"
+      (should= (update-in sample-with-one
+                          [:roles role-name which-things] conj
+                          second)
+        sample-with-two))
+
+    (it "removes secretary role when last one is removed"
+      (should= sample-anchor
+        (removal-fn sample-with-one role-name first)))
+
+    (it "doesn't remove secretary role when second-to-last one is removed"
+      (should= sample-with-one
+        (removal-fn sample-with-two role-name second)))))
+
 ;; Section 2.5
 (describe "Elected Roles"
   ;; Section 2.5.1
@@ -191,29 +253,42 @@
   (it "will only assign someone to an elected role with a term expiration date")
 
   ;; Section 2.5.3
-  (it "can add domain to secretary role"
-    (should= (update-in sample-anchor [:roles] assoc g/secretary-name
-                        (g/map->Role {:name    g/secretary-name
-                                      :domains #{sample-domain1}}))
-      sample-anchor-with-secretary-with-domain))
+  (should-manipulate-things-in-core-role
+    g/secretary-name "domains"
+    :domains sample-anchor-with-secretary-with-domain
+    sample-anchor-with-secretary-with-domains
+    sample-domain1 sample-domain2 g/remove-role-domain)
 
-  (it "can add second domain to secretary role"
-    (should= (update-in sample-anchor-with-secretary-with-domain
-                        [:roles g/secretary-name :domains] conj sample-domain2)
-      sample-anchor-with-secretary-with-domains))
+  (should-manipulate-things-in-core-role
+    g/secretary-name "accountabilities"
+    :accountabilities sample-anchor-with-secretary-with-acc
+    sample-anchor-with-secretary-with-accs
+    sample-acc1 sample-acc2 g/remove-role-accountability)
 
-  (it "removes secretary role when last domain is removed"
-    (should= sample-anchor
-      (g/remove-role-domain sample-anchor-with-secretary-with-domain
-                            g/secretary-name sample-domain1)))
+  (should-manipulate-things-in-core-role
+    g/facilitator-name "domains"
+    :domains sample-anchor-with-facilitator-with-domain
+    sample-anchor-with-facilitator-with-domains
+    sample-domain1 sample-domain2 g/remove-role-domain)
 
-  (it "doesn't remove secretary role when second-to-last domain is removed"
-    (should= sample-anchor-with-secretary-with-domain
-      (g/remove-role-domain sample-anchor-with-secretary-with-domains
-                            g/secretary-name sample-domain2)))
+  (should-manipulate-things-in-core-role
+    g/facilitator-name "accountabilities"
+    :accountabilities sample-anchor-with-facilitator-with-acc
+    sample-anchor-with-facilitator-with-accs
+    sample-acc1 sample-acc2 g/remove-role-accountability)
 
-  (it "can add accountabilities")
-  (it "can remove accountabilities")
+  (should-manipulate-things-in-core-role
+    g/rep-link-name "domains"
+    :domains sample-anchor-with-rep-link-with-domain
+    sample-anchor-with-rep-link-with-domains
+    sample-domain1 sample-domain2 g/remove-role-domain)
+
+  (should-manipulate-things-in-core-role
+    g/rep-link-name "accountabilities"
+    :accountabilities sample-anchor-with-rep-link-with-acc
+    sample-anchor-with-rep-link-with-accs
+    sample-acc1 sample-acc2 g/remove-role-accountability)
+
   (it "can create policies")
   (it "can create policies with predefined domains")
   (it "can remove policies")
