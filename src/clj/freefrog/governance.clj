@@ -259,34 +259,64 @@
 (defn is-lead-link? [role-name]
   (= lead-link-name role-name))
 
+(defn is-core-role? [role-name]
+  (#{lead-link-name secretary-name} role-name))
+
 (defn- add-to
-  "Abstract function that adds anything to a set-of-things in a role in a
-   circle. Performs all validation and so forth. Creates the set if it doesn't
-   exist. The sets that can be manipulated are defined in sets-of-things."
-  [circle role-name set-of-things thing]
-  (validate-not (is-lead-link? role-name)
-                (format "May not add %s to '%s'"
-                        (sets-of-things set-of-things) role-name))
-  (validate-things circle role-name set-of-things thing contains?
-                   "%s '%s' already exists on role '%s'")
-  (let [things (get-entity circle role-name set-of-things)
-        circle (if things
-                 circle
-                 (update-role circle role-name assoc set-of-things #{}))]
-    (update-role-entity circle role-name [set-of-things] conj thing)))
+  "Very abstract function that adds things to things in a role, making sure
+   that if a core role is being manipulated, it is made to be present.
+   Performs collection-op on the collection, or the given empty-collection
+   if it doesn't exist."
+  [circle role-name which-things empty-collection collection-op thing & args]
+  (let [circle (if (and (is-core-role? role-name)
+                        (role-missing? circle role-name))
+                 (add-role circle (map->Role {:name role-name}))
+                 circle)]
+    (validate-things circle role-name which-things thing contains?
+                     "%s '%s' already exists on role '%s'")
+    (let [things (get-entity circle role-name which-things)
+          circle (if things
+                   circle
+                   (update-role circle role-name assoc which-things
+                                empty-collection))
+          add-args (into [thing] args)]
+      (update-role-raw circle role-name [which-things] collection-op
+                       add-args))))
 
 (defn- remove-from
+  "Removes a thing from a collection of things in a role, making sure that
+   if a core role is being manipulated, and becomes empty, it gets removed
+   altogether. Performs collection-op on the collection."
+  [circle role-name which-things collection-op thing]
+  (validate-things circle role-name which-things thing (comp not contains?)
+                   "%s '%s' doesn't exist on role '%s'")
+  (let [result
+        (remove-and-purge circle role-name which-things collection-op thing)]
+    (if (and (is-core-role? role-name)
+             (empty? (get-entity result role-name which-things)))
+      (remove-role result role-name)
+      result)))
+
+(defn- add-to-set
+  "Abstract function that adds anything to which-set-of-things in a role in a
+   circle. Performs all validation and so forth. Creates the set if it doesn't
+   exist. The sets that can be manipulated are defined in sets-of-things."
+  [circle role-name which-set-of-things thing]
+  (validate-not (is-lead-link? role-name)
+                (format "May not add %s to '%s'"
+                        (sets-of-things which-set-of-things) role-name))
+  (add-to circle role-name which-set-of-things #{} conj thing))
+
+(defn- remove-from-set
   "Abstract function that removes a thing from a set-of-things in a role in a
    circle. Performs all validation and so forth. Removes the set if it's empty."
   [circle role-name set-of-things thing]
-  (validate-things circle role-name set-of-things thing (comp not contains?)
-                   "%s '%s' doesn't exist on role '%s'")
-  (remove-and-purge circle role-name set-of-things disj thing))
+  (remove-from circle role-name set-of-things disj thing))
 
 ;; ## Role Collection Manipulation Functions ##
 ;; These functions are critical to maintaining namespace encapsulation. Simply
-;; allowing an external actor to call directly into the "add-to" and
-;; "remove-from" functions artificially constrains this namespace from
+;; allowing an external actor to call directly into the "add-to-set" and
+;; "remove-from-set" functions artificially constrains this namespace from
 ;; easily being able to cause these functions to differentiate themselves from
 ;; one another should they need to, adding a heavier burden on future
 ;; maintainers.
@@ -294,35 +324,29 @@
 (defn add-role-domain
   "Add a domain to a role in the given circle."
   [circle role-name domain]
-  (add-to circle role-name :domains domain))
+  (add-to-set circle role-name :domains domain))
 
 (defn remove-role-domain
   "Remove a domain from a role in the given circle."
   [circle role-name domain]
-  (remove-from circle role-name :domains domain))
+  (remove-from-set circle role-name :domains domain))
 
 (defn add-role-accountability
   "Add an accountability to a role in the given circle."
   [circle role-name accountability]
-  (add-to circle role-name :accountabilities accountability))
+  (add-to-set circle role-name :accountabilities accountability))
 
 (defn remove-role-accountability
   "Remove an accountability from a role in the given circle."
   [circle role-name accountability]
-  (remove-from circle role-name :accountabilities accountability))
+  (remove-from-set circle role-name :accountabilities accountability))
 
 (defn add-role-policy
   "Publish a policy to grant/revoke access to a domain on the given role in
    the given circle. If you give a domain, that will be added, too."
   ([circle role-name policy-name policy-text]
-    (let [circle (if (and (is-lead-link? role-name)
-                          (role-missing? circle role-name))
-                   (add-role-to-circle circle lead-link-name)
-                   circle)]
-      (validate-things circle role-name :policies policy-name contains?
-                       "%s '%s' already exists on role '%s'")
-      (update-role-entity circle role-name [:policies] assoc policy-name
-                          {:name policy-name :text policy-text})))
+    (add-to circle role-name :policies {} assoc policy-name
+            {:name policy-name :text policy-text}))
   ([circle role-name policy-name policy-text domain]
     (let [with-added-policy (add-role-policy circle role-name policy-name
                                              policy-text)]
@@ -338,11 +362,4 @@
 (defn remove-role-policy
   "Remove a policy from a role in the given circle."
   [circle role-name policy-name]
-  (validate-things circle role-name :policies policy-name (comp not contains?)
-                   "%s '%s' doesn't exist on role '%s'")
-  (let [result
-        (remove-and-purge circle role-name :policies dissoc policy-name)]
-    (if (and (is-lead-link? role-name)
-             (empty? (get-entity result role-name :policies)))
-      (remove-role result role-name)
-      result)))
+  (remove-from circle role-name :policies dissoc policy-name))
