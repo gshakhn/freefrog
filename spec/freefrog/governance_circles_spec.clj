@@ -20,9 +20,7 @@
 ;;; # Circle Manipulation Spec #
 ;;; Defines how circles may be updated.
 (ns freefrog.governance-circles-spec
-  (:require [clojure.pprint :as pp]
-            [clojure.set :as s]
-            [freefrog.governance :as g]
+  (:require [freefrog.governance :as g]
             [freefrog.governance-spec-helpers :refer :all]
             [speclj.core :refer :all]))
 
@@ -219,27 +217,31 @@
   (g/add-role-accountability sample-anchor-with-rep-link-with-acc
                              g/rep-link-name sample-acc2))
 
+(def sample-anchor-with-rep-link-with-acc-and-domain
+  (g/add-role-domain sample-anchor-with-rep-link-with-acc
+                     g/rep-link-name sample-domain1))
+
 (defn- should-manipulate-things-in-core-role
   [role-name description which-things sample-with-one sample-with-two first
    second removal-fn]
   (describe (format "%s %s" role-name description)
-    (it "can add to secretary role"
+    (it "can add one"
       (should= (update-in sample-anchor [:roles] assoc role-name
                           (g/map->Role {:name        role-name
                                         which-things #{first}}))
         sample-with-one))
 
-    (it "can add second one to secretary role"
+    (it "can add second one"
       (should= (update-in sample-with-one
                           [:roles role-name which-things] conj
                           second)
         sample-with-two))
 
-    (it "removes secretary role when last one is removed"
+    (it "removes role when last one is removed"
       (should= sample-anchor
         (removal-fn sample-with-one role-name first)))
 
-    (it "doesn't remove secretary role when second-to-last one is removed"
+    (it "doesn't remove role when second-to-last one is removed"
       (should= sample-with-one
         (removal-fn sample-with-two role-name second)))))
 
@@ -288,6 +290,11 @@
     :accountabilities sample-anchor-with-rep-link-with-acc
     sample-anchor-with-rep-link-with-accs
     sample-acc1 sample-acc2 g/remove-role-accountability)
+
+  (it "doesn't remove core role when manipulating one collection among many"
+    (should= sample-anchor-with-rep-link-with-acc
+      (g/remove-role-domain sample-anchor-with-rep-link-with-acc-and-domain
+                            g/rep-link-name sample-domain1)))
 
   (it "can create policies")
   (it "can create policies with predefined domains")

@@ -293,7 +293,8 @@
   (let [result
         (remove-and-purge circle role-name which-things collection-op thing)]
     (if (and (is-core-role? role-name)
-             (empty? (get-entity result role-name which-things)))
+             (every? empty? (map (partial get-entity result role-name)
+                          [:domains :accountabilities :policies])))
       (remove-role result role-name)
       result)))
 
