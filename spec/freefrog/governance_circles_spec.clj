@@ -118,7 +118,7 @@
     (should-throw IllegalArgumentException
       (format "May not add Accountability to '%s'" g/lead-link-name)
       (g/add-role-accountability sample-anchor-with-lead-link-policy
-                         g/lead-link-name "test")))
+                                 g/lead-link-name "test")))
 
   (describe "adding policies"
     (it "can delegate a predefined domain from Lead Link"
@@ -171,6 +171,16 @@
   ;; Section 2.4.3, Appendix A/Lead Link
   (it "can remove someone from a role"))
 
+(def sample-domain1 "stuff")
+(def sample-domain2 "bits")
+
+(def sample-anchor-with-secretary-with-domain
+  (g/add-role-domain sample-anchor g/secretary-name sample-domain1))
+
+(def sample-anchor-with-secretary-with-domains
+  (g/add-role-domain sample-anchor-with-secretary-with-domain
+                     g/secretary-name sample-domain2))
+
 ;; Section 2.5
 (describe "Elected Roles"
   ;; Section 2.5.1
@@ -181,8 +191,27 @@
   (it "will only assign someone to an elected role with a term expiration date")
 
   ;; Section 2.5.3
-  (it "can add domains")
-  (it "can remove domains")
+  (it "can add domain to secretary role"
+    (should= (update-in sample-anchor [:roles] assoc g/secretary-name
+                        (g/map->Role {:name    g/secretary-name
+                                      :domains #{sample-domain1}}))
+      sample-anchor-with-secretary-with-domain))
+
+  (it "can add second domain to secretary role"
+    (should= (update-in sample-anchor-with-secretary-with-domain
+                        [:roles g/secretary-name :domains] conj sample-domain2)
+      sample-anchor-with-secretary-with-domains))
+
+  (it "removes secretary role when last domain is removed"
+    (should= sample-anchor
+      (g/remove-role-domain sample-anchor-with-secretary-with-domain
+                            g/secretary-name sample-domain1)))
+
+  (it "doesn't remove secretary role when second-to-last domain is removed"
+    (should= sample-anchor-with-secretary-with-domain
+      (g/remove-role-domain sample-anchor-with-secretary-with-domains
+                            g/secretary-name sample-domain2)))
+
   (it "can add accountabilities")
   (it "can remove accountabilities")
   (it "can create policies")
