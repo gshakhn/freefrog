@@ -19,88 +19,91 @@
 
 ;;; ### These are the core rules defined in the Holacracy Constitution ###
 (ns freefrog.core-roles
-  (:require [freefrog.governance-utils :as u]))
-
-(def lead-link-name "Lead Link")
-(def rep-link-name "Rep Link")
-(def secretary-name "Secretary")
-(def facilitator-name "Facilitator")
-(def core-roles "All roles defined in the Constitution"
-  #{lead-link-name rep-link-name secretary-name facilitator-name})
+  (:require [freefrog.governance :as g]))
 
 (def lead-link
-  (u/make-role
-    lead-link-name
-    (str "The Lead Link Role shall be deemed to hold the purpose of the "
-         "overall Circle.")
-    ["Role assignments within the Circle"]
-    [(str "Differentiating and organizing the Circle's overall work into "
-          "segmented Roles and other requisite Governance")
-     (str "Assigning Partners to the Circle's Roles, monitoring fit between "
-          "Partners and their Roles and offering feedback to enhance fit, "
-          "and removing Partners from Roles when useful")
-     (str "Allocating the Circle's available resources across its various "
-          "Projects and/or Roles")
-     "Assessing and defining priorities and Strategies for the Circle"
-     (str "Defining and assigning metrics within the Circle that provide "
-          "visibility into such Circle's expression of its Purpose and "
-          "enactment of its Accountabilities")]))
+  (g/map->Role
+    {:name g/lead-link-name
+     :purpose
+           (str "The Lead Link Role shall be deemed to hold the purpose of "
+                "the overall Circle.")
+     :domains
+           [g/role-assignments-domain]
+     :accountabilities
+           [(str "Differentiating and organizing the Circle's overall work "
+                 "into segmented Roles and other requisite Governance")
+            (str "Assigning Partners to the Circle's Roles, monitoring fit "
+                 "between Partners and their Roles and offering feedback to "
+                 "enhance fit, and removing Partners from Roles when useful")
+            (str "Allocating the Circle's available resources across its "
+                 "various Projects and/or Roles")
+            "Assessing and defining priorities and Strategies for the Circle"
+            (str "Defining and assigning metrics within the Circle that "
+                 "provide visibility into such Circle's expression of its "
+                 "Purpose and enactment of its Accountabilities")]}))
 
 (def rep-link
-  (u/make-role
-    rep-link-name
-    (str "Within the Super-Circle, the Rep Link Role shall be deemed to "
-         "hold the purpose of the overall Circle so represented; within "
-         "such Circle, the Rep Link Role's Purpose shall be: Tensions "
-         "relevant to process in the Super-Circle channeled out and "
-         "resolved.") nil
-    [(str "Removing constraints within the Super-Circle that limit the "
-          "Circle's capacity to express its Purpose or Accountabilities")
-     (str "Seeking to understand Tensions conveyed by and of the Circle's "
-          "Circle Members, and discerning those appropriate to channel "
-          "into the Super-Circle for processing")
-     (str "Providing visibility to the Super-Circle into the health and "
-          "sustainability of operations within the Circle, including "
-          "reporting data within the Super-Circle for any metrics or "
-          "checklist items assigned to the overall Circle")]))
+  (g/map->Role
+    {:name g/rep-link-name
+     :purpose
+           (str "Within the Super-Circle, the Rep Link Role shall be deemed to "
+                "hold the purpose of the overall Circle so represented; within "
+                "such Circle, the Rep Link Role's Purpose shall be: Tensions "
+                "relevant to process in the Super-Circle channeled out and "
+                "resolved.")
+     :accountabilities
+           [(str "Removing constraints within the Super-Circle that limit
+              the "
+                 "Circle's capacity to express its Purpose or Accountabilities")
+            (str "Seeking to understand Tensions conveyed by and of the "
+                 "Circle's Circle Members, and discerning those appropriate to "
+                 "channel into the Super-Circle for processing")
+            (str "Providing visibility to the Super-Circle into the health and "
+                 "sustainability of operations within the Circle, including "
+                 "reporting data within the Super-Circle for any metrics or "
+                 "checklist items assigned to the overall Circle")]}))
 
 (def facilitator
-  (u/make-role
-    facilitator-name
-    (str "Circle governance and operational practices aligned with the core "
-         "rules and processes of this Constitution.") nil
-    [(str "Facilitating the Circle's Governance Meetings and Tactical "
-          "Meetings in alignment with the rules of this Constitution, and "
-          "enforcing such rules during such meetings as-needed")
-     (str "Auditing the meetings and records of the Circle's Sub-Circles "
-          "to assess alignment with this Constitution, including at a "
-          "minimum whenever prompted to do so by the Rep Link from a "
-          "Sub-Circle, and initiating the restorative process defined in "
-          "this Constitution if a Process Breakdown is discovered within "
-          "a Sub-Circle")]))
+  (g/map->Role
+    {:name g/facilitator-name
+     :purpose
+           (str "Circle governance and operational practices aligned with "
+                "the core rules and processes of this Constitution.")
+     :accountabilities
+           [(str "Facilitating the Circle's Governance Meetings and Tactical "
+                 "Meetings in alignment with the rules of this Constitution, "
+                 "and enforcing such rules during such meetings as-needed")
+            (str "Auditing the meetings and records of the Circle's "
+                 "Sub-Circles to assess alignment with this Constitution, "
+                 "including at a minimum whenever prompted to do so by the Rep "
+                 "Link from a Sub-Circle, and initiating the restorative "
+                 "process defined in this Constitution if a Process Breakdown "
+                 "is discovered within a Sub-Circle")]}))
 
 (def secretary
-  (u/make-role
-    secretary-name
-    (str "Stabilize the Circle's Governance over time as a steward of the "
-         "Circle's formal records and record-keeping process")
-    [(str "All records required of a Circle under this Constitution, and any "
-          "record-keeping processes and systems required to create and "
-          "maintain such records for the Circle")]
-    [(str "Maintaining all records of a Circle required by this "
-          "Constitution, including capturing the outputs of the Circle's "
-          "governance process and Tactical Meetings, maintaining a "
-          "compiled view of all Governance currently in effect for the "
-          "Circle, and maintaining a list of all operational elements "
-          "currently being monitored in Tactical Meetings")
-     (str "Scheduling all regular and special meetings of the Circle "
-          "explicitly required by this Constitution or by a Policy "
-          "established by the Circle, in alignment with the terms of "
-          "this Constitution and any relevant Policies of the Circle, and "
-          "notifying all Core Circle Members of times and locations for "
-          "meetings so scheduled")
-     (str "Interpreting the acting Governance of the Circle upon request "
-          "of a Circle Member as provided for in this Constitution, "
-          "including ruling on matters of due process, procedure, and "
-          "authority related to or granted under such Governance or this "
-          "Constitution itself")]))
+  (g/map->Role
+    {:name g/secretary-name
+     :purpose
+           (str "Stabilize the Circle's Governance over time as a steward of "
+                "the Circle's formal records and record-keeping process")
+     :domains
+           [g/governance-records-domain]
+     :accountabilities
+           [(str "Maintaining all records of a Circle required by this "
+                 "Constitution, including capturing the outputs of the "
+                 "Circle's governance process and Tactical Meetings, "
+                 "maintaining a compiled view of all Governance currently in "
+                 "effect for the Circle, and maintaining a list of all "
+                 "operational elements currently being monitored in Tactical "
+                 "Meetings")
+            (str "Scheduling all regular and special meetings of the Circle "
+                 "explicitly required by this Constitution or by a Policy "
+                 "established by the Circle, in alignment with the terms of "
+                 "this Constitution and any relevant Policies of the Circle, "
+                 "and notifying all Core Circle Members of times and locations "
+                 "for meetings so scheduled")
+            (str "Interpreting the acting Governance of the Circle upon "
+                 "request of a Circle Member as provided for in this "
+                 "Constitution, including ruling on matters of due process, "
+                 "procedure, and authority related to or granted under such "
+                 "Governance or this Constitution itself")]}))
