@@ -27,28 +27,25 @@
 
   :source-paths ["src/clj"]
 
-  :dependencies [[com.velisco/tagged "0.3.4"]
-                 [org.clojure/clojure "1.6.0"]
-                 [liberator "0.12.2"]
-                 [compojure "1.2.1"]
-                 [ring/ring-core "1.3.1"]
-                 [com.velisco/tagged "0.3.4"]
-                 [clj-jgit "0.8.0"]
+  :dependencies [[clj-jgit "0.8.0"]
                  [clj-json "0.5.3"]
+                 [com.velisco/tagged "0.3.4"]
+                 [compojure "1.2.1"]
                  [javax.persistence/persistence-api "1.0"]
+                 [liberator "0.12.2"]
+                 [org.clojure/clojure "1.6.0"]
+                 [ring/ring-core "1.3.1"]
                  [speclj "3.1.0"]]
 
   :profiles {:dev {:dependencies [[clj-http "1.0.1"]
-                                  [ring-server "0.3.1"]
-                                  ] }}
+                                  [ring-server "0.3.1"]]}}
 
   :ring {:handler freefrog.rest/handler :reload-paths ["src"]}
 
   :plugins [[lein-ancient "0.5.5"]
-            [speclj "3.1.0"]
-            [lein-ring "0.8.13"]
-            [lein-marginalia "0.8.0"]
             [lein-kibit "0.0.8"]
+            [lein-marginalia "0.8.0"]
+            [lein-ring "0.8.13"]
             [speclj "3.1.0"]]
 
   :test-paths ["spec"]
