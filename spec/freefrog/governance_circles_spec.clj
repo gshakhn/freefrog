@@ -335,7 +335,17 @@
                                                :text sample-policy-text2})}))
         sample-anchor-with-secretary-policies)))
 
-  (it "can remove policies")
+  (describe "removing policies"
+    (it "removes Secretary when it is empty"
+      (should= sample-anchor
+        (g/remove-role-policy sample-anchor-with-secretary-policy
+                              g/secretary-name sample-policy-name)))
+
+    (it "doesn't remove Secretary when it isn't empty"
+      (should= sample-anchor-with-secretary-policy
+        (g/remove-role-policy sample-anchor-with-secretary-policies
+                              g/secretary-name sample-policy-name2))))
+
   (it "removes elected roles when they have no additions"))
 
 (def subcircle-name "Development")
