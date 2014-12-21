@@ -28,7 +28,7 @@
            (str "The Lead Link Role shall be deemed to hold the purpose of "
                 "the overall Circle.")
      :domains
-           [g/role-assignments-domain]
+           [(get g/core-role-domains g/lead-link-name)]
      :accountabilities
            [(str "Differentiating and organizing the Circle's overall work "
                  "into segmented Roles and other requisite Governance")
@@ -87,7 +87,7 @@
            (str "Stabilize the Circle's Governance over time as a steward of "
                 "the Circle's formal records and record-keeping process")
      :domains
-           [g/governance-records-domain]
+           [(get g/core-role-domains g/secretary-name)]
      :accountabilities
            [(str "Maintaining all records of a Circle required by this "
                  "Constitution, including capturing the outputs of the "

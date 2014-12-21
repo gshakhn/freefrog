@@ -118,6 +118,7 @@
     (should-throw IllegalArgumentException
       (format "May not add Domain to '%s'" g/lead-link-name)
       (g/add-role-domain sample-anchor g/lead-link-name "test"))
+
     (should-throw IllegalArgumentException
       (format "May not add Domain to '%s'" g/lead-link-name)
       (g/add-role-domain sample-anchor-with-lead-link-policy
@@ -127,6 +128,7 @@
     (should-throw IllegalArgumentException
       (format "May not add Accountability to '%s'" g/lead-link-name)
       (g/add-role-accountability sample-anchor g/lead-link-name "test"))
+
     (should-throw IllegalArgumentException
       (format "May not add Accountability to '%s'" g/lead-link-name)
       (g/add-role-accountability sample-anchor-with-lead-link-policy
@@ -167,6 +169,20 @@
       (should= sample-anchor-with-lead-link-policy
         (g/remove-role-policy sample-anchor-with-lead-link-policies
                               g/lead-link-name sample-policy-name2)))))
+
+;; Section 2.3
+(describe "Circle Membership"
+  ;; Section 2.3.1
+  (it "shows people filling roles in a circle as circle members")
+  (it "shows a person filling multiple roles in a circle as a single member")
+  (it "shows rep links in subcircles as circle members")
+  (it "shows cross-links as circle members")
+
+  ;; Section 2.3.2
+  (it "can mark one person among many filling one role as the role rep")
+
+  ;; Section 2.3.3
+  (it "does NOT show people filling De Minimis roles as circle members"))
 
 ;; Section 2.4
 (describe "Role Assignment"
@@ -262,8 +278,8 @@
 ;; Section 2.5
 (describe "Elected Roles"
   ;; Section 2.5.1
-  (it "won't assign the person in the Lead Link role to the Facilitator
-    or Rep Link role")
+  (it (str "won't assign the person in the Lead Link role to the Facilitator "
+           "or Rep Link role"))
 
   ;; Section 2.5.2
   (it "will only assign someone to an elected role with a term expiration date")
