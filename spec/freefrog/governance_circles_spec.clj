@@ -82,13 +82,19 @@
 
 
 (def sample-policy-name "Do whatever")
-(def sample-policy-text "Anybody can join/leave roles whenever")
-(def sample-policies {sample-policy-name {:name   sample-policy-name
-                                          :domain g/role-assignments-domain
-                                          :text   sample-policy-text}})
+(def sample-policy-text "Anybody can do anything whenever")
 
-(def sample-policy-name2 "Fire everybody")
-(def sample-policy-text2 "Anybody can remove anybody else")
+(def sample-policies-lead-link {sample-policy-name
+                                {:name   sample-policy-name
+                                 :domain g/role-assignments-domain
+                                 :text   sample-policy-text}})
+
+(def sample-policies-secretary {sample-policy-name
+                                {:name   sample-policy-name
+                                 :domain g/governance-records-domain
+                                 :text   sample-policy-text}})
+(def sample-policy-name2 "Do things to other people")
+(def sample-policy-text2 "Anybody do things to anyone else")
 
 (def sample-anchor-with-lead-link-policy
   (g/add-role-policy sample-anchor g/lead-link-name sample-policy-name
@@ -96,6 +102,14 @@
 
 (def sample-anchor-with-lead-link-policies
   (g/add-role-policy sample-anchor-with-lead-link-policy g/lead-link-name
+                     sample-policy-name2 sample-policy-text2))
+
+(def sample-anchor-with-secretary-policy
+  (g/add-role-policy sample-anchor g/secretary-name sample-policy-name
+                     sample-policy-text g/governance-records-domain))
+
+(def sample-anchor-with-secretary-policies
+  (g/add-role-policy sample-anchor-with-secretary-policy g/secretary-name
                      sample-policy-name2 sample-policy-text2))
 
 ;; Section 2.2.3
@@ -123,7 +137,7 @@
       (should=
         (update-in sample-anchor [:roles] assoc g/lead-link-name
                    (g/map->Role {:name     g/lead-link-name
-                                 :policies sample-policies}))
+                                 :policies sample-policies-lead-link}))
         sample-anchor-with-lead-link-policy))
 
     (it "won't create policies for domains Lead Link doesn't have"
@@ -137,7 +151,7 @@
         (update-in sample-anchor [:roles] assoc g/lead-link-name
                    (g/map->Role {:name g/lead-link-name
                                  :policies
-                                       (assoc sample-policies
+                                       (assoc sample-policies-lead-link
                                               sample-policy-name2
                                               {:name sample-policy-name2
                                                :text sample-policy-text2})}))
@@ -296,8 +310,31 @@
       (g/remove-role-domain sample-anchor-with-rep-link-with-acc-and-domain
                             g/rep-link-name sample-domain1)))
 
-  (it "can create policies")
-  (it "can create policies with predefined domains")
+  (describe "Adding policies"
+    (it "can delegate a predefined domain from Secretary"
+      (should=
+        (update-in sample-anchor [:roles] assoc g/secretary-name
+                   (g/map->Role {:name     g/secretary-name
+                                 :policies sample-policies-secretary}))
+        sample-anchor-with-secretary-policy))
+
+    (it "won't create policies for domains Lead Link doesn't have"
+      (should-throw IllegalArgumentException
+        "Role 'Secretary' doesn't control domain 'domain it doesn't have'"
+        (g/add-role-policy sample-anchor g/secretary-name sample-policy-name
+                           sample-policy-text "domain it doesn't have")))
+
+    (it "can create multiple policies"
+      (should=
+        (update-in sample-anchor [:roles] assoc g/secretary-name
+                   (g/map->Role {:name g/secretary-name
+                                 :policies
+                                       (assoc sample-policies-secretary
+                                              sample-policy-name2
+                                              {:name sample-policy-name2
+                                               :text sample-policy-text2})}))
+        sample-anchor-with-secretary-policies)))
+
   (it "can remove policies")
   (it "removes elected roles when they have no additions"))
 

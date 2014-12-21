@@ -44,6 +44,9 @@
        "record-keeping processes and systems required to create and "
        "maintain such records for the Circle"))
 
+(def core-role-domains {lead-link-name role-assignments-domain
+                        secretary-name governance-records-domain})
+
 (def facilitator-name "Facilitator")
 
 ;; ## General purpose utility functions ##
@@ -351,8 +354,7 @@
   ([circle role-name policy-name policy-text domain]
     (let [with-added-policy (add-role-policy circle role-name policy-name
                                              policy-text)]
-      (validate (or (and (is-lead-link? role-name)
-                         (= role-assignments-domain domain))
+      (validate (or (= (get core-role-domains role-name) domain)
                     (contains? (get-entity circle role-name :domains)
                                domain))
                 (format "Role '%s' doesn't control domain '%s'" role-name
