@@ -1,17 +1,16 @@
 language: clojure
 jdk: oraclejdk8
-script: >
-  lein docs &&
-  lein spec -f d -C > docs/specs.txt &&
-  lein ancient > docs/ancient.txt &&
-  lein kibit > docs/kibit.txt
+script: |
+  lein docs && lein spec -f d -C > docs/specs.txt && lein ancient > docs/ancient.txt && lein kibit > docs/kibit.txt
 deploy:
-  - provider: s3
-    access_key_id:
-      secure: RTICbxTzrUHakFEZ5xrl09/Pf3GcnFIfzEhJJz+TbFFdSQXubSgmVs6fkopqfjxvHIxDWBel7dpdjxIQCsAOOr4vaTs3sH7ZCJ933o0dlJcUGj41QUNzgeG2wNxmCeFYg49rD2rAaX/ZDhjsjyIbz5piAV7zk4Szg3hDg0qETnk=
-    secret_access_key:
-      secure: ecXz5JWKXhHA6nIUunUWhnaBCB1vYhU5sse34/DN+JW/QjTr+IK8/Y6OCPMZ49kZw0r555zatuYMUErBZzHSdmAnT8/Gi5LCvRgd1BMnVmhe6H0bpKVlk7zGhnc3PsrqecvBkt7QV0DWSrXsuW2x3YvmLso07qVH35oQAaJpluA=
-    bucket: freefrog
-    local-dir: docs
-    skip_cleanup: true
-    upload-dir: docs
+  provider: s3
+  access_key_id: AKIAILUSIQQRDIX2UQGQ
+  secret_access_key:
+    secure: U5h6bonKgx5P3ggMbfnCLctIFsTGgeQdDs+wG0/z0EJXH5lsbjDBN7wOB0BYZzNMphULhL686bHcHbKAMdRk6DnxEvkRg67VzToAToT22aIHrGl3a7wD8i5iBFI2NWEhZCkRVQG0xs9iKhzhdSLVZ5Es5gIKPByFmpFVtFTP1CM=
+  bucket: freefrog
+  local-dir: docs
+  upload-dir: docs
+  acl: public_read
+  skip_cleanup: true
+  on:
+    repo: couragelabs/freefrog
