@@ -25,7 +25,8 @@
 (def role-name "Programmer")
 
 (def sample-purpose "Building awesome software")
-(def sample-anchor-with-role (g/add-role-to-circle sample-anchor role-name sample-purpose))
+(def sample-anchor-with-role (g/add-role-to-circle sample-anchor role-name
+                                                   sample-purpose))
 
 (defn should-not-update-missing-or-empty-roles [fn type-str & params]
   (describe (format "%s problems" type-str)

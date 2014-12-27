@@ -24,10 +24,6 @@
             [freefrog.governance-spec-helpers :refer :all]
             [speclj.core :refer :all]))
 
-(def sample-role-name "Test Thing")
-
-(def sample-circle (g/add-role-to-circle sample-anchor sample-role-name nil))
-
 ;; Section 2.1
 (describe "Circles"
   (it "can create a circle"
@@ -41,39 +37,40 @@
       (g/create-circle "")))
 
   (it "can tell you if a role is authorized to act as a circle"
-    (should (g/is-circle? sample-circle))
-    (should-not (g/is-subrole-circle? sample-circle sample-role-name)))
+    (should (g/is-circle? sample-anchor-with-role))
+    (should-not (g/is-subrole-circle? sample-anchor-with-role role-name)))
 
   (it "can convert a role into a circle"
-    (should (g/is-subrole-circle? (g/convert-to-circle sample-circle sample-role-name)
-                                  sample-role-name)))
+    (should (g/is-subrole-circle?
+              (g/convert-to-circle sample-anchor-with-role role-name)
+              role-name)))
 
   (it "refuses to convert a role that is already a circle into a circle"
     (should-throw IllegalArgumentException
-      (format "Role '%s' is already a circle" sample-role-name)
-      (-> sample-circle
-          (g/convert-to-circle sample-role-name)
-          (g/convert-to-circle sample-role-name))))
+      (format "Role '%s' is already a circle" role-name)
+      (-> sample-anchor-with-role
+          (g/convert-to-circle role-name)
+          (g/convert-to-circle role-name))))
 
   (it "can convert an empty circle back into a role"
-    (should= sample-circle (-> sample-circle
-                               (g/convert-to-circle sample-role-name)
-                               (g/convert-to-role sample-role-name))))
+    (should= sample-anchor-with-role (-> sample-anchor-with-role
+                                         (g/convert-to-circle role-name)
+                                         (g/convert-to-role role-name))))
 
   (it "refuses to convert a non-empty circle into a role"
     (should-throw IllegalArgumentException
-      (format "Circle %s still contains roles" sample-role-name)
+      (format "Circle %s still contains roles" role-name)
       (let [circle-with-full-subcircle
-            (-> sample-circle
-                (g/convert-to-circle sample-role-name)
-                (g/update-subcircle [sample-role-name] g/add-role-to-circle
+            (-> sample-anchor-with-role
+                (g/convert-to-circle role-name)
+                (g/update-subcircle [role-name] g/add-role-to-circle
                                     "Fun"))]
-        (println (g/convert-to-role circle-with-full-subcircle sample-role-name)))))
+        (g/convert-to-role circle-with-full-subcircle role-name))))
 
   (it "refuses to convert a role that isn't a circle into a role"
     (should-throw IllegalArgumentException
-      (format "Role '%s' is not a circle" sample-role-name)
-      (g/convert-to-role sample-circle sample-role-name)))
+      (format "Role '%s' is not a circle" role-name)
+      (g/convert-to-role sample-anchor-with-role role-name)))
 
   (should-not-update-missing-or-empty-roles g/convert-to-circle
                                             "convert to circle")
