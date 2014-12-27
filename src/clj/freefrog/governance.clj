@@ -104,7 +104,7 @@
   (remove-role [container role-name])
   (rename-role [container role-name new-name]))
 
-(defrecord Role [name purpose domains accountabilities policies]
+(defrecord Role [name purpose domains accountabilities policies assignees]
   GovernanceRecord
   (is-circle? [_] false))
 
@@ -228,7 +228,7 @@
 
   ([circle new-role-name purpose domains accountabilities]
     (add-role circle (Role. new-role-name purpose domains accountabilities
-                            nil))))
+                            nil nil))))
 
 (defn update-role-purpose
   "Update the purpose of a role in the given circle."
@@ -366,3 +366,8 @@
   "Remove a policy from a role in the given circle."
   [circle role-name policy-name]
   (remove-from circle role-name :policies dissoc policy-name))
+
+(defn add-role-assignee
+  "Assign a person to a role."
+  [circle role-name assignee]
+  (add-to circle role-name :assignees {} assoc assignee {:id assignee}))

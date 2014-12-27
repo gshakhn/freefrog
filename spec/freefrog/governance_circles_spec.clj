@@ -184,7 +184,14 @@
 ;; Section 2.4
 (describe "Role Assignment"
   ;; Appendix A/Lead Link
-  (it "can assign someone to a role")
+  (it "can assign someone to a role"
+    (should= (update-in sample-anchor-with-role [:roles role-name] assoc
+                          :assignees {"test" {:id "test"}})
+      (g/add-role-assignee sample-anchor-with-role role-name "test")))
+
+  (should-not-update-missing-or-empty-roles g/add-role-assignee
+                                            "assignee" "random-person")
+
   (it "can assign someone to Lead Link role")
   (it "can assign someone to a role with a term expiration date")
 
