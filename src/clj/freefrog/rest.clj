@@ -18,124 +18,54 @@
 ;
 
 (ns freefrog.rest
-  (:require [liberator.core :refer [resource defresource]]
-            [liberator.representation :refer [ring-response]]
-            [liberator.dev]
-            [freefrog.governance :as g]
-            [freefrog.governance-logs :as gl]
-            [freefrog.persistence :as p]
-            [clj-json.core :as json]
+  (:require [org.httpkit.server :as httpkit]
+            [ring.util.http-response :refer :all]
+            [compojure.api.sweet :refer :all]
+            [compojure.core :as c]
             [compojure.route :as route]
-            [compojure.core :refer [defroutes ANY GET]])
-  (:import java.net.URL
-           [javax.persistence EntityNotFoundException]))
+            [schema.core :as s]
+            [freefrog.persistence :as p])
+  (:import (freefrog MissingEntityException)))
 
-(defn put-or-post? [ctx]
-  (#{:put :post} (get-in ctx [:request :request-method])))
+(def port 3000)
 
-(defn check-content-type [ctx content-types]
-  (if (put-or-post? ctx)
-    (or (some #{(get-in ctx [:request :headers "content-type"])} content-types)
-        [false {:message "Unsupported Content-Type"}])
-    true))
+(defn wrap-dir-index [handler]
+  (fn [req]
+    (handler (update-in req [:uri] #(if (= "/" %) "/index.html" %)))))
 
-(defn build-entry-url
-  ([request]
-   (URL. (format "%s://%s:%s%s"
-                 (name (:scheme request))
-                 (:server-name request)
-                 (:server-port request)
-                 (:uri request))))
-  ([request id]
-   (URL. (format "%s/%s" (build-entry-url request) (str id)))))
+(defn wrap-missing-entity [handler]
+  (fn [req]
+    (try
+      (handler req)
+      (catch MissingEntityException e
+        (let [{:keys [_ message]} (meta e)]
+          (not-found message))))))
 
-(defn new-governance-log [circle-id]
-  {::new-governance-log-id (p/new-governance-log 
-                             circle-id 
-                             (gl/create-governance-log))})
+(defapi api
+  (swagger-ui "/api")
+  (swagger-docs
+    :title "Freefrog API")
+  (swaggered "freefrog"
+    :description "The Freefrog API"
+    (middlewares [wrap-missing-entity]
+      (context "/api" []
+        (GET* "/*/_governance" {{path :*} :route-params}
+              :return [s/Str]
+              :summary "Retrieve the governance for a circle"
+              (ok (p/get-all-governance-logs path)))
 
-(defn get-governance-log [circle-id log-id]
-  [true {::governance-log (p/get-governance-log circle-id log-id)}])
+        (GET* "/*" {{path :*} :route-params}
+              :return String
+              :summary "Retrieve a circle or role"
+              (format "You requested circle/role: %s" path))))))
 
-(defn put-governance-log [circle-id gov-id context]
-  (let [gov-log (p/get-governance-log circle-id gov-id)]
-    (when (:is-open? gov-log)
-      (p/put-governance-log circle-id gov-id 
-                            (assoc gov-log
-                                   :is-open? false)))))
+(def app (-> (c/routes api (route/resources "/"))
+             wrap-dir-index))
 
-(defn get-governance-logs [circle-id]
-  [true {::governance-logs (p/get-all-governance-logs circle-id)}])
+(defn start-server []
+  (httpkit/run-server app {:port port}))
 
-(defn put-governance-log-agenda [circle-id gov-id context]
-  (let [gov-log (p/get-governance-log circle-id gov-id)]
-    (if (:is-open? gov-log)
-      (p/put-governance-log circle-id gov-id 
-                            (assoc gov-log
-                                   :agenda (:body context)))
-      {::failed "Agenda is closed."})))
-
-(defn validate-context [ctx]
-  (when (::failed ctx)
-    (ring-response {:status 400 :body (::failed ctx)})))
-
-(defn handle-exception [ctx]
-  (let [exception (:exception ctx)]
-    (when (= (type exception)
-             javax.persistence.EntityNotFoundException)
-      (ring-response {:status 404 :body (.getMessage exception)}))))
-
-(defresource governance-agenda-resource [circle-id log-id]
-  :allowed-methods [:get :put]
-  :known-content-type? #(check-content-type % ["text/plain"])
-  :exists? (fn [_] (get-governance-log circle-id log-id))
-  :new? #(nil? (:agenda (::governance-log %)))
-  :put! #(put-governance-log-agenda circle-id log-id %)
-  :handle-ok #(if (:is-open? (::governance-log %))
-                (ring-response {:status 200 
-                                :headers {"Content-Type" "text/plain"}
-                                :body (str (:agenda (::governance-log %)))})
-                (ring-response {:status 400 :body "Agenda is closed."}))
-  :handle-created #(validate-context %)
-  :handle-no-content #(validate-context %)
-  :handle-exception #(handle-exception %)
-  :location #(build-entry-url (:request %)))
-
-(defresource specific-governance-resource [circle-id log-id]
-  :allowed-methods [:put :get]
-  :known-content-type? #(check-content-type % ["text/plain"])
-  :exists? (fn [_] (get-governance-log circle-id log-id))
-  :new? #(nil? (::governance-log %))
-  :put! #(put-governance-log circle-id log-id %)
-  :handle-ok #(if (:is-open? (::governance-log %))
-                (ring-response {:status 200 :headers {"Open-Meeting" "true"}})
-                (json/generate-string (::governance-log %)))
-  :handle-exception #(handle-exception %)
-  :handle-no-content #(validate-context %))
-
-(defresource general-governance-resource [circle-id]
-  :allowed-methods [:get :post]
-  :known-content-type? #(check-content-type % ["text/plain"])
-  :post! (fn [_] (new-governance-log circle-id))
-  :exists? (fn [_] (get-governance-logs circle-id))
-  :handle-ok #(json/generate-string (::governance-logs %))
-  :handle-created #(validate-context %)
-  :handle-exception #(handle-exception %)
-  :location #(build-entry-url (:request %) (::new-governance-log-id %)))
-
-(defroutes app
-  (ANY "/circles/:circle-id/governance" [circle-id] 
-       (general-governance-resource circle-id))
-  (ANY "/circles/:circle-id/governance/:log-id" [circle-id log-id] 
-       (specific-governance-resource circle-id log-id))
-  (ANY "/circles/:circle-id/governance/:log-id/agenda" [circle-id log-id]
-       (governance-agenda-resource circle-id log-id))
-  ;;TODO
-  ;(ANY "/circles/:circle-id/governance/:log-id/current" [circle-id log-id]
-       ;(governance-current-resource circle-id log-id))
-  (route/not-found "<h1>:-(</hi>"))
-
-(def handler 
-  (-> app 
-    (liberator.dev/wrap-trace :header :ui)))
+(defn -main []
+  (start-server)
+  (println "server started"))
 

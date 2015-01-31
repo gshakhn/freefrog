@@ -22,19 +22,20 @@
 (defn new-governance-log 
   "Creates a new governance log for the circle using the given input log.
   Returns the unique ID of this newly created governance log."
-  [circle-id log])
+  [])
 
 (defn get-governance-log
   "Return the specified governance log for the circle. Throws
   EntityNotFoundException if the specified log or circle does not exist."
-  [circle-id log-id])
+  [])
 
 (defn put-governance-log
   "Store the governance log for the specified circle and ID. Throws
   EntityNotFoundException if the specified log or circle does not exist."
-  [circle-id log-id log])
+  [])
 
 (defn get-all-governance-logs
   "Return a collection of all of the governance logs for the circle. Throws
   EntityNotFoundException if the circle does not exist."
-  [circle-id])
+  [_]
+  [])

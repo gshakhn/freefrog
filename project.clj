@@ -25,30 +25,42 @@
 
   :min-lein-version "2.3.4"
 
-  :source-paths ["src/clj"]
+  :source-paths ["src/clj" "src/java"]
 
-  :dependencies [[clj-jgit "0.8.0"]
+  :java-source-paths ["src/java"]
+
+  :dependencies [[org.clojure/clojure "1.6.0"]
+                 [metosin/ring-swagger "0.13.0"]
+                 [metosin/compojure-api "0.16.0"]
+                 [metosin/ring-http-response "0.5.0"]
+                 [metosin/ring-swagger-ui "2.0.17"]
                  [clj-json "0.5.3"]
-                 [com.velisco/tagged "0.3.4"]
-                 [compojure "1.2.1"]
-                 [javax.persistence/persistence-api "1.0"]
-                 [liberator "0.12.2"]
-                 [org.clojure/clojure "1.6.0"]
-                 [ring/ring-core "1.3.1"]
-                 [speclj "3.1.0"]]
+                 [clj-time "0.8.0"]
+                 [speclj "3.1.0"]
+                 [http-kit "2.1.19"]]
 
-  :profiles {:dev {:dependencies [[clj-http "1.0.1"]
-                                  [ring-server "0.3.1"]]}}
-
-  :ring {:handler freefrog.rest/handler :reload-paths ["src"]}
+  :profiles {:freefrog {:ring {:handler freefrog.rest/app
+                              :reload-paths ["src"]}
+                       :main freefrog.rest
+                       :dependencies [[metosin/ring-swagger-ui "2.0.24"]]}
+             :uberjar {:aot :all}
+             :dev {:ring {:handler freefrog.rest/app}
+                   :plugins [[lein-clojars "0.9.1"]
+                             [lein-midje "3.1.3"]
+                             [lein-ring "0.9.1"]]
+                   :dependencies [[peridot "0.3.1"]
+                                  [javax.servlet/servlet-api "2.5"]
+                                  [midje "1.6.3"]
+                                  [clj-http "1.0.1"]]}
+             :1.7 {:dependencies [[org.clojure/clojure "1.7.0-alpha4"]]}}
 
   :plugins [[lein-ancient "0.5.5"]
             [lein-kibit "0.0.8"]
             [lein-marginalia "0.8.0"]
-            [lein-ring "0.8.13"]
             [speclj "3.1.0"]]
 
   :test-paths ["spec"]
 
   :aliases {"autotest" ["spec" "-a"]
-            "docs" ["marg" "src" "spec"]})
+            "docs" ["marg" "src" "spec"]
+            "freefrog" ["with-profile" "freefrog" "run"]})
