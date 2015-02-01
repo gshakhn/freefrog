@@ -20,12 +20,19 @@
 (ns freefrog.rest-spec
   (:require [speclj.core :refer :all]
             [clj-http.client :as http-client]
+            [freefrog.auth :as auth]
             [freefrog.rest :as r]
-            [freefrog.persistence :as p])
+            [freefrog.persistence :as p]
+            [clj-json.core :as json]
+            [clojure.walk :as walk]
+            [clj-http.cookies :as cookies])
   (:import [freefrog MissingEntityException])
   (:use [ring.adapter.jetty]))
 
 (def host-url (format "http://localhost:%d/api" r/port))
+
+(defn circle-api [path] (format "/circles/%s" path))
+(def session-api "/session")
 
 (def http-request-fns
   {:get  http-client/get
@@ -58,40 +65,99 @@
   `(it "should contain the appropriate body"
      (should= ~expected-body (:body ~response))))
 
-(defmacro it-responds-with-body-containing [expected-body response]
-  `(it "should contain the appropriate body"
-     (should-contain ~expected-body (:body ~response))))
+(defmacro it-responds-with-json [expected-body response]
+  `(it "should contain the appropriate json body"
+     (should= ~expected-body (walk/keywordize-keys
+                               (json/parse-string (:body ~response))))))
 
-(describe "governance rest api"
+(def principal1 {:name          "Steve",
+                 :email_address "steve@example.com"})
+(def principal2 {:name          "Bill",
+                 :email_address "bill@example.com"})
+
+(def principals-map {"good1" principal1
+                     "good2" principal2})
+
+(defn json-post-body [cookies body]
+  {:body         (json/generate-string body)
+   :cookie-store cookies
+   :content-type "application/json"})
+
+(describe "rest api"
   (with-all stop-server-fn (r/start-server))
   (before-all @stop-server-fn)
   (after-all (@stop-server-fn))
 
-  (with circle-response (http-request :get "/anchor/dev/qa"
-                                      {:accept "application/json"}))
-  (with gov-response (http-request :get "/anchor/dev/qa/_governance"
-                                   {:accept "application/json"}))
-
-  (context "circle/role"
-    (context "json"
-      (it-responds-with-status 200 @circle-response)
-      (it-responds-with-body "\"You requested circle/role: anchor/dev/qa\""
-        @circle-response)
-      (it-responds-with-content-type "application/json; charset=utf-8"
-        @circle-response)))
-
   (context "governance"
-    (context "getting a non-existent circle/role"
-      (around [it]
-        (with-redefs [p/get-all-governance-logs throw-circle-not-found] (it)))
-      (it-responds-with-status 404 @gov-response))
+    (with circle-response (http-request :get (circle-api "anchor/dev/qa")
+                                        {:accept "application/json"}))
+    (with gov-response (http-request :get
+                                     (circle-api "anchor/dev/qa/_governance")
+                                     {:accept "application/json"}))
 
-    (context "json"
-      (it-responds-with-status 200 @gov-response)
-      (it-responds-with-body
-        "[]"
-        @gov-response)
-      (it-responds-with-content-type "application/json; charset=utf-8"
-        @gov-response))))
+    (context "circle/role"
+      (context "json"
+        (it-responds-with-status 200 @circle-response)
+        (it-responds-with-body "\"You requested circle/role: anchor/dev/qa\""
+          @circle-response)
+        (it-responds-with-content-type "application/json; charset=utf-8"
+          @circle-response)))
+
+    (context "governance"
+      (context "getting a non-existent circle/role"
+        (around [it]
+          (with-redefs [p/get-all-governance-logs throw-circle-not-found] (it)))
+        (it-responds-with-status 404 @gov-response))
+
+      (context "json"
+        (it-responds-with-status 200 @gov-response)
+        (it-responds-with-body
+          "[]"
+          @gov-response)
+        (it-responds-with-content-type "application/json; charset=utf-8"
+          @gov-response))))
+
+  (context "session"
+    (context "posting to the session"
+      (with-all cookie-store (cookies/cookie-store))
+
+      (with get-response (http-request :get session-api
+                                       {:cookie-store @cookie-store}))
+
+      (with post-response1 (http-request :post session-api
+                                         (json-post-body @cookie-store
+                                                         {:token "good1"})))
+
+      (with post-response2 (http-request :post session-api
+                                         (json-post-body @cookie-store
+                                                         {:token "good2"})))
+
+      (with post-response3 (http-request :post session-api
+                                         (json-post-body @cookie-store
+                                                         {:token "bad"})))
+
+      (around [it]
+        (with-redefs [auth/authenticate (fn [token]
+                                          (principals-map token))] (it)))
+
+      (it-responds-with-status 404 @get-response)
+
+      (it-responds-with-status 200 @post-response1)
+      (it-responds-with-json principal1
+                             @post-response1)
+      (it-responds-with-json principal1
+                             @get-response)
+      (it-responds-with-status 200 @get-response)
+
+      (it-responds-with-status 200 @post-response2)
+      (it-responds-with-json principal2
+                             @post-response2)
+      (it-responds-with-json principal2
+                             @get-response)
+      (it-responds-with-status 200 @get-response)
+
+      (it-responds-with-status 403 @post-response3))
+
+    (context "deleting a session")))
 
 (run-specs)

@@ -23,11 +23,16 @@
             [compojure.api.sweet :refer :all]
             [compojure.core :as c]
             [compojure.route :as route]
+            [ring.middleware.session :as session]
             [schema.core :as s]
-            [freefrog.persistence :as p])
+            [freefrog.persistence :as p]
+            [freefrog.auth :as auth])
   (:import (freefrog MissingEntityException)))
 
 (def port 3000)
+
+(s/defschema Principal
+             {:name String :email_address String})
 
 (defn wrap-dir-index [handler]
   (fn [req]
@@ -47,17 +52,39 @@
     :title "Freefrog API")
   (swaggered "freefrog"
     :description "The Freefrog API"
-    (middlewares [wrap-missing-entity]
+    (middlewares [wrap-missing-entity session/wrap-session]
       (context "/api" []
-        (GET* "/*/_governance" {{path :*} :route-params}
-              :return [s/Str]
-              :summary "Retrieve the governance for a circle"
-              (ok (p/get-all-governance-logs path)))
+        (context "/circles" []
+          (GET* "/*/_governance" {{path :*} :route-params}
+                :return [s/Str]
+                :summary "Retrieve the governance for a circle"
+                (ok (p/get-all-governance-logs path)))
 
-        (GET* "/*" {{path :*} :route-params}
-              :return String
-              :summary "Retrieve a circle or role"
-              (format "You requested circle/role: %s" path))))))
+          (GET* "/*" {{path :*} :route-params}
+                :return String
+                :summary "Retrieve a circle or role"
+                (format "You requested circle/role: %s" path)))
+
+        (context "/session" []
+          (GET* "/" {session :session}
+                :return Principal
+                :summary "Get a session"
+                (if-let [principal (:principal session)]
+                  (ok principal)
+                  nil))
+
+          (POST* "/" []
+                 :return Principal
+                 :summary "Establish a session"
+                 :body-params [token :- String]
+                 (let [principal (auth/authenticate token)
+                       response (if principal
+                                  {:session {:principal principal}}
+                                  {:session {}})]
+                   (into response
+                         (if principal
+                           (ok principal)
+                           (forbidden "Please pass a valid token"))))))))))
 
 (def app (-> (c/routes api (route/resources "/"))
              wrap-dir-index))
@@ -68,4 +95,3 @@
 (defn -main []
   (start-server)
   (println "server started"))
-

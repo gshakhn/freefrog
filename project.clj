@@ -37,6 +37,7 @@
                  [clj-json "0.5.3"]
                  [clj-time "0.8.0"]
                  [speclj "3.1.0"]
+;                 [com.cemerick/friend "0.2.1"]
                  [http-kit "2.1.19"]]
 
   :profiles {:freefrog {:ring {:handler freefrog.rest/app
