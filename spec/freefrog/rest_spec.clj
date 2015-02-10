@@ -71,13 +71,11 @@
      (should= ~expected-body (walk/keywordize-keys
                                (json/parse-string (:body ~response))))))
 
-(def principal1 {:name          "Steve",
-                 :email_address "steve@example.com"})
-(def principal2 {:name          "Bill",
-                 :email_address "bill@example.com"})
+(def principal1 "steve@example.com" )
+(def principal2 "bill@example.com")
 
-(def principals-map {"good1" principal1
-                     "good2" principal2})
+(def principals-map {"good1" {:email principal1}
+                     "good2" {:email principal2}})
 
 (defn json-post-body [cookies body]
   {:body         (json/generate-string body)
