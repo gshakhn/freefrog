@@ -30,14 +30,15 @@
   :java-source-paths ["src/java"]
 
   :dependencies [[org.clojure/clojure "1.6.0"]
+                 [org.clojure/tools.logging "0.3.1"]
                  [metosin/ring-swagger "0.13.0"]
                  [metosin/compojure-api "0.16.0"]
                  [metosin/ring-http-response "0.5.0"]
                  [metosin/ring-swagger-ui "2.0.17"]
+                 [clj-http "1.0.1"]
                  [clj-json "0.5.3"]
                  [clj-time "0.8.0"]
                  [speclj "3.1.0"]
-;                 [com.cemerick/friend "0.2.1"]
                  [http-kit "2.1.19"]]
 
   :profiles {:freefrog {:ring {:handler freefrog.rest/app
@@ -51,8 +52,7 @@
                              [lein-ring "0.9.1"]]
                    :dependencies [[peridot "0.3.1"]
                                   [javax.servlet/servlet-api "2.5"]
-                                  [midje "1.6.3"]
-                                  [clj-http "1.0.1"]]}
+                                  [midje "1.6.3"]]}
              :1.7 {:dependencies [[org.clojure/clojure "1.7.0-alpha4"]]}}
 
   :plugins [[lein-ancient "0.5.5"]

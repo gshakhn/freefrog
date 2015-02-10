@@ -30,6 +30,10 @@ To see what the documentation looks like:
 
     lein marg && open docs/uberdoc.html
 
+## Running it
+
+    lein freefrog
+
 ## Getting Help
 
 If the information above isn't telling you what you need to know, come chat

@@ -26,13 +26,12 @@
             [ring.middleware.session :as session]
             [schema.core :as s]
             [freefrog.persistence :as p]
-            [freefrog.auth :as auth])
+            [freefrog.auth :as auth]
+            [clojure.tools.logging :as log])
   (:import (freefrog MissingEntityException)))
 
+;;todo Make this configurable
 (def port 3000)
-
-(s/defschema Principal
-             {:name String :email_address String})
 
 (defn wrap-dir-index [handler]
   (fn [req]
@@ -67,24 +66,33 @@
 
         (context "/session" []
           (GET* "/" {session :session}
-                :return Principal
+                :return String
                 :summary "Get a session"
                 (if-let [principal (:principal session)]
                   (ok principal)
                   nil))
 
           (POST* "/" []
-                 :return Principal
+                 :return String
                  :summary "Establish a session"
-                 :body-params [token :- String]
-                 (let [principal (auth/authenticate token)
-                       response (if principal
-                                  {:session {:principal principal}}
-                                  {:session {}})]
-                   (into response
-                         (if principal
-                           (ok principal)
-                           (forbidden "Please pass a valid token"))))))))))
+                 :body-params [assertion :- String]
+                 (let [result (auth/authenticate assertion)
+                       principal (when result (:email result))
+                       session (if principal
+                                 {:principal principal}
+                                 {})
+
+                       response
+                       (if principal
+                         (ok principal)
+                         (forbidden "Please submit a valid assertion"))]
+                   (log/info (format "Login attempt: %s" result))
+                   (assoc response :session session)))
+
+          (DELETE* "/" {session :session}
+                   :summary "Remove the current session; effectively a logout"
+                   (log/info (format "Logged out: %s" (:principal session)))
+                   (assoc (ok "Logged out") :session {})))))))
 
 (def app (-> (c/routes api (route/resources "/"))
              wrap-dir-index))
@@ -94,4 +102,4 @@
 
 (defn -main []
   (start-server)
-  (println "server started"))
+  (log/info (format "server started on port %d" port)))

@@ -35,9 +35,10 @@
 (def session-api "/session")
 
 (def http-request-fns
-  {:get  http-client/get
-   :put  http-client/put
-   :post http-client/post})
+  {:get    http-client/get
+   :put    http-client/put
+   :post   http-client/post
+   :delete http-client/delete})
 
 (defn http-request
   ([method uri]
@@ -126,37 +127,47 @@
 
       (with post-response1 (http-request :post session-api
                                          (json-post-body @cookie-store
-                                                         {:token "good1"})))
+                                                         {:assertion "good1"})))
 
       (with post-response2 (http-request :post session-api
                                          (json-post-body @cookie-store
-                                                         {:token "good2"})))
+                                                         {:assertion "good2"})))
 
       (with post-response3 (http-request :post session-api
                                          (json-post-body @cookie-store
-                                                         {:token "bad"})))
+                                                         {:assertion "bad"})))
+
+      (with delete-response (http-request :delete session-api
+                                          {:cookie-store @cookie-store}))
 
       (around [it]
         (with-redefs [auth/authenticate (fn [token]
                                           (principals-map token))] (it)))
 
-      (it-responds-with-status 404 @get-response)
+      (context "simple login"
+        (it-responds-with-status 404 @get-response)
 
-      (it-responds-with-status 200 @post-response1)
-      (it-responds-with-json principal1
-                             @post-response1)
-      (it-responds-with-json principal1
-                             @get-response)
-      (it-responds-with-status 200 @get-response)
+        (it-responds-with-status 200 @post-response1)
+        (it-responds-with-json principal1
+                               @post-response1)
+        (it-responds-with-json principal1
+                               @get-response)
+        (it-responds-with-status 200 @get-response))
 
-      (it-responds-with-status 200 @post-response2)
-      (it-responds-with-json principal2
-                             @post-response2)
-      (it-responds-with-json principal2
-                             @get-response)
-      (it-responds-with-status 200 @get-response)
+      (context "second login"
+        (it-responds-with-status 200 @post-response2)
+        (it-responds-with-json principal2
+                               @post-response2)
+        (it-responds-with-json principal2
+                               @get-response)
+        (it-responds-with-status 200 @get-response))
 
-      (it-responds-with-status 403 @post-response3))
+      (context "logout"
+        (it-responds-with-status 200 @delete-response)
+        (it-responds-with-status 404 @get-response))
+
+      (context "bad login"
+        (it-responds-with-status 403 @post-response3)))
 
     (context "deleting a session")))
 
