@@ -6,8 +6,10 @@
 </head>
 <body>
 welcome to freefrog
-<input type="button" onclick="navigator.id.request()" value="Login"/>
-<input type="button" onclick="navigator.id.logout()" value="Logout"/>
+<input type="button" onclick="navigator.id.request()" value="Login"
+        id="login_btn" style="display:none"/>
+<input type="button" onclick="navigator.id.logout()" value="Logout"
+        id="logout_btn" style="display:none"/>
 
     <pre id="result">
 
@@ -17,15 +19,69 @@ welcome to freefrog
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
 
 <script type="application/javascript">
-    $(document).ready(function () {
+    function loggedIn(user) {
+        $('#login_btn').hide('fast', function() {
+            $('#logout_btn').show('fast', function() {
+                $('#result').html("Welcome: " + user);
+            });
+        });
+    }
+
+    function loggedOut() {
+        $('#login_btn').show();
+        $('#result').empty();
+    }
+
+    function watch(user) {
+        $('#result').html("Logging in...");
         navigator.id.watch({
-            loggedInUser: "scstarkey@gmail.com",
+            loggedInUser: user,
             onlogin: function (assertion) {
-                $("#result").html(assertion);
+                console.log('Assertion: ', assertion);
+                $.ajax({
+                    type: 'POST',
+                    url: '/api/session',
+                    data: JSON.stringify({assertion: assertion}),
+                    contentType: 'application/json',
+                    success: function (res, status, xhr) {
+                        loggedIn(res);
+                    },
+                    error: function (xhr, status, err) {
+                        navigator.id.logout();
+                        console.log('Login error: ', err);
+                    }
+                });
             },
 
             onlogout: function () {
-                $("#result").html("logged out");
+                $.ajax({
+                    type: 'DELETE',
+                    url: '/api/session',
+                    success: function (res, status, xhr) {
+                        $('#logout_btn').hide('fast', loggedOut);
+                    },
+                    error: function (xhr, status, err) {
+                        console.log('Logout error: ', err);
+                    }
+                });
+            }
+        });
+    }
+
+    $(document).ready(function () {
+        $.ajax({
+            url: '/api/session',
+            type: 'GET',
+            success: function(res, status, xhr) {
+                watch(res);
+                loggedIn(res);
+            },
+            error: function(xhr, status, err) {
+                console.log('Session validation: ', err);
+                if (err === 'Not Found') {
+                    watch(null);
+                    loggedOut();
+                }
             }
         });
     });
