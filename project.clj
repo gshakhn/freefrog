@@ -48,11 +48,9 @@
              :uberjar {:aot :all}
              :dev {:ring {:handler freefrog.rest/app}
                    :plugins [[lein-clojars "0.9.1"]
-                             [lein-midje "3.1.3"]
                              [lein-ring "0.9.1"]]
                    :dependencies [[peridot "0.3.1"]
-                                  [javax.servlet/servlet-api "2.5"]
-                                  [midje "1.6.3"]]}
+                                  [javax.servlet/servlet-api "2.5"]]}
              :1.7 {:dependencies [[org.clojure/clojure "1.7.0-alpha4"]]}}
 
   :plugins [[lein-ancient "0.5.5"]
