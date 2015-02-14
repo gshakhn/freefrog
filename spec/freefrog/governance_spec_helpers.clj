@@ -1,5 +1,5 @@
 ;
-; Copyright © 2014 Courage Labs
+; Copyright © 2015 Courage Labs
 ;
 ; This file is part of Freefrog.
 ;
