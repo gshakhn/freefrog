@@ -43,7 +43,7 @@ pretty regularly.
 
 ## License
 
-Copyright © 2014 Courage Labs
+Copyright © 2015 Courage Labs
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published by
