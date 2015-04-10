@@ -38,8 +38,11 @@
                  [clj-http "1.0.1"]
                  [clj-json "0.5.3"]
                  [clj-time "0.8.0"]
+                 [environ "1.0.0"]
                  [speclj "3.1.0"]
                  [http-kit "2.1.19"]]
+
+  :main freefrog.rest
 
   :profiles {:freefrog {:ring {:handler freefrog.rest/app
                               :reload-paths ["src"]}

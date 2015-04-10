@@ -28,7 +28,8 @@
             [freefrog.persistence :as p]
             [freefrog.auth :as auth]
             [clojure.tools.logging :as log])
-  (:import (freefrog MissingEntityException)))
+  (:import (freefrog MissingEntityException))
+  (:gen-class))
 
 ;;todo Make this configurable
 (def port 3000)

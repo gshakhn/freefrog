@@ -30,9 +30,16 @@ To see what the documentation looks like:
 
     lein marg && open docs/uberdoc.html
 
-## Running it
+## Running it locally
 
     lein freefrog
+
+## Operating using Docker
+
+Docker is our preferred approach for operating Freefrog. An example file
+can be found in the root:
+
+    ./run-with-docker
 
 ## Getting Help
 

@@ -21,23 +21,28 @@
   (:require [clj-http.client :as http-client]
             [clojure.tools.logging :as log]
             [clj-json.core :as json]
-            [clojure.walk :as walk]))
+            [clojure.walk :as walk]
+            [environ.core :as env]))
 
+(defn make-audience-url []
+  (let [url (env/env :auth-audience-url)]
+    (if (empty? url) "http://localhost:3000" url)))
 
 (defn authenticate [assertion]
   (try
-    (let [result (-> (http-client/post
+    (let [audience-url (make-audience-url)
+          result (-> (http-client/post
                        "https://verifier.login.persona.org/verify"
                        {:form-params
                         {:assertion assertion
-
-                         ;;todo Make this configurable
-                         :audience  "http://localhost:3000"}})
+                         :audience  audience-url}})
                      :body
                      json/parse-string
                      walk/keywordize-keys)]
       (if (= "okay" (:status result))
         result
-        (log/error (format "Authentication failed: %s" result))))
+        (log/error (format "Authentication failed: %s (using %s)"
+                           result
+                           audience-url))))
     (catch Throwable t
       (log/error t "Authentication service failure"))))
