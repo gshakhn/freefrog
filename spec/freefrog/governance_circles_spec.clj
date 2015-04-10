@@ -53,9 +53,10 @@
           (g/convert-to-circle role-name))))
 
   (it "can convert an empty circle back into a role"
-    (should= sample-anchor-with-role (-> sample-anchor-with-role
-                                         (g/convert-to-circle role-name)
-                                         (g/convert-to-role role-name))))
+    (should (.equals sample-anchor-with-role
+                     (-> sample-anchor-with-role
+                         (g/convert-to-circle role-name)
+                         (g/convert-to-role role-name)))))
 
   (it "refuses to convert a non-empty circle into a role"
     (should-throw IllegalArgumentException
@@ -73,9 +74,9 @@
       (g/convert-to-role sample-anchor-with-role role-name)))
 
   (should-not-update-missing-or-empty-roles g/convert-to-circle
-                                            "convert to circle")
+    "convert to circle")
   (should-not-update-missing-or-empty-roles g/convert-to-role
-                                            "convert to role"))
+    "convert to role"))
 
 
 (def sample-policy-name "Do whatever")
@@ -186,11 +187,11 @@
   ;; Appendix A/Lead Link
   (it "can assign someone to a role"
     (should= (update-in sample-anchor-with-role [:roles role-name] assoc
-                          :assignees {"test" {:id "test"}})
+                        :assignees {"test" {:id "test"}})
       (g/add-role-assignee sample-anchor-with-role role-name "test")))
 
   (should-not-update-missing-or-empty-roles g/add-role-assignee
-                                            "assignee" "random-person")
+    "assignee" "random-person")
 
   (it "can assign someone to Lead Link role")
   (it "can assign someone to a role with a term expiration date")
