@@ -1,5 +1,5 @@
 ;
-; Copyright © 2014 Courage Labs
+; Copyright © 2015 Courage Labs
 ;
 ; This file is part of Freefrog.
 ;
@@ -38,8 +38,11 @@
                  [clj-http "1.0.1"]
                  [clj-json "0.5.3"]
                  [clj-time "0.8.0"]
+                 [environ "1.0.0"]
                  [speclj "3.1.0"]
                  [http-kit "2.1.19"]]
+
+  :main freefrog.rest
 
   :profiles {:freefrog {:ring {:handler freefrog.rest/app
                               :reload-paths ["src"]}
@@ -48,11 +51,9 @@
              :uberjar {:aot :all}
              :dev {:ring {:handler freefrog.rest/app}
                    :plugins [[lein-clojars "0.9.1"]
-                             [lein-midje "3.1.3"]
                              [lein-ring "0.9.1"]]
                    :dependencies [[peridot "0.3.1"]
-                                  [javax.servlet/servlet-api "2.5"]
-                                  [midje "1.6.3"]]}
+                                  [javax.servlet/servlet-api "2.5"]]}
              :1.7 {:dependencies [[org.clojure/clojure "1.7.0-alpha4"]]}}
 
   :plugins [[lein-ancient "0.5.5"]

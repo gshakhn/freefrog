@@ -30,9 +30,16 @@ To see what the documentation looks like:
 
     lein marg && open docs/uberdoc.html
 
-## Running it
+## Running it locally
 
     lein freefrog
+
+## Operating using Docker
+
+Docker is our preferred approach for operating Freefrog. An example file
+can be found in the root:
+
+    ./run-with-docker
 
 ## Getting Help
 
@@ -43,7 +50,7 @@ pretty regularly.
 
 ## License
 
-Copyright © 2014 Courage Labs
+Copyright © 2015 Courage Labs
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published by

@@ -1,5 +1,5 @@
 ;
-; Copyright © 2014 Courage Labs
+; Copyright © 2015 Courage Labs
 ;
 ; This file is part of Freefrog.
 ;
@@ -28,7 +28,8 @@
             [freefrog.persistence :as p]
             [freefrog.auth :as auth]
             [clojure.tools.logging :as log])
-  (:import (freefrog MissingEntityException)))
+  (:import (freefrog MissingEntityException))
+  (:gen-class))
 
 ;;todo Make this configurable
 (def port 3000)
