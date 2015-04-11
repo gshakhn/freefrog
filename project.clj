@@ -29,7 +29,8 @@
 
   :java-source-paths ["src/java"]
 
-  :dependencies [[org.clojure/clojure "1.6.0"]
+  :dependencies [[clj-yaml "0.4.0"]
+                 [org.clojure/clojure "1.6.0"]
                  [org.clojure/tools.logging "0.3.1"]
                  [metosin/ring-swagger "0.13.0"]
                  [metosin/compojure-api "0.16.0"]
