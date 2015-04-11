@@ -19,11 +19,10 @@
 
 (ns freefrog.lang
   (:require [clj-yaml.core :as yaml]
-            [clojure.pprint :as pp]
             [clojure.walk :as walk]
             [freefrog.governance :as g]))
 
-(defn create-anchor-circle [{:keys [name cross-links]}]
+(defn create-anchor-circle [_ {:keys [name cross-links]}]
   (let [anchor-circle (g/create-circle name)]
     (reduce g/add-role-to-circle
             anchor-circle
@@ -40,24 +39,17 @@
             "Create Role"          create-role
             "Create Circle"        create-circle})
 
-(defn process-command
-  ([[command args]]
-   (let [fn-to-call (get verbs command)]
-     (fn-to-call (walk/keywordize-keys args))))
-  ([circle [command args]]
-   (try
-     (let [fn-to-call (get verbs command)]
-       (fn-to-call circle (walk/keywordize-keys args)))
-     (catch Exception e
-       (printf "Unable to process command %s / %s%n" command args)
-       (throw e)))))
+(defn process-command [circle [command args]]
+  (try
+    (let [fn-to-call (get verbs command)]
+      (fn-to-call circle (walk/keywordize-keys args)))
+    (catch Exception e
+      (printf "Unable to process command %s / %s%n" command args)
+      (throw e))))
 
 (defn execute-governance
   ([governance-string]
-   (let [parsed-document (-> governance-string
-                             (yaml/parse-string)
-                             (walk/stringify-keys))]
-     (process-command (first parsed-document))))
+   (execute-governance nil governance-string))
   ([circle governance-string]
    (let [parsed-document (-> governance-string
                              (yaml/parse-string)
