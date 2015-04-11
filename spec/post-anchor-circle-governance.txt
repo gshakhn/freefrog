@@ -1,0 +1,27 @@
+-
+  - Create Role
+  - name: Partner Matters
+    purpose: Bringing in and making Partners happy
+
+-
+  - Create Role
+  - name: Accounting
+    purpose: Spending money responsibly
+    domains:
+      - Checkbook
+      - Credit cards
+    accountabilities:
+      - Telling people how much money there is to spend
+      - Paying people
+      - Reimbursing for expenses
+      - Depositing income
+
+-
+  - Create Circle
+  - name: Products
+    purpose: Building cool products to sell
+    domains:
+      - Products
+    accountabilities:
+      - Communicating product direction
+      - Gathering customer needs

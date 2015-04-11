@@ -29,14 +29,37 @@
             anchor-circle
             cross-links)))
 
-(def verbs {"Create Anchor Circle" create-anchor-circle})
+(defn create-role [circle {:keys [name purpose domains accountabilities]}]
+  (g/add-role-to-circle circle name purpose domains accountabilities))
 
-(defn process-command [[command args]]
-  (let [fn-to-call (get verbs command)]
-    (fn-to-call (walk/keywordize-keys args))))
+(defn create-circle [circle {:keys [name purpose domains accountabilities]}]
+  (-> (g/add-role-to-circle circle name purpose domains accountabilities)
+      (g/convert-to-circle name)))
 
-(defn execute-governance [governance-string]
-  (let [parsed-document (-> governance-string
-                   (yaml/parse-string)
-                   (walk/stringify-keys))]
-    (map process-command parsed-document)))
+(def verbs {"Create Anchor Circle" create-anchor-circle
+            "Create Role"          create-role
+            "Create Circle"        create-circle})
+
+(defn process-command
+  ([[command args]]
+   (let [fn-to-call (get verbs command)]
+     (fn-to-call (walk/keywordize-keys args))))
+  ([circle [command args]]
+   (try
+     (let [fn-to-call (get verbs command)]
+       (fn-to-call circle (walk/keywordize-keys args)))
+     (catch Exception e
+       (printf "Unable to process command %s / %s%n" command args)
+       (throw e)))))
+
+(defn execute-governance
+  ([governance-string]
+   (let [parsed-document (-> governance-string
+                             (yaml/parse-string)
+                             (walk/stringify-keys))]
+     (process-command (first parsed-document))))
+  ([circle governance-string]
+   (let [parsed-document (-> governance-string
+                             (yaml/parse-string)
+                             (walk/stringify-keys))]
+     (reduce process-command circle parsed-document))))

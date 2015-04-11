@@ -20,13 +20,44 @@
 (ns freefrog.lang-spec
   (:require [freefrog.governance :as g]
             [freefrog.lang :as l]
-            [speclj.core :refer :all]))
+            [speclj.core :refer :all]
+            [clojure.pprint :as pp]))
 
 (def new-circle-governance (slurp "spec/new-circle-governance.txt"))
+
+(def post-anchor-circle-governance
+  (slurp "spec/post-anchor-circle-governance.txt"))
+
+(def sample-anchor-circle (-> (g/create-circle "Courage Labs")
+                              (g/add-role-to-circle "Environmental Impact")
+                              (g/add-role-to-circle "Benefit")
+                              (g/add-role-to-circle "Investor")))
+
 (describe "Using the governance DSL"
   (it "should be able to create a new anchor circle"
-    (let [expected (-> (g/create-circle "Courage Labs")
-                       (g/add-role-to-circle "Environmental Impact")
-                       (g/add-role-to-circle "Benefit")
-                       (g/add-role-to-circle "Investor"))]
-      (should= [expected] (l/execute-governance new-circle-governance)))))
+    (let [expected sample-anchor-circle]
+      (should= expected (l/execute-governance new-circle-governance))))
+
+  (it "should be able to add roles and circles"
+    (let [expected (-> sample-anchor-circle
+                       (g/add-role-to-circle "Partner Matters"
+                                             "Bringing in and making Partners happy")
+                       (g/add-role-to-circle "Accounting"
+                                             "Spending money responsibly"
+                                             ["Checkbook", "Credit cards"]
+                                             ["Telling people how much money there is to spend"
+                                              "Paying people"
+                                              "Reimbursing for expenses"
+                                              "Depositing income"])
+                       (g/add-role-to-circle "Products"
+                                             "Building cool products to sell"
+                                             ["Products"]
+                                             ["Communicating product direction"
+                                              "Gathering customer needs"])
+                       (g/convert-to-circle "Products"))]
+      (should= expected
+        (l/execute-governance
+          sample-anchor-circle post-anchor-circle-governance)))))
+
+
+
