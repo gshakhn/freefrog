@@ -20,10 +20,13 @@
 (ns freefrog.lang-spec
   (:require [freefrog.governance :as g]
             [freefrog.lang :as l]
-            [speclj.core :refer :all]
-            [clojure.pprint :as pp]))
+            [speclj.core :refer :all]))
 
-(def new-circle-governance (slurp "spec/new-circle-governance.txt"))
+(def new-circle-governance
+  (slurp "spec/new-circle-governance.txt"))
+
+(def new-circle-without-crosslinks
+  (slurp "spec/new-circle-no-crosslinks-governance.txt"))
 
 (def post-anchor-circle-governance
   (slurp "spec/post-anchor-circle-governance.txt"))
@@ -35,8 +38,11 @@
 
 (describe "Using the governance DSL"
   (it "should be able to create a new anchor circle"
-    (let [expected sample-anchor-circle]
-      (should= expected (l/execute-governance new-circle-governance))))
+    (should= sample-anchor-circle (l/execute-governance new-circle-governance)))
+
+  (it "should be able to create a new anchor circle without crosslinks"
+    (should= (g/create-circle "Courage Labs")
+      (l/execute-governance new-circle-without-crosslinks)))
 
   (it "should be able to add roles and circles"
     (let [expected (-> sample-anchor-circle
@@ -58,6 +64,3 @@
       (should= expected
         (l/execute-governance
           sample-anchor-circle post-anchor-circle-governance)))))
-
-
-
