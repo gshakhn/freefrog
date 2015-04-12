@@ -1,5 +1,4 @@
--
-  - Create Anchor Circle
+Create Anchor Circle
   - name: Courage Labs
     cross-links:
       - Environmental Impact

@@ -1,10 +1,8 @@
--
-  - Create Role
+Create Role
   - name: Partner Matters
     purpose: Bringing in and making Partners happy
 
--
-  - Create Role
+Create Role
   - name: Accounting
     purpose: Spending money responsibly
     domains:
@@ -16,8 +14,7 @@
       - Reimbursing for expenses
       - Depositing income
 
--
-  - Create Circle
+Create Circle
   - name: Products
     purpose: Building cool products to sell
     domains:

@@ -19,6 +19,7 @@
 
 (ns freefrog.lang
   (:require [clj-yaml.core :as yaml]
+            [clojure.string :as str]
             [clojure.walk :as walk]
             [freefrog.governance :as g]))
 
@@ -47,11 +48,17 @@
       (printf "Unable to process command %s / %s%n" command args)
       (throw e))))
 
+(def governance-verb-pattern #"(?im)^([\w].*)")
+
+(defn governance-to-yaml [doc]
+  (str/replace doc governance-verb-pattern "-\n  - $1"))
+
 (defn execute-governance
   ([governance-string]
    (execute-governance nil governance-string))
   ([circle governance-string]
    (let [parsed-document (-> governance-string
+                             governance-to-yaml
                              (yaml/parse-string)
                              (walk/stringify-keys))]
      (reduce process-command circle parsed-document))))

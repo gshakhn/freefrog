@@ -1,0 +1,21 @@
+-- This is an example of an ideal language for governance
+-- Not yet implemented
+
+create anchor circle "Courage Labs" with cross-links
+  "Environmental Impact", "Benefit", "Investor"
+
+create role "Partner Matters" with purpose
+  "Bringing in and making Partners happy"
+
+create role "Accounting"
+  with purpose "Spending money responsibly"
+  and domains "Checkbook", "Credit cards"
+  and accountabilities
+  "Telling people how much money there is to spend",
+  "Paying people", "Reimbursing for expenses",
+  "Depositing income"
+
+create circle "Products"
+  with purpose "Building cool products to sell" and domain "Products"
+  and accountabilities "Communicating product direction",
+  "Gathering customer needs"
