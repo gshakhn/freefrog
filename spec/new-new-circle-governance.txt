@@ -2,10 +2,10 @@
 -- Not yet implemented
 
 create anchor circle "Courage Labs" with cross-links
-  "Environmental Impact", "Benefit", "Investor"
+  "Environmental Impact", "Benefit", "Investor".
 
 create role "Partner Matters" with purpose
-  "Bringing in and making Partners happy"
+  "Bringing in and making Partners happy".
 
 create role "Accounting"
   with purpose "Spending money responsibly"
@@ -13,9 +13,20 @@ create role "Accounting"
   and accountabilities
   "Telling people how much money there is to spend",
   "Paying people", "Reimbursing for expenses",
-  "Depositing income"
+  "Depositing income".
 
 create circle "Products"
-  with purpose "Building cool products to sell" and domain "Products"
+  with purpose "Building cool products to sell"
+  and domain "Products"
   and accountabilities "Communicating product direction",
-  "Gathering customer needs"
+                       "Gathering customer needs".
+
+update circle "Products" change purpose to "stuff"
+and add accountability "blah" and remove domain "things".
+
+update role "Accounting" add accountabilities "things", "stuff"
+and remove accountability "bits".
+
+delete role "Partner Matters".
+
+convert circle "Products" into a role.
