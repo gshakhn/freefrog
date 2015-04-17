@@ -28,6 +28,4 @@ update role "Accounting" add accountabilities
 "Sharing with customers", "Listening to customers"
 and remove accountability "Gathering customer needs".
 
-delete role "Partner Matters".
-
-convert circle "Products" into a role.
+delete role "Partner Matters". convert circle "Products" into a role.

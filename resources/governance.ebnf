@@ -1,6 +1,6 @@
 <document> = { block }
 <block> = resolution | <comment>
-<resolution> = ( create | update | delete | convert ), <".">, { cr }
+<resolution> = ( create | update | delete | convert ), <".">, { ws }
 create = <"create">, ws, entity, ws, name, ws, <"with">, ws, create-components
 update = <"update">, ws, entity, ws, name, ws, update-action-list
 delete = <"delete">, ws, entity, ws, name
