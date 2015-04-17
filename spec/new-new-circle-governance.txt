@@ -1,5 +1,5 @@
 -- This is an example of an ideal language for governance
--- Not yet implemented
+--TODO: Implement this
 
 create anchor circle "Courage Labs" with cross-links
   "Environmental Impact", "Benefit", "Investor".
@@ -9,7 +9,7 @@ create role "Partner Matters" with purpose
 
 create role "Accounting"
   with purpose "Spending money responsibly"
-  and domains "Checkbook", "Credit cards"
+  and domains "Checkbook", "Credit Cards"
   and accountabilities
   "Telling people how much money there is to spend",
   "Paying people", "Reimbursing for expenses",
@@ -21,11 +21,12 @@ create circle "Products"
   and accountabilities "Communicating product direction",
                        "Gathering customer needs".
 
-update circle "Products" change purpose to "stuff"
-and add accountability "blah" and remove domain "things".
+update circle "Products" change purpose to "Building amazing things"
+and remove domain "Products".
 
-update role "Accounting" add accountabilities "things", "stuff"
-and remove accountability "bits".
+update role "Accounting" add accountabilities
+"Sharing with customers", "Listening to customers"
+and remove accountability "Gathering customer needs".
 
 delete role "Partner Matters".
 

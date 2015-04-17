@@ -21,7 +21,8 @@
   (:require [clj-yaml.core :as yaml]
             [clojure.string :as str]
             [clojure.walk :as walk]
-            [freefrog.governance :as g]))
+            [freefrog.governance :as g]
+            [instaparse.core :as insta]))
 
 (defn create-anchor-circle [_ {:keys [name cross-links]}]
   (let [anchor-circle (g/create-circle name)]
@@ -62,3 +63,5 @@
                              (yaml/parse-string)
                              (walk/stringify-keys))]
      (reduce process-command circle parsed-document))))
+
+(def governance-parser (insta/parser (slurp "resources/governance.ebnf")))
