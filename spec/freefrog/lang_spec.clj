@@ -38,9 +38,22 @@
 
 (def sample-anchor-circle
   (-> (g/create-circle "Courage Labs")
-      (g/add-role-to-circle "Environmental Impact")
-      (g/add-role-to-circle "Benefit")
-      (g/add-role-to-circle "Investor")
+      (g/add-role-to-circle "Benefit Context Link"
+                            "The Organization as a provider of General Public Benefit"
+                            nil
+                            #{"Representing the Benefit Context within the Organization"})
+      (g/add-role-to-circle "Investor Context Link"
+                            "The Organization as an effective investment vehicle for its investors"
+                            nil
+                            #{(str "Representing the Investor Context within "
+                                   "the Organization")})
+      (g/add-role-to-circle "Environmental Impact Context Link"
+                            "The Organization as a good steward of the Environment"
+                            nil
+                            #{(str "Representing the Environmental Impact "
+                                   "Context within the Organization")})
+
+
       (g/update-purpose "General public benefit")))
 
 (def circle-with-created-structure
@@ -81,7 +94,7 @@
     (should= () (l/parse-governance "--this is fun\n")))
 
   (it "should allow double quotes in comments"
-    #_(should= () (l/parse-governance "--this is fun \"stuff\"\n"))))
+    (should= () (l/parse-governance "--this is fun \"stuff\"\n"))))
 
 (describe "Executing governance documents"
   (it "should throw nice errors for bad parsing"

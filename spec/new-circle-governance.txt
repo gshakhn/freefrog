@@ -1,3 +1,12 @@
-create anchor circle "Courage Labs" with cross-links
-  "Environmental Impact", "Benefit", "Investor"
-  and purpose "General public benefit".
+create anchor circle "Courage Labs" with purpose
+"General public benefit" and cross-links
+"Investor Context Link", "Benefit Context Link", "Environmental Impact Context Link".
+
+update role "Benefit Context Link" change purpose to "The Organization as a provider of General Public Benefit"
+and add accountability "Representing the Benefit Context within the Organization".
+
+update role "Investor Context Link" change purpose to "The Organization as an effective investment vehicle for its investors"
+and add accountability "Representing the Investor Context within the Organization".
+
+update role "Environmental Impact Context Link" change purpose to "The Organization as a good steward of the Environment"
+and add accountability "Representing the Environmental Impact Context within the Organization".

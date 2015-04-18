@@ -51,7 +51,7 @@
     anchor-circle))
 
 (def update-conversions {:accountabilities "accountability"
-                         :domains "domain"})
+                         :domains          "domain"})
 
 (defn apply-collection-update [circle name update-type op]
   (let [component (first op)
@@ -62,13 +62,15 @@
 (defn apply-collection-updates [circle name update-type ops]
   (reduce #(apply-collection-update %1 name update-type %2) circle ops))
 
-(defn update-circle [circle
-                     {:keys [name rename change-purpose add remove]}]
+(defn update-role [circle
+                   {:keys [name rename change-purpose add remove]}]
   (-> circle
       (apply-collection-updates name "add" add)
       (apply-collection-updates name "remove" remove)
       (update-purpose-conditionally name change-purpose)
       (rename-conditionally name rename)))
+
+(def update-circle update-role)
 
 (defn convert-to-pair
   "Convert the given vector into a key/value pair. The first

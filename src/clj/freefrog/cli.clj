@@ -30,6 +30,7 @@
                     io/file
                     file-seq
                     (filter #(.isFile %))
+                    (filter #(not (.startsWith (.getName %) ".")))
                     (map slurp)
                     (reduce l/execute-governance {})))
     (println "Please specify a directory full of governance files.")))
