@@ -1,6 +1,2 @@
-Create Anchor Circle
-  - name: Courage Labs
-    cross-links:
-      - Environmental Impact
-      - Benefit
-      - Investor
+create anchor circle "Courage Labs" with cross-links
+  "Environmental Impact", "Benefit", "Investor".

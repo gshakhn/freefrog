@@ -18,8 +18,7 @@
 ;
 
 (ns freefrog.lang
-  (:require [clj-yaml.core :as yaml]
-            [clojure.string :as str]
+  (:require [clojure.string :as str]
             [clojure.walk :as walk]
             [freefrog.governance :as g]
             [instaparse.core :as insta]))
@@ -37,31 +36,33 @@
   (-> (g/add-role-to-circle circle name purpose domains accountabilities)
       (g/convert-to-circle name)))
 
-(def verbs {"Create Anchor Circle" create-anchor-circle
-            "Create Role"          create-role
-            "Create Circle"        create-circle})
+(defn convert-to-pair [v]
+  (if (= :purpose (first v))
+    v
+    [(first v) (rest v)]))
 
-(defn process-command [circle [command args]]
-  (try
-    (let [fn-to-call (get verbs command)]
-      (fn-to-call circle (walk/keywordize-keys args)))
-    (catch Exception e
-      (printf "Unable to process command %s / %s%n" command args)
-      (throw e))))
+(defn process-command [circle record]
+  (let [function-primary (first record)
+        function-secondary (first (second record))
+        function-name (str (name function-primary) "-"
+                           (name function-secondary))
+        fn (resolve (symbol "freefrog.lang" function-name))
+        entity-name (nth record 2)
+        params (->> record
+                   (drop 3)
+                    (map convert-to-pair)
+                    (into {:name entity-name}))]
+    (fn circle params)))
 
-(def governance-verb-pattern #"(?im)^([\w].*)")
-
-(defn governance-to-yaml [doc]
-  (str/replace doc governance-verb-pattern "-\n  - $1"))
+(def parse-governance
+  (insta/parser (slurp "resources/governance.ebnf")
+                :string-ci true))
 
 (defn execute-governance
   ([governance-string]
    (execute-governance nil governance-string))
   ([circle governance-string]
    (let [parsed-document (-> governance-string
-                             governance-to-yaml
-                             (yaml/parse-string)
-                             (walk/stringify-keys))]
+                             parse-governance)]
      (reduce process-command circle parsed-document))))
 
-(def governance-parser (insta/parser (slurp "resources/governance.ebnf")))

@@ -32,7 +32,6 @@
   :dependencies [[clj-http "1.0.1"]
                  [clj-json "0.5.3"]
                  [clj-time "0.8.0"]
-                 [clj-yaml "0.4.0"]
                  [environ "1.0.0"]
                  [http-kit "2.1.19"]
                  [instaparse "1.3.6"]

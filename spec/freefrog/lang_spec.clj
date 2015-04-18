@@ -50,7 +50,7 @@
                                              "Bringing in and making Partners happy")
                        (g/add-role-to-circle "Accounting"
                                              "Spending money responsibly"
-                                             ["Checkbook", "Credit cards"]
+                                             ["Checkbook", "Credit Cards"]
                                              ["Telling people how much money there is to spend"
                                               "Paying people"
                                               "Reimbursing for expenses"

@@ -1,24 +1,18 @@
-Create Role
-  - name: Partner Matters
-    purpose: Bringing in and making Partners happy
+create role "Partner Matters" with purpose
+"Bringing in and making Partners happy".
 
-Create Role
-  - name: Accounting
-    purpose: Spending money responsibly
-    domains:
-      - Checkbook
-      - Credit cards
-    accountabilities:
-      - Telling people how much money there is to spend
-      - Paying people
-      - Reimbursing for expenses
-      - Depositing income
+create role "Accounting" with purpose
+"Spending money responsibly" and
+domains "Checkbook", "Credit Cards" and
+accountabilities
+  "Telling people how much money there is to spend",
+  "Paying people",
+  "Reimbursing for expenses",
+  "Depositing income".
 
-Create Circle
-  - name: Products
-    purpose: Building cool products to sell
-    domains:
-      - Products
-    accountabilities:
-      - Communicating product direction
-      - Gathering customer needs
+Create Circle "Products" with purpose
+"Building cool products to sell" and
+Domain "Products" and
+Accountabilities
+  "Communicating product direction",
+  "Gathering customer needs".

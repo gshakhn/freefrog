@@ -1,3 +1,1 @@
--
-  - Create Anchor Circle
-  - name: Courage Labs
+CREATE ANCHOR CIRCLE "Courage Labs".
