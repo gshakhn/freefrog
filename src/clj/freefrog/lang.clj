@@ -18,8 +18,7 @@
 ;
 
 (ns freefrog.lang
-  (:require [clojure.string :as str]
-            [clojure.walk :as walk]
+  (:require [clojure.java.io :as io]
             [freefrog.governance :as g]
             [instaparse.core :as insta]))
 
@@ -36,12 +35,20 @@
   (-> (g/add-role-to-circle circle name purpose domains accountabilities)
       (g/convert-to-circle name)))
 
-(defn convert-to-pair [v]
+(defn convert-to-pair
+  "Convert the given vector into a key/value pair. The first
+   value of the vector is the first value, whereas the rest
+   is the second value as a vector. Unless the key is :purpose,
+   in which case the value will be just the second value."
+  [v]
   (if (= :purpose (first v))
-    v
+    [(first v) (second v)]
     [(first v) (rest v)]))
 
-(defn process-command [circle record]
+(defn process-command
+  "Execute the given governance transformation on the given
+   circle, returning the new circle."
+  [circle record]
   (let [function-primary (first record)
         function-secondary (first (second record))
         function-name (str (name function-primary) "-"
@@ -49,18 +56,22 @@
         fn (resolve (symbol "freefrog.lang" function-name))
         entity-name (nth record 2)
         params (->> record
-                   (drop 3)
+                    (drop 3)
                     (map convert-to-pair)
                     (into {:name entity-name}))]
     (fn circle params)))
 
 (def parse-governance
-  (insta/parser (slurp "resources/governance.ebnf")
+  "Parse a governance document and produce a tree from it."
+  (insta/parser (io/resource "governance.ebnf")
                 :string-ci true))
 
 (defn execute-governance
+  "Take a governance string and execute the transformations
+   it represents."
   ([governance-string]
    (execute-governance nil governance-string))
+
   ([circle governance-string]
    (let [parsed-document (-> governance-string
                              parse-governance)]
