@@ -29,19 +29,19 @@
 
   :java-source-paths ["src/java"]
 
-  :dependencies [[clj-http "1.0.1"]
+  :dependencies [[clj-http "1.1.0"]
                  [clj-json "0.5.3"]
-                 [clj-time "0.8.0"]
+                 [clj-time "0.9.0"]
                  [environ "1.0.0"]
                  [http-kit "2.1.19"]
                  [instaparse "1.3.6"]
                  [org.clojure/clojure "1.6.0"]
                  [org.clojure/tools.logging "0.3.1"]
-                 [metosin/ring-swagger "0.13.0"]
-                 [metosin/compojure-api "0.16.0"]
-                 [metosin/ring-http-response "0.5.0"]
-                 [metosin/ring-swagger-ui "2.0.17"]
-                 [speclj "3.1.0"]]
+                 [metosin/ring-swagger "0.19.5"]
+                 [metosin/compojure-api "0.19.3"]
+                 [metosin/ring-http-response "0.6.1"]
+                 [metosin/ring-swagger-ui "2.0.24"]
+                 [speclj "3.2.0"]]
 
   :main freefrog.rest
 

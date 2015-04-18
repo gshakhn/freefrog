@@ -14,7 +14,7 @@ Artifacts generated:
  * [Code Cleanliness Reports]
    (http://s3.amazonaws.com/freefrog/docs/kibit.txt) (empty is good)
  * [Outdated Library Reports]
-   (http://s3.amazonaws.com/freefrog/docs/ancient.html) (empty is good)
+   (http://s3.amazonaws.com/freefrog/docs/ancient.txt) (empty is good)
 
 ## Development
 
