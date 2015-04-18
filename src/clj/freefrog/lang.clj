@@ -35,6 +35,39 @@
   (-> (g/add-role-to-circle circle name purpose domains accountabilities)
       (g/convert-to-circle name)))
 
+(defn convert-role [anchor-circle {:keys [name]}]
+  (g/convert-to-circle anchor-circle name))
+
+(defn update-purpose-conditionally [anchor-circle name purpose]
+  (if purpose
+    (g/update-role-purpose anchor-circle name (first purpose))
+    anchor-circle))
+
+(defn rename-conditionally [anchor-circle name new-name]
+  (if new-name
+    (g/rename-role anchor-circle name (first new-name))
+    anchor-circle))
+
+(def update-conversions {:accountabilities "accountability"
+                         :domains "domain"})
+
+(defn apply-collection-update [circle name update-type op]
+  (let [component (first op)
+        function-name (str update-type "-role-" (update-conversions component))
+        fn (resolve (symbol "freefrog.governance" function-name))]
+    (reduce #(fn %1 name %2) circle (rest op))))
+
+(defn apply-collection-updates [circle name update-type ops]
+  (reduce #(apply-collection-update %1 name update-type %2) circle ops))
+
+(defn update-circle [circle
+                     {:keys [name rename change-purpose add remove]}]
+  (-> circle
+      (apply-collection-updates name "add" add)
+      (apply-collection-updates name "remove" remove)
+      (update-purpose-conditionally name change-purpose)
+      (rename-conditionally name rename)))
+
 (defn convert-to-pair
   "Convert the given vector into a key/value pair. The first
    value of the vector is the first value, whereas the rest
@@ -44,6 +77,12 @@
   (if (= :purpose (first v))
     [(first v) (second v)]
     [(first v) (rest v)]))
+
+(defn array-to-map [v]
+  {(first v) (second v)})
+
+(defn merge-array-values [v]
+  (apply merge-with (concat [concat] v)))
 
 (defn process-command
   "Execute the given governance transformation on the given
@@ -58,13 +97,17 @@
         params (->> record
                     (drop 3)
                     (map convert-to-pair)
-                    (into {:name entity-name}))]
-    (fn circle params)))
+                    (map array-to-map)
+                    merge-array-values
+                    (merge {:name entity-name}))]
+    (try (fn circle params)
+         (catch Exception e
+           (throw (RuntimeException.
+                    (str "Unable to execute governance record " record) e))))))
 
 (def parse-governance
   "Parse a governance document and produce a tree from it."
-  (insta/parser (io/resource "governance.ebnf")
-                :string-ci true))
+  (insta/parser (io/resource "governance.ebnf") :string-ci true))
 
 (defn execute-governance
   "Take a governance string and execute the transformations
@@ -75,5 +118,8 @@
   ([circle governance-string]
    (let [parsed-document (-> governance-string
                              parse-governance)]
-     (reduce process-command circle parsed-document))))
+     (if (insta/failure? parsed-document)
+       (throw (RuntimeException.
+                (with-out-str (println parsed-document))))
+       (reduce process-command circle parsed-document)))))
 

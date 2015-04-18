@@ -1,0 +1,12 @@
+convert role "Partner Matters" into a circle.
+
+update circle "Partner Matters" rename to "Partner Things" and
+add domains "Addition of Partners", "Removal of Partners" and
+add accountability "Creating policies for addition and removal of partners".
+
+update circle "Partner Things"
+remove domains "Addition of Partners", "Removal of Partners" and
+add domain "Addition/Removal of Partners" and
+change purpose to "Ensuring we have the right Partners".
+
+update circle "Partner Things" rename to "Partner Matters".
