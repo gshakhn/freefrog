@@ -69,9 +69,7 @@
           (GET* "/" {session :session}
                 :return String
                 :summary "Get a session"
-                (if-let [principal (:principal session)]
-                  (ok principal)
-                  nil))
+                (when-let [principal (:principal session)] (ok principal)))
 
           (POST* "/" []
                  :return String
@@ -95,8 +93,7 @@
                    (log/info (format "Logged out: %s" (:principal session)))
                    (assoc (ok "Logged out") :session {})))))))
 
-(def app (-> (c/routes api (route/resources "/"))
-             wrap-dir-index))
+(def app (wrap-dir-index (c/routes api (route/resources "/"))))
 
 (defn start-server []
   (httpkit/run-server app {:port port}))
