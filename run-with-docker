@@ -1,0 +1,5 @@
+#!/bin/bash
+`boot2docker shellinit`
+lein uberjar &&
+  docker build -t freefrog . &&
+  docker run -e AUTH_AUDIENCE_URL="http://$(boot2docker ip):3000" -p 3000:3000 freefrog

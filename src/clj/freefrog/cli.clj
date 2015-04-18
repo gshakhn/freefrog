@@ -17,9 +17,20 @@
 ; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ;
 
-(ns freefrog.governance-logs)
+(ns freefrog.cli
+  (:require [clojure.java.io :as io]
+            [clojure.pprint :as pp]
+            [freefrog.lang :as l])
+  (:gen-class))
 
-(defn create-governance-log
-  "Creates a new governance log."
-  []
-  {:agenda nil, :is-open? true, :log-clob nil})
+(defn -main [& args]
+  (if (= 1 (count args))
+    (pp/pprint (->> args
+                    first
+                    io/file
+                    file-seq
+                    (filter #(.isFile %))
+                    (filter #(not (.startsWith (.getName %) ".")))
+                    (map slurp)
+                    (reduce l/execute-governance {})))
+    (println "Please specify a directory full of governance files.")))

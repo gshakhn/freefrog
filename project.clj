@@ -1,5 +1,5 @@
 ;
-; Copyright © 2014 Courage Labs
+; Copyright © 2015 Courage Labs
 ;
 ; This file is part of Freefrog.
 ;
@@ -29,17 +29,21 @@
 
   :java-source-paths ["src/java"]
 
-  :dependencies [[org.clojure/clojure "1.6.0"]
-                 [org.clojure/tools.logging "0.3.1"]
-                 [metosin/ring-swagger "0.13.0"]
-                 [metosin/compojure-api "0.16.0"]
-                 [metosin/ring-http-response "0.5.0"]
-                 [metosin/ring-swagger-ui "2.0.17"]
-                 [clj-http "1.0.1"]
+  :dependencies [[clj-http "1.1.0"]
                  [clj-json "0.5.3"]
-                 [clj-time "0.8.0"]
-                 [speclj "3.1.0"]
-                 [http-kit "2.1.19"]]
+                 [clj-time "0.9.0"]
+                 [environ "1.0.0"]
+                 [http-kit "2.1.19"]
+                 [instaparse "1.3.6"]
+                 [org.clojure/clojure "1.6.0"]
+                 [org.clojure/tools.logging "0.3.1"]
+                 [metosin/ring-swagger "0.19.5"]
+                 [metosin/compojure-api "0.19.3"]
+                 [metosin/ring-http-response "0.6.1"]
+                 [metosin/ring-swagger-ui "2.0.24"]
+                 [speclj "3.2.0"]]
+
+  :main freefrog.rest
 
   :profiles {:freefrog {:ring {:handler freefrog.rest/app
                               :reload-paths ["src"]}
@@ -48,12 +52,11 @@
              :uberjar {:aot :all}
              :dev {:ring {:handler freefrog.rest/app}
                    :plugins [[lein-clojars "0.9.1"]
-                             [lein-midje "3.1.3"]
                              [lein-ring "0.9.1"]]
                    :dependencies [[peridot "0.3.1"]
-                                  [javax.servlet/servlet-api "2.5"]
-                                  [midje "1.6.3"]]}
-             :1.7 {:dependencies [[org.clojure/clojure "1.7.0-alpha4"]]}}
+                                  [javax.servlet/servlet-api "2.5"]]}
+             :1.7 {:dependencies [[org.clojure/clojure "1.7.0-alpha4"]]}
+             :cli {:main freefrog.cli}}
 
   :plugins [[lein-ancient "0.5.5"]
             [lein-kibit "0.0.8"]
@@ -64,4 +67,5 @@
 
   :aliases {"autotest" ["spec" "-a"]
             "docs" ["marg" "src" "spec"]
-            "freefrog" ["with-profile" "freefrog" "run"]})
+            "freefrog" ["with-profile" "freefrog" "run"]
+            "cli" ["with-profile" "cli" "run"]})
