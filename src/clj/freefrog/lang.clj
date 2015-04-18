@@ -78,11 +78,9 @@
     [(first v) (second v)]
     [(first v) (rest v)]))
 
-(defn array-to-map [v]
-  {(first v) (second v)})
+(defn array-to-map [v] {(first v) (second v)})
 
-(defn merge-array-values [v]
-  (apply merge-with (concat [concat] v)))
+(defn merge-array-values [v] (apply merge-with (concat [concat] v)))
 
 (defn process-command
   "Execute the given governance transformation on the given
