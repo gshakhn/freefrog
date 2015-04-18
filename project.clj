@@ -55,7 +55,8 @@
                              [lein-ring "0.9.1"]]
                    :dependencies [[peridot "0.3.1"]
                                   [javax.servlet/servlet-api "2.5"]]}
-             :1.7 {:dependencies [[org.clojure/clojure "1.7.0-alpha4"]]}}
+             :1.7 {:dependencies [[org.clojure/clojure "1.7.0-alpha4"]]}
+             :cli {:main freefrog.cli}}
 
   :plugins [[lein-ancient "0.5.5"]
             [lein-kibit "0.0.8"]
@@ -66,4 +67,5 @@
 
   :aliases {"autotest" ["spec" "-a"]
             "docs" ["marg" "src" "spec"]
-            "freefrog" ["with-profile" "freefrog" "run"]})
+            "freefrog" ["with-profile" "freefrog" "run"]
+            "cli" ["with-profile" "cli" "run"]})

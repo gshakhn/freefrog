@@ -230,13 +230,16 @@
     (add-role circle (Role. new-role-name purpose domains accountabilities
                             nil nil))))
 
+(defn update-purpose [entity new-purpose]
+  (if (empty? new-purpose)
+    (assoc entity :purpose nil)
+    (assoc entity :purpose new-purpose)))
+
 (defn update-role-purpose
   "Update the purpose of a role in the given circle."
   [circle role-name new-purpose]
   (validate-role-updates circle role-name)
-  (if (empty? new-purpose)
-    (update-role circle role-name assoc :purpose nil)
-    (update-role circle role-name assoc :purpose new-purpose)))
+  (update-role circle role-name update-purpose new-purpose))
 
 (def ^:private sets-of-things {:domains          "Domain"
                                :accountabilities "Accountability"

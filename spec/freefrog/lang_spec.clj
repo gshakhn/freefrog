@@ -40,7 +40,8 @@
   (-> (g/create-circle "Courage Labs")
       (g/add-role-to-circle "Environmental Impact")
       (g/add-role-to-circle "Benefit")
-      (g/add-role-to-circle "Investor")))
+      (g/add-role-to-circle "Investor")
+      (g/update-purpose "General public benefit")))
 
 (def circle-with-created-structure
   (-> sample-anchor-circle

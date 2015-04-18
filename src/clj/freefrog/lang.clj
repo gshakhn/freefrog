@@ -22,8 +22,10 @@
             [freefrog.governance :as g]
             [instaparse.core :as insta]))
 
-(defn create-anchor-circle [_ {:keys [name cross-links]}]
-  (let [anchor-circle (g/create-circle name)]
+(defn create-anchor-circle [_ {:keys [name cross-links purpose]}]
+  (let [anchor-circle (-> name
+                          g/create-circle
+                          (g/update-purpose purpose))]
     (reduce g/add-role-to-circle
             anchor-circle
             cross-links)))

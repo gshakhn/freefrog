@@ -1,2 +1,3 @@
 create anchor circle "Courage Labs" with cross-links
-  "Environmental Impact", "Benefit", "Investor".
+  "Environmental Impact", "Benefit", "Investor"
+  and purpose "General public benefit".
