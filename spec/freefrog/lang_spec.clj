@@ -106,6 +106,11 @@
     ;part
     )
 
+  (describe "governing subcircles"
+    (it "won't allow multiple subcircles to be governed in one document")
+    (it "won't allow subcircle governance except as the first statement")
+    (it "will apply all governance to the mentioned subcircle"))
+
   (assert-governance
     "should be able to add roles and circles"
     sample-anchor-circle
