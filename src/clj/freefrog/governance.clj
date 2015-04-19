@@ -174,18 +174,21 @@
 
 ;; ## Entity Generalization Functions ##
 
-(defn add-to
-  "Generalizes an addition to any collection of things within an entity,
-   ensuring that the given thing doesn't already exist."
-  [entity which-things empty-collection collection-op thing & args]
-  (validate-things entity which-things thing contains? "%s '%s' already exists")
-
+(defn- add-to-raw
+  [entity which-things empty-collection collection-op thing args]
   (let [things (which-things entity)
         entity (if things
                  entity
                  (assoc entity which-things empty-collection))
         add-args (into [thing] args)]
     (apply update-in entity [which-things] collection-op add-args)))
+
+(defn- add-to
+  "Generalizes an addition to any collection of things within an entity,
+   ensuring that the given thing doesn't already exist."
+  [entity which-things empty-collection collection-op thing & args]
+  (validate-things entity which-things thing contains? "%s '%s' already exists")
+  (add-to-raw entity which-things empty-collection collection-op thing args))
 
 (defn add-policy
   "Add a policy to any entity."
@@ -305,14 +308,8 @@
                  circle)]
     (validate-things circle role-name which-things thing contains?
                      "%s '%s' already exists on role '%s'")
-    (let [things (get-entity circle role-name which-things)
-          circle (if things
-                   circle
-                   (update-role circle role-name assoc which-things
-                                empty-collection))
-          add-args (into [thing] args)]
-      (update-role-raw circle role-name [which-things] collection-op
-                       add-args))))
+    (update-in circle (role-path role-name) add-to-raw
+               which-things empty-collection collection-op thing args)))
 
 (defn- remove-from-role
   "Removes a thing from a collection of things in a role, making sure that
