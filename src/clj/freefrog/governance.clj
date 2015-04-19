@@ -395,8 +395,3 @@
   "Remove a policy from a role in the given circle."
   [circle role-name policy-name]
   (remove-from-role circle role-name :policies dissoc policy-name))
-
-(defn add-role-assignee
-  "Assign a person to a role."
-  [circle role-name assignee]
-  (add-to-role circle role-name :assignees {} assoc assignee {:id assignee}))

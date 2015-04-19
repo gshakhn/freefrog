@@ -179,42 +179,6 @@
         (g/remove-role-policy sample-anchor-with-lead-link-policies
                               g/lead-link-name sample-policy-name2)))))
 
-;; Section 2.3
-(describe "Circle Membership"
-  ;; Section 2.3.1
-  (it "shows people filling roles in a circle as circle members")
-  (it "shows a person filling multiple roles in a circle as a single member")
-  (it "shows rep links in subcircles as circle members")
-  (it "shows cross-links as circle members")
-
-  ;; Section 2.3.2
-  (it "can mark one person among many filling one role as the role rep")
-
-  ;; Section 2.3.3
-  (it "does NOT show people filling De Minimis roles as circle members"))
-
-;; Section 2.4
-(describe "Role Assignment"
-  ;; Appendix A/Lead Link
-  (it "can assign someone to a role"
-    (should= (update-in sample-anchor-with-role [:roles role-name] assoc
-                        :assignees {"test" {:id "test"}})
-      (g/add-role-assignee sample-anchor-with-role role-name "test")))
-
-  (should-not-update-missing-or-empty-roles g/add-role-assignee
-    "assignee" "random-person")
-
-  (it "can assign someone to Lead Link role")
-  (it "can assign someone to a role with a term expiration date")
-
-  ;; Section 2.4.2
-  (it "can assign multiple people to a role")
-  (it "can assign multiple people to a role with focuses")
-  (it "won't assign multiple people to core roles")
-
-  ;; Section 2.4.3, Appendix A/Lead Link
-  (it "can remove someone from a role"))
-
 (def sample-domain1 "stuff")
 (def sample-domain2 "bits")
 
@@ -293,12 +257,9 @@
 
 ;; Section 2.5
 (describe "Elected Roles"
-  ;; Section 2.5.1
-  (it (str "won't assign the person in the Lead Link role to the Facilitator "
-           "or Rep Link role"))
-
   ;; Section 2.5.2
-  (it "will only assign someone to an elected role with a term expiration date")
+  (it "can specify that an elected role has had someone elected to it
+       and when their term expires")
 
   ;; Section 2.5.3
   (should-manipulate-things-in-core-role
