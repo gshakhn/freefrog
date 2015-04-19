@@ -293,8 +293,8 @@
 (defn is-lead-link? [role-name]
   (= lead-link-name role-name))
 
-(defn is-core-role? [role-name]
-  (#{lead-link-name secretary-name facilitator-name rep-link-name} role-name))
+(def is-core-role?
+  #{lead-link-name secretary-name facilitator-name rep-link-name})
 
 (defn- add-to-role
   "Very abstract function that adds things to things in a role, making sure
