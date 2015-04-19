@@ -22,19 +22,8 @@
             [freefrog.lang :as l]
             [speclj.core :refer :all]))
 
-(def bad-governance (slurp "spec/bad-governance.txt"))
-
-(def new-circle-governance
-  (slurp "spec/new-circle-governance.txt"))
-
-(def new-circle-without-crosslinks
-  (slurp "spec/new-circle-no-crosslinks-governance.txt"))
-
-(def post-anchor-circle-governance
-  (slurp "spec/post-anchor-circle-governance.txt"))
-
-(def circle-updates-governance
-  (slurp "spec/circle-updates-governance.txt"))
+(defn governance [name]
+  (slurp (str "spec/freefrog/lang/" name "-governance.txt")))
 
 (def sample-anchor-circle
   (-> (g/create-circle "Courage Labs")
@@ -100,15 +89,15 @@
   (it "should throw nice errors for bad parsing"
     (should-throw RuntimeException
       "Parse error at line 1, column 32:\nconvert role \"Partner Matters\" to a circle.\n                               ^\nExpected:\ninto a\n\n"
-      (l/execute-governance bad-governance)))
+      (l/execute-governance (governance "bad"))))
 
   (it "should be able to create a new anchor circle"
     (should= sample-anchor-circle
-      (l/execute-governance new-circle-governance)))
+      (l/execute-governance (governance "new-circle"))))
 
   (it "should be able to create a new anchor circle without crosslinks"
     (should= (g/create-circle "Courage Labs")
-      (l/execute-governance new-circle-without-crosslinks)))
+      (l/execute-governance (governance "new-circle-no-crosslinks"))))
 
   (it "should not allow nonsense in role/circle conversions"
     ;Currently someone can say 'convert circle "blah" into a circle.' and it
@@ -120,10 +109,10 @@
     "should be able to add roles and circles"
     sample-anchor-circle
     circle-with-created-structure
-    post-anchor-circle-governance)
+    (governance "post-anchor-circle"))
 
   (assert-governance
     "should be able to update various existing values"
     circle-with-created-structure
     circle-with-updates
-    circle-updates-governance))
+    (governance "circle-updates")))
