@@ -10,3 +10,6 @@ add domain "Addition/Removal of Partners" and
 change purpose to "Ensuring we have the right Partners".
 
 update circle "Partners' Things" rename to "Partner Matters".
+
+elect "bill" as facilitator expiring 2014-01-01.
+elect "jill" as secretary expiring 2014-01-01.

@@ -26,8 +26,12 @@
 (defn governance [name]
   (slurp (str "spec/freefrog/lang/" name "-governance.txt")))
 
-(def sample-anchor-circle
-  (-> (g/create-circle "Courage Labs")
+(def sample-anchor-circle (g/create-circle "Courage Labs"))
+
+(def expiration-date (t/date-time 2014 01 01))
+
+(def very-governed-circle
+  (-> sample-anchor-circle
       (g/add-role-to-circle "Benefit Context Link"
                             "The Organization as a provider of General Public Benefit"
                             nil
@@ -42,12 +46,7 @@
                             nil
                             #{(str "Representing the Environmental Impact "
                                    "Context within the Organization")})
-
-
-      (g/update-purpose "General public benefit")))
-
-(def circle-with-created-structure
-  (-> sample-anchor-circle
+      (g/update-purpose "General public benefit")
       (g/add-role-to-circle "Partner Matters"
                             "Bringing in and making Partners happy")
       (g/add-role-to-circle "Accounting"
@@ -62,22 +61,16 @@
                             ["Products"]
                             ["Communicating product direction"
                              "Gathering customer needs"])
-      (g/convert-to-circle "Products")))
-
-(def circle-with-updates
-  (-> circle-with-created-structure
+      (g/convert-to-circle "Products")
       (g/convert-to-circle "Partner Matters")
       (g/update-role-purpose "Partner Matters"
                              "Ensuring we have the right Partners")
       (g/add-role-domain "Partner Matters" "Addition/Removal of Partners")
       (g/add-role-accountability
         "Partner Matters"
-        "Creating policies for addition and removal of partners")))
-
-(defn assert-governance [msg circle expected governance-document]
-  (it msg
-    (should= expected
-      (l/execute-governance circle governance-document))))
+        "Creating policies for addition and removal of partners")
+      (g/elect-to-role g/facilitator-name "bill" expiration-date)
+      (g/elect-to-role g/secretary-name "jill" expiration-date)))
 
 (describe "Parsing governance"
   (it "should ignore comments"
@@ -92,10 +85,6 @@
       "Parse error at line 1, column 32:\nconvert role \"Partner Matters\" to a circle.\n                               ^\nExpected:\n\"into a\"\n"
       (l/execute-governance "convert role \"Partner Matters\" to a circle.")))
 
-  (it "should be able to create a new anchor circle"
-    (should= sample-anchor-circle
-      (l/execute-governance (governance "new-circle"))))
-
   (it "should be able to create a new anchor circle without crosslinks"
     (should= (g/create-circle "Courage Labs")
       (l/execute-governance "CREATE ANCHOR CIRCLE \"Courage Labs\".")))
@@ -106,40 +95,17 @@
     ;part
     )
 
+  (it "should do all the governance"
+    (should= very-governed-circle
+      (l/execute-directory "spec/freefrog/lang/basic")))
+
   (describe "governing subcircles"
     (it "won't allow multiple subcircles to be governed in one document")
     (it "won't allow subcircle governance except as the first statement")
     (it "will apply all governance to the mentioned subcircle"))
 
-  (assert-governance
-    "should be able to add roles and circles"
-    sample-anchor-circle
-    circle-with-created-structure
-    (governance "post-anchor-circle"))
-
-  (assert-governance
-    "should be able to update various existing values"
-    circle-with-created-structure
-    circle-with-updates
-    (governance "circle-updates"))
-
-  (assert-governance
-    "should be able to define policies"
-    sample-anchor-circle
-    (g/add-policy sample-anchor-circle "test" "stuff")
-    "define policy \"test\" as \"stuff\".")
-
-  (let [expiration-date (t/date-time 2014 01 01)]
-    (assert-governance
-      "should be able to elect someone to a role"
-      sample-anchor-circle
-      (-> sample-anchor-circle
-          (g/elect-to-role g/facilitator-name "bill" expiration-date)
-          (g/elect-to-role g/secretary-name "jill" expiration-date))
-      "elect \"bill\" as facilitator expiring 2014-01-01.
-       elect \"jill\" as secretary expiring 2014-01-01."))
-
   (describe "Courage Labs Governance smoke test"
     (with-all result (l/execute-directory "spec/freefrog/lang/courage_labs"))
     (it "should be able to execute all Courage Labs Governance"
-      (clojure.pprint/pprint @result))))
+      #_(clojure.pprint/pprint @result)
+      @result)))

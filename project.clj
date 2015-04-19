@@ -53,8 +53,8 @@
              :dev {:ring {:handler freefrog.rest/app}
                    :plugins [[lein-clojars "0.9.1"]
                              [lein-ring "0.9.1"]]
-                   :dependencies [[peridot "0.3.1"]
-                                  [javax.servlet/servlet-api "2.5"]]}
+                   :dependencies [[javax.servlet/servlet-api "2.5"]
+                                  [peridot "0.3.1"]]}
              :1.7 {:dependencies [[org.clojure/clojure "1.7.0-alpha4"]]}
              :cli {:main freefrog.cli}}
 

@@ -123,7 +123,6 @@
 (def formatter (f/formatter "yyyy-MM-dd"))
 
 (defn elect [circle record _]
-  (clojure.pprint/pprint record)
   (g/elect-to-role circle (elected-role-mapping (nth record 2))
                    (second record) (f/parse formatter (nth record 3))))
 
