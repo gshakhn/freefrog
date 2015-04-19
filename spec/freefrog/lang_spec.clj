@@ -18,7 +18,8 @@
 ;
 
 (ns freefrog.lang-spec
-  (:require [freefrog.governance :as g]
+  (:require [clj-time.core :as t]
+            [freefrog.governance :as g]
             [freefrog.lang :as l]
             [speclj.core :refer :all]))
 
@@ -89,7 +90,7 @@
   (it "should throw nice errors for bad parsing"
     (should-throw RuntimeException
       "Parse error at line 1, column 32:\nconvert role \"Partner Matters\" to a circle.\n                               ^\nExpected:\ninto a\n\n"
-      (l/execute-governance (governance "bad"))))
+      (l/execute-governance "convert role \"Partner Matters\" to a circle.")))
 
   (it "should be able to create a new anchor circle"
     (should= sample-anchor-circle
@@ -97,7 +98,7 @@
 
   (it "should be able to create a new anchor circle without crosslinks"
     (should= (g/create-circle "Courage Labs")
-      (l/execute-governance (governance "new-circle-no-crosslinks"))))
+      (l/execute-governance "CREATE ANCHOR CIRCLE \"Courage Labs\".")))
 
   (it "should not allow nonsense in role/circle conversions"
     ;Currently someone can say 'convert circle "blah" into a circle.' and it
@@ -123,7 +124,17 @@
     (g/add-policy sample-anchor-circle "test" "stuff")
     "define policy \"test\" as \"stuff\".")
 
+  (let [expiration-date (t/date-time 2014 01 01)]
+    (assert-governance
+      "should be able to elect someone to a role"
+      sample-anchor-circle
+      (-> sample-anchor-circle
+          (g/elect-to-role g/facilitator-name "bill" expiration-date)
+          (g/elect-to-role g/secretary-name "jill" expiration-date))
+      "elect \"bill\" as facilitator expiring 2014-01-01.
+       elect \"jill\" as secretary expiring 2014-01-01."))
+
   (describe "Courage Labs Governance smoke test"
     (with-all result (l/execute-directory "spec/freefrog/lang/courage_labs"))
     (it "should be able to execute all Courage Labs Governance"
-      (println @result))))
+      (clojure.pprint/pprint @result))))

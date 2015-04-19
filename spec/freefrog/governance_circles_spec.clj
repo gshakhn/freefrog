@@ -22,7 +22,8 @@
 (ns freefrog.governance-circles-spec
   (:require [freefrog.governance :as g]
             [freefrog.governance-spec-helpers :refer :all]
-            [speclj.core :refer :all]))
+            [speclj.core :refer :all]
+            [clj-time.core :as t]))
 
 (def sample-anchor-with-sample-policy
   (my-add-policy sample-anchor-with-role "test" "stuff"))
@@ -258,8 +259,27 @@
 ;; Section 2.5
 (describe "Elected Roles"
   ;; Section 2.5.2
-  (it "can specify that an elected role has had someone elected to it
-       and when their term expires")
+
+  (let [expiration-date (t/date-time 2014 01 01)]
+    (describe "holding elections"
+      (it "can't elect someone to a non-core role"
+        (should-throw IllegalArgumentException
+          (format "'%s' is not an elected role." role-name)
+          (g/elect-to-role sample-anchor-with-role role-name "bill"
+                           expiration-date)))
+      (it "can specify that an elected role has had someone elected to it
+       and when their term expires"
+        (should= (assoc sample-anchor :facilitator
+                        {:name            "bill"
+                         :expiration-date expiration-date})
+          (g/elect-to-role sample-anchor g/facilitator-name "bill"
+                           expiration-date))
+
+        (should= (assoc sample-anchor :secretary
+                        {:name            "mary"
+                         :expiration-date expiration-date})
+          (g/elect-to-role sample-anchor g/secretary-name "mary"
+                           expiration-date)))))
 
   ;; Section 2.5.3
   (should-manipulate-things-in-core-role
@@ -337,9 +357,7 @@
     (it "doesn't remove Secretary when it isn't empty"
       (should= sample-anchor-with-secretary-policy
         (g/remove-role-policy sample-anchor-with-secretary-policies
-                              g/secretary-name sample-policy-name2))))
-
-  (it "removes elected roles when they have no additions"))
+                              g/secretary-name sample-policy-name2)))))
 
 (def subcircle-name "Development")
 (def subcircle-role-name "Programmer")

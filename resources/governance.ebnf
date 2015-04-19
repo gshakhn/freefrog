@@ -6,8 +6,8 @@ create = <"create">, ws, entity, ws, name, [ws, <"with">, ws, create-components]
 update = <"update">, ws, entity, ws, name, ws, update-action-list
 delete = <"delete">, ws, entity, ws, name
 define = <"define policy">, ws, name, ws, <"as">, ws, name
-elect = <"elect">, ws, name, ws, <"to role">, ws, name, ws, <"expiring">, ws,
-        #"\d{4}-\d{2}-\d{2}"
+elect = <"elect">, ws, name, ws, <"as">, ws, [ "facilitator" | "secretary" ],
+        ws, <"expiring">, ws, #"\d{4}-\d{2}-\d{2}"
 convert = <"convert">, ws, entity, ws, name, ws, <"into a">, ws, entity
 comment = <"--">, comment-text, cr, { cr }
 comment-text = #'[^\n]*'

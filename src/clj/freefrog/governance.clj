@@ -35,10 +35,24 @@
   (:require [clojure.set :as s]))
 
 (def lead-link-name "Lead Link")
-(def role-assignments-domain "Role assignments within the Circle")
-
 (def rep-link-name "Rep Link")
 (def secretary-name "Secretary")
+(def facilitator-name "Facilitator")
+
+(def elected-role-mapping {facilitator-name :facilitator
+                           secretary-name   :secretary})
+
+(defn is-lead-link? [role-name]
+  (= lead-link-name role-name))
+
+(def elected-roles
+  #{facilitator-name secretary-name})
+
+(def core-roles
+  (into elected-roles #{lead-link-name rep-link-name}))
+
+(def role-assignments-domain "Role assignments within the Circle")
+
 (def governance-records-domain
   (str "All records required of a Circle under this Constitution, and any "
        "record-keeping processes and systems required to create and "
@@ -46,8 +60,6 @@
 
 (def core-role-domains {lead-link-name role-assignments-domain
                         secretary-name governance-records-domain})
-
-(def facilitator-name "Facilitator")
 
 ;; ## General purpose utility functions ##
 
@@ -106,12 +118,13 @@
   (remove-role [container role-name])
   (rename-role [container role-name new-name]))
 
-(defrecord Role [name purpose domains accountabilities policies assignees]
+(defrecord Role [name purpose domains accountabilities policies]
   GovernanceRecord
   (is-circle? [_] false))
 
 ;;todo This re-definition of fields in Circle is ridiculous.
-(defrecord Circle [name purpose domains accountabilities policies roles]
+(defrecord Circle [name purpose domains accountabilities policies roles
+                   facilitator secretary]
   GovernanceRecord
   (is-circle? [_] true)
 
@@ -264,7 +277,7 @@
             (format "Circle %s still contains roles" role-name))
   (-> circle
       (update-role role-name map->Role)
-      (update-role role-name dissoc :roles)))
+      (update-role role-name dissoc :roles :facilitator :secretary)))
 
 (defn add-role-to-circle
   "Adds a role to a circle.  The role may not conflict with an existing role.
@@ -277,7 +290,7 @@
 
   ([circle new-role-name purpose domains accountabilities]
    (add-role circle (Role. new-role-name purpose domains accountabilities
-                           nil nil))))
+                           nil))))
 
 (defn update-purpose [entity new-purpose]
   (if (empty? new-purpose)
@@ -290,11 +303,11 @@
   (validate-role-updates circle role-name)
   (update-role circle role-name update-purpose new-purpose))
 
-(defn is-lead-link? [role-name]
-  (= lead-link-name role-name))
-
-(def is-core-role?
-  #{lead-link-name secretary-name facilitator-name rep-link-name})
+(defn- add-role-if-missing [circle role-name]
+  (if (and (core-roles role-name)
+           (role-missing? circle role-name))
+    (add-role circle (map->Role {:name role-name}))
+    circle))
 
 (defn- add-to-role
   "Very abstract function that adds things to things in a role, making sure
@@ -302,10 +315,7 @@
    Performs collection-op on the collection, or the given empty-collection
    if it doesn't exist."
   [circle role-name which-things empty-collection collection-op thing & args]
-  (let [circle (if (and (is-core-role? role-name)
-                        (role-missing? circle role-name))
-                 (add-role circle (map->Role {:name role-name}))
-                 circle)]
+  (let [circle (add-role-if-missing circle role-name)]
     (validate-things circle role-name which-things thing contains?
                      "%s '%s' already exists on role '%s'")
     (update-in circle (role-path role-name) add-to-raw
@@ -321,7 +331,7 @@
   (let [result
         (remove-and-purge-from-role circle role-name which-things collection-op
                                     thing)]
-    (if (and (is-core-role? role-name)
+    (if (and (core-roles role-name)
              (every? empty? (map (partial get-entity result role-name)
                                  [:domains :accountabilities :policies])))
       (remove-role result role-name)
@@ -342,6 +352,13 @@
    circle. Performs all validation and so forth. Removes the set if it's empty."
   [circle role-name set-of-things thing]
   (remove-from-role circle role-name set-of-things disj thing))
+
+(defn elect-to-role [circle role-name person-name expiration-date]
+  (validate (core-roles role-name)
+            (format "'%s' is not an elected role." role-name))
+  (assoc circle (elected-role-mapping role-name)
+         {:name            person-name
+          :expiration-date expiration-date}))
 
 ;; ## Role Collection Manipulation Functions ##
 ;; These functions are critical to maintaining namespace encapsulation. Simply

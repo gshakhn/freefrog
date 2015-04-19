@@ -18,11 +18,14 @@
 ;
 
 (ns freefrog.lang
-  (:require [clojure.java.io :as io]
+  (:require [clj-time.format :as f]
+            [clojure.java.io :as io]
             [freefrog.governance :as g]
             [instaparse.core :as insta]
             [clojure.tools.logging :as log]))
 
+;;Note: this function may show up as unused in IntelliJ but it is because
+;;      metaprogramming!
 (defn create-anchor-circle [_ {:keys [name cross-links purpose]}]
   (let [anchor-circle (-> name
                           g/create-circle
@@ -38,6 +41,8 @@
   (-> (g/add-role-to-circle circle name purpose domains accountabilities)
       (g/convert-to-circle name)))
 
+;;Note: this function may show up as unused in IntelliJ but it is because
+;;      metaprogramming!
 (defn convert-role [anchor-circle {:keys [name]}]
   (g/convert-to-circle anchor-circle name))
 
@@ -110,11 +115,22 @@
 (defn define-policy [circle record _]
   (g/add-policy circle (second record) (nth record 2)))
 
-(def modify-functions {:create modify-entity
-                       :delete modify-entity
-                       :update modify-entity
+(def elected-role-mapping {"facilitator" g/facilitator-name
+                           "secretary"   g/secretary-name})
+
+(def formatter (f/formatter "yyyy-MM-dd"))
+
+(defn elect [circle record _]
+  (clojure.pprint/pprint record)
+  (g/elect-to-role circle (elected-role-mapping (nth record 2))
+                   (second record) (f/parse formatter (nth record 3))))
+
+(def modify-functions {:create  modify-entity
+                       :delete  modify-entity
+                       :update  modify-entity
                        :convert modify-entity
-                       :define define-policy})
+                       :define  define-policy
+                       :elect   elect})
 
 (defn process-command
   "Execute the given governance transformation on the given

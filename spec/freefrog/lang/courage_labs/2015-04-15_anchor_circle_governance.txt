@@ -27,8 +27,8 @@ and domain "Financial accounts" and accountabilities
 "Reimbursing Members for expenses",
 "Establishing mechanisms by which Members can contribute income".
 
-elect "Travis Marsh" to role "Secretary" expiring 2015-10-18.
-elect "Stephen Starkey" to role "Facilitator" expiring 2015-10-18.
+elect "Travis Marsh" as Secretary expiring 2015-10-18.
+elect "Stephen Starkey" as Facilitator expiring 2015-10-18.
 
 -- We also appointed Stephen Starkey and Steve Mondozzi to the "Money
 -- Matters" role as an operational decision.
