@@ -61,7 +61,8 @@
 
 (defn apply-collection-update [circle name update-type op]
   (let [component (first op)
-        function-name (str update-type "-role-" (update-conversions component))
+        function-name (format "%s-role-%s"
+                              update-type (update-conversions component))
         fn (resolve (symbol "freefrog.governance" function-name))]
     (reduce #(fn %1 name %2) circle (rest op))))
 
@@ -95,13 +96,14 @@
 (defn execute-governance-function [record fn circle params]
   (try (fn circle params)
        (catch Exception e
-         (throw (RuntimeException.
-                  (str "Unable to execute governance record " record) e)))))
+         (throw
+           (RuntimeException.
+             (format "Unable to execute governance record: %s " record) e)))))
 
 (defn modify-entity [circle record function-primary]
   (let [function-secondary (first (second record))
-        function-name (str (name function-primary) "-"
-                           (name function-secondary))
+        function-name (format "%s-%s"
+                              (name function-primary) (name function-secondary))
         fn (resolve (symbol "freefrog.lang" function-name))
         entity-name (nth record 2)
         params (->> record
