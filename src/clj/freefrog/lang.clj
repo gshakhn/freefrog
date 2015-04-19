@@ -160,8 +160,7 @@
    (let [parsed-document (-> governance-string
                              parse-governance)]
      (if (insta/failure? parsed-document)
-       (throw (RuntimeException.
-                (with-out-str (println parsed-document))))
+       (throw (RuntimeException. (pr-str parsed-document)))
        (reduce process-command circle parsed-document)))))
 
 (defn execute-directory

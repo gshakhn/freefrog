@@ -89,7 +89,7 @@
 (describe "Executing governance documents"
   (it "should throw nice errors for bad parsing"
     (should-throw RuntimeException
-      "Parse error at line 1, column 32:\nconvert role \"Partner Matters\" to a circle.\n                               ^\nExpected:\ninto a\n\n"
+      "Parse error at line 1, column 32:\nconvert role \"Partner Matters\" to a circle.\n                               ^\nExpected:\n\"into a\"\n"
       (l/execute-governance "convert role \"Partner Matters\" to a circle.")))
 
   (it "should be able to create a new anchor circle"
