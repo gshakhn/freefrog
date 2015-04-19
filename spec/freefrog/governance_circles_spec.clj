@@ -24,6 +24,9 @@
             [freefrog.governance-spec-helpers :refer :all]
             [speclj.core :refer :all]))
 
+(def sample-anchor-with-sample-policy
+  (my-add-policy sample-anchor-with-role "test" "stuff"))
+
 ;; Section 2.1
 (describe "Circles"
   (it "can create a circle"
@@ -76,7 +79,15 @@
   (should-not-update-missing-or-empty-roles g/convert-to-circle
     "convert to circle")
   (should-not-update-missing-or-empty-roles g/convert-to-role
-    "convert to role"))
+    "convert to role")
+
+  ;; TODO unify this with the role-specific code because there is a TON
+  ;; of validation and behavior in there
+  (describe "policies"
+    (describe "adding"
+      (it "can add to a circle with no policies"
+        (should= sample-anchor-with-sample-policy
+          (g/add-policy sample-anchor-with-role "test" "stuff"))))))
 
 
 (def sample-policy-name "Do whatever")

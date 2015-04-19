@@ -28,6 +28,17 @@
 (def sample-anchor-with-role (g/add-role-to-circle sample-anchor role-name
                                                    sample-purpose))
 
+(defn my-add-policy
+  ([circle name text]
+   (update-in circle [:policies]
+              assoc name {:name name :text text}))
+  ([circle role-name name text]
+   (update-in circle [:roles role-name :policies]
+              assoc name {:name name :text text}))
+  ([circle role-name name text domain]
+   (update-in (my-add-policy circle role-name name text)
+              [:roles role-name :policies name] assoc :domain domain)))
+
 (defn should-not-update-missing-or-empty-roles [fn type-str & params]
   (describe (format "%s problems" type-str)
     (it "doesn't work with a role that doesn't exist"

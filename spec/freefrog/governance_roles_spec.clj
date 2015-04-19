@@ -226,14 +226,6 @@
                                                     sample-policy2-name
                                                     sample-policy2-text))
 
-(defn- my-add-policy
-  ([circle name text]
-   (update-in circle [:roles role-name :policies]
-              assoc name {:name name :text text}))
-  ([circle name text domain]
-   (update-in (my-add-policy circle name text)
-              [:roles role-name :policies name] assoc :domain domain)))
-
 ;; Section 1.3
 (describe "policies"
   (should-not-update-missing-or-empty-roles g/add-role-policy "policy"
@@ -242,17 +234,18 @@
     sample-policy-name
     sample-policy-text sample-domain-1)
   (it "can add a policy granting access to all domains"
-    (should= (my-add-policy sample-anchor-with-domain sample-policy-name
-                            sample-policy-text)
+    (should= (my-add-policy sample-anchor-with-domain role-name
+                            sample-policy-name sample-policy-text)
       sample-anchor-with-policy)
-    (should= (my-add-policy sample-anchor-with-policy sample-policy2-name
-                            sample-policy2-text)
+    (should= (my-add-policy sample-anchor-with-policy role-name
+                            sample-policy2-name sample-policy2-text)
       (g/add-role-policy sample-anchor-with-policy role-name
                          sample-policy2-name sample-policy2-text)))
 
   (it "can add a policy granting access to a domain"
-    (should= (my-add-policy sample-anchor-with-domain sample-policy-name
-                            sample-policy-text sample-domain-1)
+    (should= (my-add-policy sample-anchor-with-domain role-name
+                            sample-policy-name sample-policy-text
+                            sample-domain-1)
       (g/add-role-policy sample-anchor-with-domain role-name
                          sample-policy-name sample-policy-text sample-domain-1)))
   (it (str "won't add a policy granting access to a domain that the role"

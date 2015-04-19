@@ -20,7 +20,8 @@
 (ns freefrog.lang
   (:require [clojure.java.io :as io]
             [freefrog.governance :as g]
-            [instaparse.core :as insta]))
+            [instaparse.core :as insta]
+            [clojure.tools.logging :as log]))
 
 (defn create-anchor-circle [_ {:keys [name cross-links purpose]}]
   (let [anchor-circle (-> name
@@ -86,12 +87,14 @@
 
 (defn merge-array-values [v] (apply merge-with (concat [concat] v)))
 
-(defn process-command
-  "Execute the given governance transformation on the given
-   circle, returning the new circle."
-  [circle record]
-  (let [function-primary (first record)
-        function-secondary (first (second record))
+(defn execute-governance-function [record fn circle params]
+  (try (fn circle params)
+       (catch Exception e
+         (throw (RuntimeException.
+                  (str "Unable to execute governance record " record) e)))))
+
+(defn modify-entity [circle record function-primary]
+  (let [function-secondary (first (second record))
         function-name (str (name function-primary) "-"
                            (name function-secondary))
         fn (resolve (symbol "freefrog.lang" function-name))
@@ -102,10 +105,28 @@
                     (map array-to-map)
                     merge-array-values
                     (merge {:name entity-name}))]
-    (try (fn circle params)
-         (catch Exception e
-           (throw (RuntimeException.
-                    (str "Unable to execute governance record " record) e))))))
+    (execute-governance-function record fn circle params)))
+
+(defn define-policy [circle record _]
+  (g/add-policy circle (second record) (nth record 2)))
+
+(def modify-functions {:create modify-entity
+                       :delete modify-entity
+                       :update modify-entity
+                       :convert modify-entity
+                       :define define-policy})
+
+(defn process-command
+  "Execute the given governance transformation on the given
+   circle, returning the new circle."
+  [circle record]
+  (let [function-primary (first record)
+        modify-function (function-primary modify-functions)]
+    (if modify-function
+      (modify-function circle record function-primary)
+      (do
+        (log/warnf "Can't handle this record yet: %s" record)
+        circle))))
 
 (def parse-governance
   "Parse a governance document and produce a tree from it."
@@ -124,4 +145,19 @@
        (throw (RuntimeException.
                 (with-out-str (println parsed-document))))
        (reduce process-command circle parsed-document)))))
+
+(defn execute-directory
+  "Run a directory full of files as if they were governance of
+   a brand new organization"
+  [directory]
+  (log/infof "Executing governance in directory: %s" directory)
+  (->> directory
+       io/file
+       file-seq
+       (filter #(.isFile %))
+       (filter #(not (.startsWith (.getName %) ".")))
+       (sort-by #(.getName %))
+       (reduce (fn [circle governance-file]
+                 (log/infof "Executing: %s" (.getName governance-file))
+                 (execute-governance circle (slurp governance-file))) {})))
 

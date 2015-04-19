@@ -115,4 +115,15 @@
     "should be able to update various existing values"
     circle-with-created-structure
     circle-with-updates
-    (governance "circle-updates")))
+    (governance "circle-updates"))
+
+  (assert-governance
+    "should be able to define policies"
+    sample-anchor-circle
+    (g/add-policy sample-anchor-circle "test" "stuff")
+    "define policy \"test\" as \"stuff\".")
+
+  (describe "Courage Labs Governance smoke test"
+    (with-all result (l/execute-directory "spec/freefrog/lang/courage_labs"))
+    (it "should be able to execute all Courage Labs Governance"
+      (println @result))))

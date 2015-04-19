@@ -1,0 +1,37 @@
+-- This initial meeting began with the election for the three cross-links
+-- defined in the Operating Agreement:
+-- Stephen Starkey to the "Benefit Context Link" role expiring 2017-04-18.
+-- Nate Riffe to the "Environmental Impact Context Link" role expiring
+-- 2017-04-18.
+-- Steve Mondozzi to the "Investor Context Link" role expiring 2017-04-18.
+
+create role "Software Tools" with purpose
+"Coaching the world with Software Tools" and domain "Software".
+
+-- We also appointed Stephen Starkey, Nate Riffe, and Travis Marsh to the
+-- "Software Tools" role as an operational decision.
+
+create role "Coaching People" with purpose
+"Providing coaching services to individuals"
+and domain "Coaching Services".
+
+-- We also appointed Stephen Starkey and Travis Marsh to the "Coaching Services"
+-- role as an operational decision.
+
+define policy "Income from Services" as
+"Services income is moved to the service provider's account less a 5% fee
+ for expenses.".
+
+create role "Money Matters" with purpose "Handling Courage Labs' Money"
+and domain "Financial accounts" and accountabilities
+"Reimbursing Members for expenses",
+"Establishing mechanisms by which Members can contribute income".
+
+elect "Travis Marsh" to role "Secretary" expiring 2015-10-18.
+elect "Stephen Starkey" to role "Facilitator" expiring 2015-10-18.
+
+-- We also appointed Stephen Starkey and Steve Mondozzi to the "Money
+-- Matters" role as an operational decision.
+
+define policy "Expenses" as "Member expenses by default come out of
+that Member's account.".
