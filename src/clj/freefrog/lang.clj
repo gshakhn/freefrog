@@ -127,21 +127,21 @@
   (g/elect-to-role circle (elected-role-mapping (nth record 2))
                    (second record) (f/parse formatter (nth record 3))))
 
-(def modify-functions {:create  modify-entity
-                       :delete  modify-entity
-                       :update  modify-entity
-                       :convert modify-entity
-                       :define  define-policy
-                       :elect   elect})
+(def commands {:create  modify-entity
+               :delete  modify-entity
+               :update  modify-entity
+               :convert modify-entity
+               :define  define-policy
+               :elect   elect})
 
 (defn process-command
   "Execute the given governance transformation on the given
    circle, returning the new circle."
   [circle record]
   (let [function-primary (first record)
-        modify-function (function-primary modify-functions)]
-    (if modify-function
-      (modify-function circle record function-primary)
+        command (function-primary commands)]
+    (if command
+      (command circle record function-primary)
       (do
         (log/warnf "Can't handle this record yet: %s" record)
         circle))))
