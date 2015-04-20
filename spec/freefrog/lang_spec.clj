@@ -107,5 +107,4 @@
   (describe "Courage Labs Governance smoke test"
     (with-all result (l/execute-directory "spec/freefrog/lang/courage_labs"))
     (it "should be able to execute all Courage Labs Governance"
-      #_(clojure.pprint/pprint @result)
-      @result)))
+      (clojure.pprint/pprint @result))))
