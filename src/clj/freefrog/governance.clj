@@ -209,6 +209,15 @@
   (add-to entity :policies {} assoc policy-name
           {:name policy-name :text policy-text}))
 
+;; todo this looks strikingly like remove-and-purge-from-role, right? BAD.
+(defn remove-policy
+  "Remove a policy from an entity."
+  [entity policy-name]
+  (let [result (update-in entity [:policies] dissoc policy-name)]
+    (if (empty? (:policies result))
+      (assoc result :policies nil)
+      result)))
+
 ;; ## Role Generalization Functions ##
 
 (defn- update-role-raw
@@ -289,8 +298,11 @@
    (add-role-to-circle circle new-role-name purpose nil nil))
 
   ([circle new-role-name purpose domains accountabilities]
-   (add-role circle (Role. new-role-name purpose domains accountabilities
-                           nil))))
+   (add-role circle (Role. new-role-name purpose
+                           (if (seq domains) (into #{} domains) nil)
+                           (if (seq accountabilities)
+                             (into #{} accountabilities)
+                             nil) nil))))
 
 (defn update-purpose [entity new-purpose]
   (if (empty? new-purpose)

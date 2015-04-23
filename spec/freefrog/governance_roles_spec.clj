@@ -29,14 +29,14 @@
 
 (def sample-domain-1 "Code")
 (def sample-domain-2 "Tests")
-(def sample-domains [sample-domain-1 sample-domain-2])
+(def sample-domains #{sample-domain-1 sample-domain-2})
 (def sample-anchor-with-domain
   (g/add-role-domain sample-anchor-with-role role-name sample-domain-1))
 (def sample-anchor-with-domains
   (g/add-role-domain sample-anchor-with-domain role-name sample-domain-2))
 (def sample-acc-1 "Writing Code")
 (def sample-acc-2 "Testing their own stuff")
-(def sample-accountabilities [sample-acc-1 sample-acc-2])
+(def sample-accountabilities #{sample-acc-1 sample-acc-2})
 (def sample-anchor-with-acc
   (g/add-role-accountability sample-anchor-with-role role-name sample-acc-1))
 (def sample-anchor-with-accs

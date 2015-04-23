@@ -1,3 +1,5 @@
+strike policy "money".
+
 convert role "Partner Matters" into a circle.
 
 update circle "Partner Matters" rename to "Partners' Things" and

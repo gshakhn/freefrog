@@ -16,3 +16,5 @@ Domain "Products" and
 Accountabilities
   "Communicating product direction",
   "Gathering customer needs".
+
+define policy "money" as "you can only spend money on Mondays".

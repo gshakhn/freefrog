@@ -1,0 +1,4 @@
+govern circle "Products".
+create role "Developer".
+govern circle "Partner Matters".
+create role "Partner Admission".

@@ -100,7 +100,11 @@
       (l/execute-directory "spec/freefrog/lang/basic")))
 
   (describe "governing subcircles"
-    (it "won't allow multiple subcircles to be governed in one document")
+    (it "won't allow multiple subcircles to be governed in one document"
+      (should-throw RuntimeException
+        (l/execute-governance
+          sample-anchor-circle
+          (governance "multiple-subcircle"))))
     (it "won't allow subcircle governance except as the first statement")
     (it "will apply all governance to the mentioned subcircle"))
 

@@ -117,6 +117,9 @@
 (defn define-policy [circle record _]
   (g/add-policy circle (second record) (nth record 2)))
 
+(defn strike-policy [circle record _]
+  (g/remove-policy circle (second record)))
+
 (def elected-role-mapping {"facilitator" g/facilitator-name
                            "secretary"   g/secretary-name})
 
@@ -131,6 +134,7 @@
                :update  modify-entity
                :convert modify-entity
                :define  define-policy
+               :strike  strike-policy
                :elect   elect})
 
 (defn process-command

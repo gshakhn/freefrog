@@ -1,18 +1,20 @@
-<document> = { block }
+<document> = [govern], { block }
+govern = <"govern circle">, ws, name, <".">, cr, { cr }
 <block> = resolution | <comment>
-<resolution> = ( create | update | delete | convert | define | elect ),
+<resolution> = ( create | update | delete | convert | define | strike | elect ),
                <".">, { ws }
 create = <"create">, ws, entity, ws, name, [ws, <"with">, ws, create-components]
 update = <"update">, ws, entity, ws, name, ws, update-action-list
 delete = <"delete">, ws, entity, ws, name
 define = <"define policy">, ws, name, ws, <"as">, ws, name
+strike = <"strike policy">, ws, name
 elect = <"elect">, ws, name, ws, <"as">, ws, [ "facilitator" | "secretary" ],
         ws, <"expiring">, ws, #"\d{4}-\d{2}-\d{2}"
 convert = <"convert">, ws, entity, ws, name, ws, <"into a">, ws, entity
 comment = <"--">, comment-text, cr, { cr }
 comment-text = #'[^\n]*'
 <cr> = <"\n">
-<text> = #"[a-zA-Z0-9 \n:\-/%\.']*"
+<text> = #"[a-zA-Z0-9 \n:\-/%\.\(\)',]*"
 <update-action-list> = update-action, { ws <"and"> ws update-action }
 <update-action> = add | remove | change-purpose | rename
 add = <"add">, ws, component

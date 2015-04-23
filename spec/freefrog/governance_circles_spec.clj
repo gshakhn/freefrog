@@ -88,7 +88,12 @@
     (describe "adding"
       (it "can add to a circle with no policies"
         (should= sample-anchor-with-sample-policy
-          (g/add-policy sample-anchor-with-role "test" "stuff"))))))
+          (g/add-policy sample-anchor-with-role "test" "stuff"))))
+
+    (describe "removing"
+      (it "can remove a policy from a circle"
+        (should= sample-anchor-with-role
+          (g/remove-policy sample-anchor-with-sample-policy "test"))))))
 
 
 (def sample-policy-name "Do whatever")
