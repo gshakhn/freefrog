@@ -29,7 +29,7 @@
 
   :java-source-paths ["src/java"]
 
-  :dependencies [[clj-http "1.1.0"]
+  :dependencies [[clj-http "1.1.1"]
                  [clj-json "0.5.3"]
                  [clj-time "0.9.0"]
                  [environ "1.0.0"]
@@ -37,8 +37,8 @@
                  [instaparse "1.3.6"]
                  [org.clojure/clojure "1.6.0"]
                  [org.clojure/tools.logging "0.3.1"]
-                 [metosin/ring-swagger "0.19.5"]
-                 [metosin/compojure-api "0.19.3"]
+                 [metosin/ring-swagger "0.20.2"]
+                 [metosin/compojure-api "0.20.1"]
                  [metosin/ring-http-response "0.6.1"]
                  [metosin/ring-swagger-ui "2.0.24"]
                  [speclj "3.2.0"]]
@@ -52,16 +52,16 @@
              :uberjar {:aot :all}
              :dev {:ring {:handler freefrog.rest/app}
                    :plugins [[lein-clojars "0.9.1"]
-                             [lein-ring "0.9.1"]]
+                             [lein-ring "0.9.3"]]
                    :dependencies [[javax.servlet/servlet-api "2.5"]
                                   [peridot "0.3.1"]]}
              :1.7 {:dependencies [[org.clojure/clojure "1.7.0-alpha4"]]}
              :cli {:main freefrog.cli}}
 
-  :plugins [[lein-ancient "0.5.5"]
-            [lein-kibit "0.0.8"]
+  :plugins [[lein-ancient "0.6.7"]
+            [lein-kibit "0.1.2"]
             [lein-marginalia "0.8.0"]
-            [speclj "3.1.0"]]
+            [speclj "3.2.0"]]
 
   :test-paths ["spec"]
 
