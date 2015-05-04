@@ -299,9 +299,9 @@
 
   ([circle new-role-name purpose domains accountabilities]
    (add-role circle (Role. new-role-name purpose
-                           (if (seq domains) (into hash-set domains) nil)
+                           (if (seq domains) (into (hash-set) domains) nil)
                            (if (seq accountabilities)
-                             (into hash-set accountabilities)
+                             (into (hash-set) accountabilities)
                              nil) nil))))
 
 (defn update-purpose [entity new-purpose]
