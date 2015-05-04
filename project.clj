@@ -29,7 +29,7 @@
 
   :java-source-paths ["src/java"]
 
-  :dependencies [[clj-http "1.1.0"]
+  :dependencies [[clj-http "1.1.1"]
                  [clj-json "0.5.3"]
                  [clj-time "0.9.0"]
                  [environ "1.0.0"]
