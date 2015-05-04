@@ -5,7 +5,9 @@ Exquisite Organization -- For Free
 ## Information
 
 This project is being integrated using
-[Travis-CI](https://travis-ci.org/couragelabs/freefrog).
+[Travis-CI](https://travis-ci.org/).
+
+[![Build Status](https://travis-ci.org/couragelabs/freefrog.svg?branch=master)](https://travis-ci.org/couragelabs/freefrog)
 
 Artifacts generated:
 
