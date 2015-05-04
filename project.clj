@@ -59,7 +59,7 @@
              :cli {:main freefrog.cli}}
 
   :plugins [[lein-ancient "0.6.7"]
-            [lein-kibit "0.0.8"]
+            [lein-kibit "0.1.2"]
             [lein-marginalia "0.8.0"]
             [speclj "3.1.0"]]
 
