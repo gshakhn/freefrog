@@ -58,7 +58,7 @@
              :1.7 {:dependencies [[org.clojure/clojure "1.7.0-alpha4"]]}
              :cli {:main freefrog.cli}}
 
-  :plugins [[lein-ancient "0.5.5"]
+  :plugins [[lein-ancient "0.6.7"]
             [lein-kibit "0.0.8"]
             [lein-marginalia "0.8.0"]
             [speclj "3.1.0"]]
