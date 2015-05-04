@@ -7,14 +7,14 @@ Exquisite Organization -- For Free
 This project is being integrated using
 [Travis-CI](https://travis-ci.org/couragelabs/freefrog).
 
+[![Dependencies Status](http://jarkeeper.com/couragelabs/freefrog/status.svg)](http://jarkeeper.com/couragelabs/freefrog)
+
 Artifacts generated:
 
  * [API Documentation](http://s3.amazonaws.com/freefrog/docs/uberdoc.html)
  * [Specs](http://s3.amazonaws.com/freefrog/docs/specs.txt)
  * [Code Cleanliness Reports]
    (http://s3.amazonaws.com/freefrog/docs/kibit.txt) (empty is good)
- * [Outdated Library Reports]
-   (http://s3.amazonaws.com/freefrog/docs/ancient.txt) (empty is good)
 
 ## Development
 
