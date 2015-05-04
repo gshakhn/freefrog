@@ -38,8 +38,9 @@
   (g/add-role-to-circle circle name purpose domains accountabilities))
 
 (defn create-circle [circle {:keys [name purpose domains accountabilities]}]
-  (-> (g/add-role-to-circle circle name purpose domains accountabilities)
-      (g/convert-to-circle name)))
+  (g/convert-to-circle
+    (g/add-role-to-circle circle name purpose domains accountabilities)
+    name))
 
 ;;Note: this function may show up as unused in IntelliJ but it is because
 ;;      metaprogramming!
@@ -160,8 +161,7 @@
    (execute-governance nil governance-string))
 
   ([circle governance-string]
-   (let [parsed-document (-> governance-string
-                             parse-governance)]
+   (let [parsed-document (parse-governance governance-string)]
      (if (insta/failure? parsed-document)
        (throw (RuntimeException. (pr-str parsed-document)))
        (reduce process-command circle parsed-document)))))
