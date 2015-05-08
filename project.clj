@@ -29,12 +29,12 @@
 
   :java-source-paths ["src/java"]
 
-  :dependencies [[clj-http "1.1.1"]
+  :dependencies [[clj-http "1.1.2"]
                  [clj-json "0.5.3"]
                  [clj-time "0.9.0"]
                  [environ "1.0.0"]
                  [http-kit "2.1.19"]
-                 [instaparse "1.3.6"]
+                 [instaparse "1.4.0"]
                  [org.clojure/clojure "1.6.0"]
                  [org.clojure/tools.logging "0.3.1"]
                  [metosin/ring-swagger "0.20.2"]
@@ -54,7 +54,7 @@
                    :plugins [[lein-clojars "0.9.1"]
                              [lein-ring "0.9.3"]]
                    :dependencies [[javax.servlet/servlet-api "2.5"]
-                                  [peridot "0.3.1"]]}
+                                  [peridot "0.4.0"]]}
              :1.7 {:dependencies [[org.clojure/clojure "1.7.0-alpha4"]]}
              :cli {:main freefrog.cli}}
 
