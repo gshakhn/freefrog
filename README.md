@@ -15,8 +15,6 @@ Artifacts generated:
 
  * [API Documentation](http://s3.amazonaws.com/freefrog/docs/uberdoc.html)
  * [Specs](http://s3.amazonaws.com/freefrog/docs/specs.txt)
- * [Code Cleanliness Reports]
-   (http://s3.amazonaws.com/freefrog/docs/kibit.txt) (empty is good)
 
 ## Development
 
