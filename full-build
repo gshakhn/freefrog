@@ -1,0 +1,6 @@
+#!/bin/bash
+lein ancient > docs/ancient.txt
+lein kibit > docs/kibit.txt
+./fail-if-nonempty docs/kibit.txt &&
+lein spec -f d -C > docs/specs.txt &&
+lein docs

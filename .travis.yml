@@ -1,7 +1,6 @@
 language: clojure
 jdk: oraclejdk8
-script: |
-  lein docs && lein spec -f d -C > docs/specs.txt && lein ancient > docs/ancient.txt && lein kibit > docs/kibit.txt
+script: ./full-build
 deploy:
   provider: s3
   access_key_id: AKIAILUSIQQRDIX2UQGQ
