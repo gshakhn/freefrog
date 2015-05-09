@@ -18,10 +18,31 @@
 ;
 
 (ns freefrog.lang-spec
-  (:require [clj-time.core :as t]
+  (:require [clj-yaml.core :as yaml]
+            [clj-time.core :as t]
             [freefrog.governance :as g]
             [freefrog.lang :as l]
             [speclj.core :refer :all]))
+
+;; Monkey patch clj-yaml to do nice encoding of dates and defrecords
+(ns clj-yaml.core
+  (:require [clj-time.format :as f]))
+
+(defn encode-without-nils [data]
+  (encode (into {} (remove (comp nil? second) data))))
+
+(extend-protocol YAMLCodec
+  freefrog.governance.Role
+  (encode [data] (encode-without-nils data))
+
+  freefrog.governance.Circle
+  (encode [data] (encode-without-nils data))
+
+  org.joda.time.DateTime
+  (encode [data]
+    (f/unparse (f/formatters :date) data)))
+
+(ns freefrog.lang-spec)
 
 (defn governance [name]
   (slurp (str "spec/freefrog/lang/" name "-governance.txt")))
@@ -111,4 +132,4 @@
   (describe "Courage Labs Governance smoke test"
     (with-all result (l/execute-directory "spec/freefrog/lang/courage_labs"))
     (it "should be able to execute all Courage Labs Governance"
-      (clojure.pprint/pprint @result))))
+      (println (yaml/generate-string @result)))))
