@@ -100,13 +100,11 @@
 (def sample-policy-text "Anybody can do anything whenever")
 
 (def sample-policies-lead-link {sample-policy-name
-                                {:name   sample-policy-name
-                                 :domain g/role-assignments-domain
+                                {:domain g/role-assignments-domain
                                  :text   sample-policy-text}})
 
 (def sample-policies-secretary {sample-policy-name
-                                {:name   sample-policy-name
-                                 :domain g/governance-records-domain
+                                {:domain g/governance-records-domain
                                  :text   sample-policy-text}})
 (def sample-policy-name2 "Do things to other people")
 (def sample-policy-text2 "Anybody do things to anyone else")
@@ -170,8 +168,7 @@
                                  :policies
                                        (assoc sample-policies-lead-link
                                               sample-policy-name2
-                                              {:name sample-policy-name2
-                                               :text sample-policy-text2})}))
+                                              {:text sample-policy-text2})}))
         sample-anchor-with-lead-link-policies)))
 
   (describe "removing policies"
@@ -349,8 +346,7 @@
                                  :policies
                                        (assoc sample-policies-secretary
                                               sample-policy-name2
-                                              {:name sample-policy-name2
-                                               :text sample-policy-text2})}))
+                                              {:text sample-policy-text2})}))
         sample-anchor-with-secretary-policies)))
 
   (describe "removing policies"

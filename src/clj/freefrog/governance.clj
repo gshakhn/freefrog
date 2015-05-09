@@ -206,8 +206,7 @@
 (defn add-policy
   "Add a policy to any entity."
   [entity policy-name policy-text]
-  (add-to entity :policies {} assoc policy-name
-          {:name policy-name :text policy-text}))
+  (add-to entity :policies {} assoc policy-name {:text policy-text}))
 
 ;; todo this looks strikingly like remove-and-purge-from-role, right? BAD.
 (defn remove-policy
@@ -405,7 +404,7 @@
    the given circle. If you give a domain, that will be added, too."
   ([circle role-name policy-name policy-text]
    (add-to-role circle role-name :policies {} assoc policy-name
-                {:name policy-name :text policy-text}))
+                {:text policy-text}))
   ([circle role-name policy-name policy-text domain]
    (let [with-added-policy (add-role-policy circle role-name policy-name
                                             policy-text)]

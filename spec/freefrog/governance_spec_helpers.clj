@@ -31,10 +31,10 @@
 (defn my-add-policy
   ([circle name text]
    (update-in circle [:policies]
-              assoc name {:name name :text text}))
+              assoc name {:text text}))
   ([circle role-name name text]
    (update-in circle [:roles role-name :policies]
-              assoc name {:name name :text text}))
+              assoc name {:text text}))
   ([circle role-name name text domain]
    (update-in (my-add-policy circle role-name name text)
               [:roles role-name :policies name] assoc :domain domain)))
