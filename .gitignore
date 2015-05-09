@@ -6,6 +6,7 @@ pom.xml
 /target/
 .lein-deps-sum
 .lein-repl-history
+.lein-failures
 .lein-plugins/
 /dev-resources/public/js/*
 .idea
@@ -15,3 +16,4 @@ freefrog.iml
 /docs/
 .nrepl-port
 .floo*
+
