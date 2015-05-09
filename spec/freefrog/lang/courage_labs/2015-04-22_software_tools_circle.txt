@@ -1,0 +1,9 @@
+govern circle "Software Tools".
+
+create role "Income" with purpose
+"Generating income from our software tools".
+
+create role "Builder" with purpose
+"Building software" and domain "Software" and accountability
+"Demonstrating progress building software tools to coach the world at least monthly.".
+

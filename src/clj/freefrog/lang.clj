@@ -20,9 +20,10 @@
 (ns freefrog.lang
   (:require [clj-time.format :as f]
             [clojure.java.io :as io]
+            [clojure.tools.logging :as log]
             [freefrog.governance :as g]
-            [instaparse.core :as insta]
-            [clojure.tools.logging :as log]))
+            [instaparse.core :as insta])
+  (:import (freefrog GovernanceParseException)))
 
 ;;Note: this function may show up as unused in IntelliJ but it is because
 ;;      metaprogramming!
@@ -163,8 +164,13 @@
   ([circle governance-string]
    (let [parsed-document (parse-governance governance-string)]
      (if (insta/failure? parsed-document)
-       (throw (RuntimeException. (pr-str parsed-document)))
-       (reduce process-command circle parsed-document)))))
+       (throw (GovernanceParseException. (pr-str parsed-document)))
+       (let [process-document (partial reduce process-command)
+             first-command (first parsed-document)]
+         (if (= :govern (first first-command))
+           (g/update-subcircle circle (rest first-command)
+                               process-document (rest parsed-document))
+           (process-document circle parsed-document)))))))
 
 (defn execute-directory
   "Run a directory full of files as if they were governance of

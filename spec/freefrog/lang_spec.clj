@@ -22,7 +22,8 @@
             [clj-time.core :as t]
             [freefrog.governance :as g]
             [freefrog.lang :as l]
-            [speclj.core :refer :all]))
+            [speclj.core :refer :all])
+  (:import (freefrog GovernanceParseException)))
 
 ;; Monkey patch clj-yaml to do nice encoding of dates and defrecords
 (ns clj-yaml.core
@@ -91,7 +92,9 @@
         "Partner Matters"
         "Creating policies for addition and removal of partners")
       (g/elect-to-role g/facilitator-name "bill" expiration-date)
-      (g/elect-to-role g/secretary-name "jill" expiration-date)))
+      (g/elect-to-role g/secretary-name "jill" expiration-date)
+      (g/update-subcircle ["Products"] g/add-role
+                          (g/map->Role {:name "Product Analyzer"}))))
 
 (describe "Parsing governance"
   (it "should ignore comments"
@@ -102,7 +105,7 @@
 
 (describe "Executing governance documents"
   (it "should throw nice errors for bad parsing"
-    (should-throw RuntimeException
+    (should-throw GovernanceParseException
       "Parse error at line 1, column 32:\nconvert role \"Partner Matters\" to a circle.\n                               ^\nExpected:\n\"into a\"\n"
       (l/execute-governance "convert role \"Partner Matters\" to a circle.")))
 
@@ -122,12 +125,17 @@
 
   (describe "governing subcircles"
     (it "won't allow multiple subcircles to be governed in one document"
-      (should-throw RuntimeException
+      (should-throw GovernanceParseException
+        #"Parse error at line 3, column 1:\ngovern circle \"Partner Matters\".*"
         (l/execute-governance
           sample-anchor-circle
           (governance "multiple-subcircle"))))
-    (it "won't allow subcircle governance except as the first statement")
-    (it "will apply all governance to the mentioned subcircle"))
+    (it "won't allow subcircle governance except as the first statement"
+      (should-throw GovernanceParseException
+        #"Parse error at line 2, column 1:\ngovern circle \"stuff\".*"
+        (l/execute-governance
+          sample-anchor-circle
+          "create role \"things\".\ngovern circle \"stuff\".\n"))))
 
   (describe "Courage Labs Governance smoke test"
     (with-all result (l/execute-directory "spec/freefrog/lang/courage_labs"))

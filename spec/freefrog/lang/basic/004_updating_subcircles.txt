@@ -1,0 +1,3 @@
+govern circle "Products".
+
+create role "Product Analyzer".
