@@ -1,4 +1,5 @@
 #!/bin/bash
+mkdir docs
 lein ancient > docs/ancient.txt
 lein kibit > docs/kibit.txt
 ./fail-if-nonempty docs/kibit.txt &&
