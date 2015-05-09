@@ -1,5 +1,5 @@
 <document> = [govern], { block }
-govern = <"govern circle">, ws, name, <".">, cr, { cr }
+govern = <"govern circle">, ws, name-list, <".">, cr, { cr }
 <block> = resolution | <comment>
 <resolution> = ( create | update | delete | convert | define | strike | elect ),
                <".">, { ws }
