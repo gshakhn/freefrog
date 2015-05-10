@@ -151,9 +151,9 @@
 
 (defn create-circle
   "Create a new circle with no parent."
-  [name]
-  (validate-not (empty? name) "Name may not be empty")
-  (map->Circle {:name name}))
+  [circle-name]
+  (validate-not (empty? circle-name) "Name may not be empty")
+  (map->Circle {:name circle-name}))
 
 (defn is-subrole-circle?
   "Returns true if the given circle really is a circle. If you give it a

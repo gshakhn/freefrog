@@ -48,28 +48,28 @@
 (defn convert-role [anchor-circle {:keys [name]}]
   (g/convert-to-circle anchor-circle name))
 
-(defn update-purpose-conditionally [anchor-circle name purpose]
+(defn update-purpose-conditionally [anchor-circle circle-name purpose]
   (if purpose
-    (g/update-role-purpose anchor-circle name (first purpose))
+    (g/update-role-purpose anchor-circle circle-name (first purpose))
     anchor-circle))
 
-(defn rename-conditionally [anchor-circle name new-name]
+(defn rename-conditionally [anchor-circle old-name new-name]
   (if new-name
-    (g/rename-role anchor-circle name (first new-name))
+    (g/rename-role anchor-circle old-name (first new-name))
     anchor-circle))
 
 (def update-conversions {:accountabilities "accountability"
                          :domains          "domain"})
 
-(defn apply-collection-update [circle name update-type op]
+(defn apply-collection-update [circle role-name update-type op]
   (let [component (first op)
         function-name (format "%s-role-%s"
                               update-type (update-conversions component))
         fn (resolve (symbol "freefrog.governance" function-name))]
-    (reduce #(fn %1 name %2) circle (rest op))))
+    (reduce #(fn %1 role-name %2) circle (rest op))))
 
-(defn apply-collection-updates [circle name update-type ops]
-  (reduce #(apply-collection-update %1 name update-type %2) circle ops))
+(defn apply-collection-updates [circle role-name update-type ops]
+  (reduce #(apply-collection-update %1 role-name update-type %2) circle ops))
 
 (defn update-role [circle
                    {:keys [name rename change-purpose add remove]}]
