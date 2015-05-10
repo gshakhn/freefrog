@@ -118,19 +118,19 @@
   (remove-role [container role-name])
   (rename-role [container role-name new-name]))
 
-(defrecord Role [name purpose domains accountabilities policies]
+(defrecord Role [rname purpose domains accountabilities policies]
   GovernanceRecord
   (is-circle? [_] false))
 
 ;;todo This re-definition of fields in Circle is ridiculous.
-(defrecord Circle [name purpose domains accountabilities policies roles
+(defrecord Circle [rname purpose domains accountabilities policies roles
                    facilitator secretary]
   GovernanceRecord
   (is-circle? [_] true)
 
   RoleContainer
   (add-role [circle role]
-    (let [new-role-name (:name role)]
+    (let [new-role-name (:rname role)]
       (validate-role-name new-role-name)
       (validate-not (get-in circle [:roles new-role-name])
                     (str "Role already exists: " new-role-name))
@@ -147,13 +147,13 @@
     (validate-role-updates circle role-name)
     (-> circle
         (update-in [:roles] s/rename-keys {role-name new-name})
-        (update-in [:roles new-name] assoc :name new-name))))
+        (update-in [:roles new-name] assoc :rname new-name))))
 
 (defn create-circle
   "Create a new circle with no parent."
   [circle-name]
   (validate-not (empty? circle-name) "Name may not be empty")
-  (map->Circle {:name circle-name}))
+  (map->Circle {:rname circle-name}))
 
 (defn is-subrole-circle?
   "Returns true if the given circle really is a circle. If you give it a
@@ -270,7 +270,7 @@
    an exception."
   ([role]
    (validate-not (is-circle? role)
-                 (format "Role '%s' is already a circle" (:name role)))
+                 (format "Role '%s' is already a circle" (:rname role)))
    (map->Circle (into {} role)))
   ([circle role-name]
    (validate-role-updates circle role-name)
@@ -319,7 +319,7 @@
 (defn- add-role-if-missing [circle role-name]
   (if (and (core-roles role-name)
            (role-missing? circle role-name))
-    (add-role circle (map->Role {:name role-name}))
+    (add-role circle (map->Role {:rname role-name}))
     circle))
 
 (defn- add-to-role
@@ -370,7 +370,7 @@
   (validate (core-roles role-name)
             (format "'%s' is not an elected role." role-name))
   (assoc circle (elected-role-mapping role-name)
-         {:name            person-name
+         {:rname           person-name
           :expiration-date expiration-date}))
 
 ;; ## Role Collection Manipulation Functions ##

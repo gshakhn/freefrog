@@ -98,7 +98,7 @@
       (g/elect-to-role g/facilitator-name "bill" expiration-date)
       (g/elect-to-role g/secretary-name "jill" expiration-date)
       (g/update-subcircle ["Products"] g/add-role
-                          (g/map->Role {:name "Product Analyzer"}))))
+                          (g/map->Role {:rname "Product Analyzer"}))))
 
 (describe "Parsing governance"
   (it "should ignore comments"

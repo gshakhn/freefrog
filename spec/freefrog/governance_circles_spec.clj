@@ -31,7 +31,7 @@
 ;; Section 2.1
 (describe "Circles"
   (it "can create a circle"
-    (should= (g/map->Circle {:name "Courage Labs"})
+    (should= (g/map->Circle {:rname "Courage Labs"})
       (g/create-circle "Courage Labs")))
 
   (it "doesn't work with an empty name"
@@ -151,7 +151,7 @@
     (it "can delegate a predefined domain from Lead Link"
       (should=
         (update-in sample-anchor [:roles] assoc g/lead-link-name
-                   (g/map->Role {:name     g/lead-link-name
+                   (g/map->Role {:rname    g/lead-link-name
                                  :policies sample-policies-lead-link}))
         sample-anchor-with-lead-link-policy))
 
@@ -164,11 +164,11 @@
     (it "can create multiple policies"
       (should=
         (update-in sample-anchor [:roles] assoc g/lead-link-name
-                   (g/map->Role {:name g/lead-link-name
+                   (g/map->Role {:rname g/lead-link-name
                                  :policies
-                                       (assoc sample-policies-lead-link
-                                              sample-policy-name2
-                                              {:text sample-policy-text2})}))
+                                        (assoc sample-policies-lead-link
+                                               sample-policy-name2
+                                               {:text sample-policy-text2})}))
         sample-anchor-with-lead-link-policies)))
 
   (describe "removing policies"
@@ -240,7 +240,7 @@
   (describe (format "%s %s" role-name description)
     (it "can add one"
       (should= (update-in sample-anchor [:roles] assoc role-name
-                          (g/map->Role {:name        role-name
+                          (g/map->Role {:rname       role-name
                                         which-things #{first}}))
         sample-with-one))
 
@@ -272,13 +272,13 @@
       (it "can specify that an elected role has had someone elected to it
        and when their term expires"
         (should= (assoc sample-anchor :facilitator
-                        {:name            "bill"
+                        {:rname           "bill"
                          :expiration-date expiration-date})
           (g/elect-to-role sample-anchor g/facilitator-name "bill"
                            expiration-date))
 
         (should= (assoc sample-anchor :secretary
-                        {:name            "mary"
+                        {:rname           "mary"
                          :expiration-date expiration-date})
           (g/elect-to-role sample-anchor g/secretary-name "mary"
                            expiration-date)))))
@@ -329,7 +329,7 @@
     (it "can delegate a predefined domain from Secretary"
       (should=
         (update-in sample-anchor [:roles] assoc g/secretary-name
-                   (g/map->Role {:name     g/secretary-name
+                   (g/map->Role {:rname    g/secretary-name
                                  :policies sample-policies-secretary}))
         sample-anchor-with-secretary-policy))
 
@@ -342,11 +342,11 @@
     (it "can create multiple policies"
       (should=
         (update-in sample-anchor [:roles] assoc g/secretary-name
-                   (g/map->Role {:name g/secretary-name
+                   (g/map->Role {:rname g/secretary-name
                                  :policies
-                                       (assoc sample-policies-secretary
-                                              sample-policy-name2
-                                              {:text sample-policy-text2})}))
+                                        (assoc sample-policies-secretary
+                                               sample-policy-name2
+                                               {:text sample-policy-text2})}))
         sample-anchor-with-secretary-policies)))
 
   (describe "removing policies"

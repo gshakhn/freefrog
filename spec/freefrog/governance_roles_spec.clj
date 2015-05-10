@@ -85,7 +85,7 @@
     (it "can add a role to a circle with name and purpose"
       (should (.equals (assoc sample-anchor :roles
                               {role-name
-                               (g/map->Role {:name    role-name
+                               (g/map->Role {:rname   role-name
                                              :purpose sample-purpose})})
                        sample-anchor-with-role)))
 
@@ -95,7 +95,7 @@
         (should
           (.equals (update-in sample-anchor-with-role [:roles] assoc
                               second-role-name
-                              (g/map->Role {:name    second-role-name
+                              (g/map->Role {:rname   second-role-name
                                             :purpose second-role-purpose}))
                    (g/add-role-to-circle sample-anchor-with-role
                                          second-role-name
@@ -106,7 +106,7 @@
         (.equals (assoc sample-anchor :roles
                         {role-name
                          (g/map->Role
-                           {:name             role-name
+                           {:rname            role-name
                             :accountabilities sample-accountabilities})})
                  (g/add-role-to-circle sample-anchor role-name
                                        nil nil sample-accountabilities))))
@@ -115,7 +115,7 @@
       (should
         (.equals (assoc sample-anchor :roles
                         {role-name
-                         (g/map->Role {:name    role-name
+                         (g/map->Role {:rname   role-name
                                        :domains sample-domains})})
                  (g/add-role-to-circle sample-anchor role-name nil
                                        sample-domains nil))))
@@ -124,7 +124,7 @@
       (should
         (.equals (assoc sample-anchor :roles
                         {role-name
-                         (g/map->Role {:name    role-name
+                         (g/map->Role {:rname   role-name
                                        :domains sample-domains})})
                  (g/add-role-to-circle sample-anchor role-name nil
                                        sample-domains nil))))
@@ -134,7 +134,7 @@
                               :roles
                               {role-name
                                (g/map->Role
-                                 {:name             role-name
+                                 {:rname            role-name
                                   :purpose          sample-purpose
                                   :domains          sample-domains
                                   :accountabilities sample-accountabilities})})
@@ -170,7 +170,7 @@
       (it "can rename a role"
         (should= (-> sample-anchor-with-role
                      (update-in [:roles] s/rename-keys {role-name new-name})
-                     (update-in [:roles new-name] assoc :name new-name))
+                     (update-in [:roles new-name] assoc :rname new-name))
 
           (g/rename-role sample-anchor-with-role role-name new-name)))
       (should-not-update-missing-or-empty-roles g/rename-role "renaming role"
