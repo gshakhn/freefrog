@@ -60,6 +60,7 @@
              :cli {:main freefrog.cli}}
 
   :plugins [[lein-ancient "0.6.7"]
+            [lein-bikeshed "0.2.0"]
             [lein-kibit "0.1.2"]
             [lein-marginalia "0.8.0"]
             [speclj "3.2.0"]]

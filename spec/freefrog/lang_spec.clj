@@ -55,16 +55,20 @@
 (def very-governed-circle
   (-> sample-anchor-circle
       (g/add-role-to-circle "Benefit Context Link"
-                            "The Organization as a provider of General Public Benefit"
+                            (str "The Organization as a provider of General "
+                                 "Public Benefit")
                             nil
-                            #{"Representing the Benefit Context within the Organization"})
+                            #{(str "Representing the Benefit Context within"
+                                   " the Organization")})
       (g/add-role-to-circle "Investor Context Link"
-                            "The Organization as an effective investment vehicle for its investors"
+                            (str "The Organization as an effective investment "
+                                 "vehicle for its investors")
                             nil
                             #{(str "Representing the Investor Context within "
                                    "the Organization")})
       (g/add-role-to-circle "Environmental Impact Context Link"
-                            "The Organization as a good steward of the Environment"
+                            (str "The Organization as a good steward of the "
+                                 "Environment")
                             nil
                             #{(str "Representing the Environmental Impact "
                                    "Context within the Organization")})
@@ -106,7 +110,9 @@
 (describe "Executing governance documents"
   (it "should throw nice errors for bad parsing"
     (should-throw GovernanceParseException
-      "Parse error at line 1, column 32:\nconvert role \"Partner Matters\" to a circle.\n                               ^\nExpected:\n\"into a\"\n"
+      (str "Parse error at line 1, column 32:\nconvert role \"Partner "
+           "Matters\" to a circle.\n                               ^\n"
+           "Expected:\n\"into a\"\n")
       (l/execute-governance "convert role \"Partner Matters\" to a circle.")))
 
   (it "should be able to create a new anchor circle without crosslinks"

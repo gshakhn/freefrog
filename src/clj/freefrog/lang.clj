@@ -95,8 +95,8 @@
 
 (defn merge-array-values [v] (apply merge-with (concat [concat] v)))
 
-(defn execute-governance-function [record fn circle params]
-  (try (fn circle params)
+(defn execute-governance-function [record function circle params]
+  (try (function circle params)
        (catch Exception e
          (throw
            (RuntimeException.
@@ -186,4 +186,3 @@
        (reduce (fn [circle governance-file]
                  (log/infof "Executing: %s" (.getName governance-file))
                  (execute-governance circle (slurp governance-file))) {})))
-

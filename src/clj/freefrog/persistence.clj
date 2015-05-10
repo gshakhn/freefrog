@@ -19,7 +19,7 @@
 
 (ns freefrog.persistence)
 
-(defn new-governance-log 
+(defn new-governance-log
   "Creates a new governance log for the circle using the given input log.
   Returns the unique ID of this newly created governance log."
   [])

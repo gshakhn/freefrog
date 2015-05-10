@@ -247,7 +247,8 @@
                             sample-policy-name sample-policy-text
                             sample-domain-1)
       (g/add-role-policy sample-anchor-with-domain role-name
-                         sample-policy-name sample-policy-text sample-domain-1)))
+                         sample-policy-name sample-policy-text
+                         sample-domain-1)))
   (it (str "won't add a policy granting access to a domain that the role"
            "doesn't control")
     (should-throw IllegalArgumentException
@@ -276,5 +277,6 @@
     (should-throw IllegalArgumentException
       (format "Policy '%s' doesn't exist on role '%s'" sample-policy-name
               role-name)
-      (g/remove-role-policy sample-anchor-with-domain role-name sample-policy-name))))
+      (g/remove-role-policy sample-anchor-with-domain role-name
+                            sample-policy-name))))
 (run-specs)

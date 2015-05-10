@@ -20,7 +20,7 @@
 ;;; # Governance Encoding #
 ;;; Defines how governance can be manipulated, and is intended
 ;;; to comply to the
-;;; [Holacracy Constitution v4.0](http://holacracy.org/sites/default/files/resources/holacracy_constitution_v4.0.pdf)
+;;; [Holacracy Constitution v4.0](http://bit.ly/holacracy-constitution-v4)
 ;;;
 ;;; Designed to provide all manipulation functions for Holacracy governance
 ;;; structures. It is not recommended that the structures
@@ -173,35 +173,37 @@
    If the check-fn returns true, throws an error with the given
    err-msg-fmt. err-msg-fmt be in the form of ^.*%s.*%s.*%s.*$ where the
    first %s is to be replaced with a singular English representation of
-   the given type (see err-types), the second %s is to be replaced with the
-   thing itself and the third with the role-name.
+   the given component (see sets-of-things), the second %s is to be replaced
+   with the thing itself and the third with the role-name.
 
    For example: %s '%s' already exists on role '%s'"
-  ([entity type thing check-fn err-msg-fmt]
-   (validate-not (check-fn (get-entity-raw entity [type]) thing)
-                 (format err-msg-fmt (sets-of-things type) thing)))
-  ([circle role-name type thing check-fn err-msg-fmt]
+  ([entity component thing check-fn err-msg-fmt]
+   (validate-not (check-fn (get-entity-raw entity [component]) thing)
+                 (format err-msg-fmt (sets-of-things component) thing)))
+  ([circle role-name component thing check-fn err-msg-fmt]
    (validate-role-updates circle role-name)
-   (validate-not (check-fn (get-entity circle role-name type) thing)
-                 (format err-msg-fmt (sets-of-things type) thing role-name))))
+   (validate-not (check-fn (get-entity circle role-name component) thing)
+                 (format err-msg-fmt (sets-of-things component) thing
+                         role-name))))
 
 ;; ## Entity Generalization Functions ##
 
 (defn- add-to-raw
-  [entity which-things empty-collection collection-op thing args]
-  (let [things (which-things entity)
+  "Adds a component to a collection without any validation."
+  [entity component empty-collection collection-op thing args]
+  (let [things (component entity)
         entity (if things
                  entity
-                 (assoc entity which-things empty-collection))
+                 (assoc entity component empty-collection))
         add-args (into [thing] args)]
-    (apply update-in entity [which-things] collection-op add-args)))
+    (apply update-in entity [component] collection-op add-args)))
 
 (defn- add-to
   "Generalizes an addition to any collection of things within an entity,
    ensuring that the given thing doesn't already exist."
-  [entity which-things empty-collection collection-op thing & args]
-  (validate-things entity which-things thing contains? "%s '%s' already exists")
-  (add-to-raw entity which-things empty-collection collection-op thing args))
+  [entity component empty-collection collection-op thing & args]
+  (validate-things entity component thing contains? "%s '%s' already exists")
+  (add-to-raw entity component empty-collection collection-op thing args))
 
 (defn add-policy
   "Add a policy to any entity."
@@ -224,30 +226,30 @@
    entity inside the role you want to manipulate. The function given is what
    gets applied to the final entity, and the params are the arguments passed to
    that function."
-  [circle role-name entities fn args]
+  [circle role-name entities function args]
   (apply update-in
-         (concat [circle (entity-path role-name entities) fn] args)))
+         (concat [circle (entity-path role-name entities) function] args)))
 
 (defn- update-role
   "Sames as update-role-raw, but a bit easier to use. Doesn't include an
    entity path."
-  [circle role-name fn & args]
-  (update-role-raw circle role-name nil fn args))
+  [circle role-name function & args]
+  (update-role-raw circle role-name nil function args))
 
 (defn- update-role-entity
   "Same as update-role-raw, but a bit easier to use. Includes an entity path."
-  [circle role-name entity-path fn & args]
-  (update-role-raw circle role-name entity-path fn args))
+  [circle role-name entity-path function & args]
+  (update-role-raw circle role-name entity-path function args))
 
 (defn- remove-and-purge-from-role
   "Abstract function that removes a thing from a collection of things in a role
    in a circle. Doesn't do ANY validation. Removes the collection if it's
    empty. Uses the given rmfn because you could be operating on any kind of
    collection."
-  [circle role-name type rmfn thing]
-  (let [result (update-role-entity circle role-name [type] rmfn thing)]
-    (if (empty? (get-entity result role-name type))
-      (update-role result role-name assoc type nil)
+  [circle role-name component rmfn thing]
+  (let [result (update-role-entity circle role-name [component] rmfn thing)]
+    (if (empty? (get-entity result role-name component))
+      (update-role result role-name assoc component nil)
       result)))
 
 (defn update-subcircle
@@ -255,9 +257,9 @@
    is a series of role names starting from (but not including) the anchor
    circle. The function is what gets applied to the final subcircle, and the
    params are the arguments passed to that function."
-  [circle path fn & params]
+  [circle path function & params]
   (let [update-args
-        (concat [circle (interleave (repeat :roles) path) fn] params)]
+        (concat [circle (interleave (repeat :roles) path) function] params)]
     (apply update-in update-args)))
 
 ;; ## Role manipulation ##
@@ -325,22 +327,22 @@
    that if a core role is being manipulated, it is made to be present.
    Performs collection-op on the collection, or the given empty-collection
    if it doesn't exist."
-  [circle role-name which-things empty-collection collection-op thing & args]
+  [circle role-name component empty-collection collection-op thing & args]
   (let [circle (add-role-if-missing circle role-name)]
-    (validate-things circle role-name which-things thing contains?
+    (validate-things circle role-name component thing contains?
                      "%s '%s' already exists on role '%s'")
     (update-in circle (role-path role-name) add-to-raw
-               which-things empty-collection collection-op thing args)))
+               component empty-collection collection-op thing args)))
 
 (defn- remove-from-role
   "Removes a thing from a collection of things in a role, making sure that
    if a core role is being manipulated, and becomes empty, it gets removed
    altogether. Performs collection-op on the collection."
-  [circle role-name which-things collection-op thing]
-  (validate-things circle role-name which-things thing (comp not contains?)
+  [circle role-name component collection-op thing]
+  (validate-things circle role-name component thing (comp not contains?)
                    "%s '%s' doesn't exist on role '%s'")
   (let [result
-        (remove-and-purge-from-role circle role-name which-things collection-op
+        (remove-and-purge-from-role circle role-name component collection-op
                                     thing)]
     (if (and (core-roles role-name)
              (every? empty? (map (partial get-entity result role-name)
