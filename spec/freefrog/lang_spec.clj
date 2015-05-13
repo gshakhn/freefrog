@@ -121,7 +121,8 @@
 
   (it "should be able to create a new anchor with special characters"
     (should= (g/create-circle "Courage & Labs!@#$%^&*()")
-      (l/execute-governance "CREATE ANCHOR CIRCLE \"Courage & Labs!@#$%^&*()\".")))
+      (l/execute-governance
+        "CREATE ANCHOR CIRCLE \"Courage & Labs!@#$%^&*()\".")))
 
   (it "should not allow nonsense in role/circle conversions"
     ;Currently someone can say 'convert circle "blah" into a circle.' and it
