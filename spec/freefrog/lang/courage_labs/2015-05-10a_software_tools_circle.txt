@@ -1,0 +1,5 @@
+govern circle "Software Tools".
+
+elect "Bill Finn" as rep link expiring 2015-11-10.
+elect "Bill Finn" as facilitator expiring 2015-11-10.
+elect "Travis Marsh" as secretary expiring 2015-11-10.
