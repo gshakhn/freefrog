@@ -123,7 +123,8 @@
   (g/remove-policy circle (second record)))
 
 (def elected-role-mapping {"facilitator" g/facilitator-name
-                           "secretary"   g/secretary-name})
+                           "secretary"   g/secretary-name
+                           "rep link"    g/rep-link-name})
 
 (def formatter (f/formatter "yyyy-MM-dd"))
 

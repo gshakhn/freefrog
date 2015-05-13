@@ -40,7 +40,8 @@
 (def facilitator-name "Facilitator")
 
 (def elected-role-mapping {facilitator-name :facilitator
-                           secretary-name   :secretary})
+                           secretary-name   :secretary
+                           rep-link-name    :rep-link})
 
 (defn is-lead-link? [role-name]
   (= lead-link-name role-name))
@@ -124,7 +125,7 @@
 
 ;;todo This re-definition of fields in Circle is ridiculous.
 (defrecord Circle [rname purpose domains accountabilities policies roles
-                   facilitator secretary]
+                   facilitator secretary rep-link]
   GovernanceRecord
   (is-circle? [_] true)
 
@@ -287,7 +288,7 @@
             (format "Circle %s still contains roles" role-name))
   (-> circle
       (update-role role-name map->Role)
-      (update-role role-name dissoc :roles :facilitator :secretary)))
+      (update-role role-name dissoc :roles :facilitator :secretary :rep-link)))
 
 (defn add-role-to-circle
   "Adds a role to a circle.  The role may not conflict with an existing role.
