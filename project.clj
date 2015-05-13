@@ -40,7 +40,7 @@
                  [metosin/ring-swagger "0.20.2"]
                  [metosin/compojure-api "0.20.1"]
                  [metosin/ring-http-response "0.6.1"]
-                 [metosin/ring-swagger-ui "2.0.24"]
+                 [metosin/ring-swagger-ui "2.1.1-M2"]
                  [speclj "3.2.0"]]
 
   :main freefrog.rest
