@@ -1,8 +1,0 @@
-govern circle "Software Tools".
-
-create role "Code Retreat Host" with purpose "Spectacular Code Retreats".
-
-create role "Product Manager" with purpose "Good decision making about product
-direction" and accountabilities "Generating & maintaining the software product
-roadmap based on market research", "Soliciting feedback from inside and outside
-Courage Labs about the direction of the product".
