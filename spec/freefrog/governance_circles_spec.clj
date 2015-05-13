@@ -281,6 +281,12 @@
                         {:rname           "mary"
                          :expiration-date expiration-date})
           (g/elect-to-role sample-anchor g/secretary-name "mary"
+                           expiration-date))
+
+        (should= (assoc sample-anchor :rep-link
+                        {:rname           "mary"
+                         :expiration-date expiration-date})
+          (g/elect-to-role sample-anchor g/rep-link-name "mary"
                            expiration-date)))))
 
   ;; Section 2.5.3
