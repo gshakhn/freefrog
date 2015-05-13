@@ -49,49 +49,48 @@
 (defapi api
   (swagger-ui "/api")
   (swagger-docs
-    :title "Freefrog API")
-  (swaggered "freefrog"
-    :description "The Freefrog API"
-    (middlewares [wrap-missing-entity session/wrap-session]
-      (context "/api" []
-        (context "/circles" []
-          (GET* "/*/_governance" {{path :*} :route-params}
-                :return [s/Str]
-                :summary "Retrieve the governance for a circle"
-                (ok (p/get-all-governance-logs path)))
+    {:info {:title "Freefrog API",
+            :tags [{:name "freefrog", :description "The Freefrog API"}]}})
+  (middlewares [wrap-missing-entity session/wrap-session]
+    (context "/api" []
+      (context "/circles" []
+        (GET* "/*/_governance" {{path :*} :route-params}
+              :return [s/Str]
+              :summary "Retrieve the governance for a circle"
+              (ok (p/get-all-governance-logs path)))
 
-          (GET* "/*" {{path :*} :route-params}
-                :return String
-                :summary "Retrieve a circle or role"
-                (format "You requested circle/role: %s" path)))
+        (GET* "/*" {{path :*} :route-params}
+              :return String
+              :summary "Retrieve a circle or role"
+              (format "You requested circle/role: %s" path)))
 
-        (context "/session" []
-          (GET* "/" {session :session}
-                :return String
-                :summary "Get a session"
-                (when-let [principal (:principal session)] (ok principal)))
+      (context "/session" []
+        (GET* "/" {session :session}
+              :return String
+              :summary "Get a session"
+              (when-let [principal (:principal session)] (ok principal)))
 
-          (POST* "/" []
-                 :return String
-                 :summary "Establish a session"
-                 :body-params [assertion :- String]
-                 (let [result (auth/authenticate assertion)
-                       principal (when result (:email result))
-                       session (if principal
-                                 {:principal principal}
-                                 {})
+        (POST* "/" []
+               :return String
+               :summary "Establish a session"
+               :body-params [assertion :- String]
+               (let [result (auth/authenticate assertion)
+                     principal (when result (:email result))
+                     session (if principal
+                               {:principal principal}
+                               {})
 
-                       response
-                       (if principal
-                         (ok principal)
-                         (forbidden "Please submit a valid assertion"))]
-                   (log/info (format "Login attempt: %s" result))
-                   (assoc response :session session)))
+                     response
+                     (if principal
+                       (ok principal)
+                       (forbidden "Please submit a valid assertion"))]
+                 (log/info (format "Login attempt: %s" result))
+                 (assoc response :session session)))
 
-          (DELETE* "/" {session :session}
-                   :summary "Remove the current session; effectively a logout"
-                   (log/info (format "Logged out: %s" (:principal session)))
-                   (assoc (ok "Logged out") :session {})))))))
+        (DELETE* "/" {session :session}
+                 :summary "Remove the current session; effectively a logout"
+                 (log/info (format "Logged out: %s" (:principal session)))
+                 (assoc (ok "Logged out") :session {}))))))
 
 (def app (wrap-dir-index (c/routes api (route/resources "/"))))
 
