@@ -32,30 +32,15 @@
   :dependencies [[clj-http "1.1.2"]
                  [clj-json "0.5.3"]
                  [clj-time "0.9.0"]
-                 [environ "1.0.0"]
-                 [http-kit "2.1.19"]
                  [instaparse "1.4.0"]
                  [org.clojure/clojure "1.6.0"]
                  [org.clojure/tools.logging "0.3.1"]
-                 [metosin/ring-swagger "0.20.2"]
-                 [metosin/compojure-api "0.20.1"]
-                 [metosin/ring-http-response "0.6.1"]
-                 [metosin/ring-swagger-ui "2.1.1-M2"]
                  [speclj "3.2.0"]]
 
-  :main freefrog.rest
-
-  :profiles {:freefrog {:ring {:handler freefrog.rest/app
-                              :reload-paths ["src"]}
-                       :main freefrog.rest
-                       :dependencies [[metosin/ring-swagger-ui "2.0.24"]]}
-             :uberjar {:aot :all}
-             :dev {:ring {:handler freefrog.rest/app}
-                   :plugins [[lein-clojars "0.9.1"]
-                             [lein-ring "0.9.3"]]
-                   :dependencies [[clj-yaml "0.4.0"]
-                                  [javax.servlet/servlet-api "2.5"]
-                                  [peridot "0.4.0"]]}
+  :profiles {:uberjar {:aot :all}
+             :dev {
+                   :plugins [[lein-clojars "0.9.1"]]
+                   :dependencies [[clj-yaml "0.4.0"]]}
              :1.7 {:dependencies [[org.clojure/clojure "1.7.0-alpha4"]]}
              :cli {:main freefrog.cli}}
 
@@ -69,5 +54,4 @@
 
   :aliases {"autotest" ["spec" "-a"]
             "docs" ["marg" "src" "spec"]
-            "freefrog" ["with-profile" "freefrog" "run"]
             "cli" ["with-profile" "cli" "run"]})
