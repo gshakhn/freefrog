@@ -24,5 +24,8 @@
             [freefrog.governance :as g]
             [instaparse.core :as insta]))
 
+(defn components [circle]
+  (str "with purpose \"" (:purpose circle) "\""))
+
 (defn generate-lang [anchor-circle]
-  (str "CREATE ANCHOR CIRCLE \"" (:rname anchor-circle) "\"."))
+  (str "CREATE ANCHOR CIRCLE \"" (:rname anchor-circle) "\" " (components anchor-circle) "."))
