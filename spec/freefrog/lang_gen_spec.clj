@@ -51,7 +51,10 @@
           (str "spec/freefrog/lang_gen/" test-name "/source"))
         generated
         (lg/generate-lang circle)]
-    (should= (slurp (str "spec/freefrog/lang_gen/" test-name "/expected_result.txt"))
+    (should= (slurp (str
+                      "spec/freefrog/lang_gen/"
+                      test-name
+                      "/expected_result.txt"))
              (lg/generate-lang circle))
     (should= circle
              (l/execute-governance generated))))
