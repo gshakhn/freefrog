@@ -30,4 +30,8 @@
    (str " with purpose \"" (:purpose circle) "\".")))
 
 (defn generate-lang [anchor-circle]
-  (str "CREATE ANCHOR CIRCLE \"" (:rname anchor-circle) "\"" (components anchor-circle)))
+  "Generates language for a circle"
+  (str "CREATE ANCHOR CIRCLE \""
+       (:rname anchor-circle)
+       "\""
+       (components anchor-circle)))
