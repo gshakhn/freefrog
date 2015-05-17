@@ -25,7 +25,9 @@
             [instaparse.core :as insta]))
 
 (defn components [circle]
-  (str "with purpose \"" (:purpose circle) "\""))
+  (if (empty? (:purpose circle))
+    "."
+   (str " with purpose \"" (:purpose circle) "\".")))
 
 (defn generate-lang [anchor-circle]
-  (str "CREATE ANCHOR CIRCLE \"" (:rname anchor-circle) "\" " (components anchor-circle) "."))
+  (str "CREATE ANCHOR CIRCLE \"" (:rname anchor-circle) "\"" (components anchor-circle)))

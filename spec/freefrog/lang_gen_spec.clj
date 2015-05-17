@@ -48,16 +48,21 @@
 (describe "Generating governance documents"
   (it "should be able to generate a document for a new anchor circle"
     (let [anchor-circle (g/create-circle "Courage Labs")]
-      (should= (l/execute-governance (lg/generate-lang anchor-circle) )
-               anchor-circle)))
+      (should= anchor-circle
+               (l/execute-governance (lg/generate-lang anchor-circle) ))))
 
   (it "should be able to generate a document for another anchor circle"
     (let [anchor-circle (g/create-circle "Courage Labs 2")]
-      (should= (l/execute-governance (lg/generate-lang anchor-circle) )
-               anchor-circle)))
+      (should= anchor-circle
+               (l/execute-governance (lg/generate-lang anchor-circle) ))))
 
   (it "should be able to generate a document for a new anchor circle with a purpose"
     (let [anchor-circle (-> (g/create-circle "Courage Labs")
                             (g/update-purpose "General public benefit"))]
-      (should= (l/execute-governance (lg/generate-lang anchor-circle) )
-               anchor-circle))))
+      (should= anchor-circle
+               (l/execute-governance (lg/generate-lang anchor-circle) ))))
+
+  (it "should generate language from a source and assert it matches target"
+          (let [circle (l/execute-directory "spec/freefrog/lang_gen/base_circle/source")]
+            (should= (slurp "spec/freefrog/lang_gen/base_circle/result.txt")
+                     (lg/generate-lang circle)))))
