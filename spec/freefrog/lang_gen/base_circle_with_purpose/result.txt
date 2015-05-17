@@ -1,1 +1,2 @@
-CREATE ANCHOR CIRCLE "Courage Labs" with purpose "General public benefit".
+CREATE ANCHOR CIRCLE "Courage Labs"
+  with purpose "General public benefit".

@@ -27,7 +27,7 @@
 (defn components [circle]
   (if (empty? (:purpose circle))
     "."
-   (str " with purpose \"" (:purpose circle) "\".")))
+   (str "\n  with purpose \"" (:purpose circle) "\".")))
 
 (defn generate-lang [anchor-circle]
   "Generates language for a circle"
