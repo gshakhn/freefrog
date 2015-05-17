@@ -25,5 +25,4 @@
             [instaparse.core :as insta]))
 
 (defn generate-lang [anchor-circle]
-  "CREATE ANCHOR CIRCLE \"Courage Labs\"."
-  )
+  (str "CREATE ANCHOR CIRCLE \"" (:rname anchor-circle) "\"."))

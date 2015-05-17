@@ -49,4 +49,9 @@
   (it "should be able to generate a document for a new anchor circle without crosslinks"
       (let [anchor-circle  (g/create-circle "Courage Labs")]
         (should= (l/execute-governance (lg/generate-lang anchor-circle) )
+                 anchor-circle)))
+
+  (it "should be able to generate a document for another anchor circle without crosslinks"
+      (let [anchor-circle  (g/create-circle "Courage Labs 2")]
+        (should= (l/execute-governance (lg/generate-lang anchor-circle) )
                  anchor-circle))))
