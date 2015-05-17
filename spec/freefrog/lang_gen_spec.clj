@@ -45,23 +45,20 @@
 
 (ns freefrog.lang-gen-spec)
 
+(defn run-test [test-name]
+  (let [circle
+        (l/execute-directory
+          (str "spec/freefrog/lang_gen/" test-name "/source"))
+        generated
+        (lg/generate-lang circle)]
+    (should= (slurp (str "spec/freefrog/lang_gen/" test-name "/result.txt"))
+             (lg/generate-lang circle))
+    (should= circle
+             (l/execute-governance generated))))
+
 (describe "Generating governance documents"
   (it "should be able to generate for an anchor circle"
-    (let [circle
-          (l/execute-directory "spec/freefrog/lang_gen/base_circle/source")
-          generated
-          (lg/generate-lang circle)]
-      (should= (slurp "spec/freefrog/lang_gen/base_circle/result.txt")
-               (lg/generate-lang circle))
-      (should= circle
-               (l/execute-governance generated))))
+    (run-test "base_circle"))
 
   (it "should be able to generate for an anchor circle with a purpose"
-      (let [circle
-            (l/execute-directory "spec/freefrog/lang_gen/base_circle_with_purpose/source")
-            generated
-            (lg/generate-lang circle)]
-        (should= (slurp "spec/freefrog/lang_gen/base_circle_with_purpose/result.txt")
-                 (lg/generate-lang circle))
-        (should= circle
-                 (l/execute-governance generated)))))
+    (run-test "base_circle_with_purpose")))
